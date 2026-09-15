@@ -54,7 +54,7 @@ function MainLayout() {
   const isChatOpenOnMobile = activeTab === 'chats' && !isConversationListVisible;
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 transition-colors duration-200">
+    <div className="fixed inset-0 w-full h-full flex flex-col overflow-hidden bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 transition-colors duration-200">
       {/* Top Navbar: On desktop always shown; on mobile hidden during active chat */}
       <div className={`flex-shrink-0 ${isChatOpenOnMobile ? 'hidden md:block' : 'block'}`}>
         <GlassNavbar
@@ -99,7 +99,7 @@ function MainLayout() {
             </div>
 
             {/* Chat Workspace */}
-            <div className={`flex-1 h-full overflow-hidden min-h-0 flex flex-col ${
+            <div className={`flex-1 h-full overflow-hidden min-h-0 flex flex-col w-full ${
               !isConversationListVisible ? 'flex' : 'hidden md:flex'
             }`}>
               <ChatArea 
