@@ -49,5 +49,6 @@ module.exports = {
   SSL_PASSPHRASE: process.env.SSL_PASSPHRASE || null,
   VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || 'BJ6_MpjdnYd2kS9DwgOXmTpiYMsrigU32AXo8vL6Bi-xxZKMEpA2qTNvGneshh-DBp8cIOXo3bV0BeGAkkcFPzA',
   VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY || 'jFoClphDQQTzFz5WRhzgajXfA5sAevoRcWNrEtnRPmk',
-  VAPID_EMAIL: process.env.VAPID_EMAIL || 'mailto:himanshudwivedi0325@gmail.com'
+  VAPID_EMAIL: process.env.VAPID_EMAIL || 'mailto:himanshudwivedi0325@gmail.com',
+  MONGODB_URI: process.env.MONGODB_URI || 'mongodb+srv://himanshudwivedi0325_db_user:vj7tDfH57rdwU308@hdtalk-cluster.w65tsyc.mongodb.net/hdtalk?retryWrites=true&w=majority'
 };
