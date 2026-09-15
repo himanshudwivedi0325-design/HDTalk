@@ -1,14 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useChat } from '../../context/ChatContext';
-import { Check, CheckCheck, Play, Pause, Paperclip, Download, Languages, Trash2, Ban } from 'lucide-react';
+import { Check, CheckCheck, Play, Pause, Paperclip, Download, Languages, Trash2, Ban, Reply } from 'lucide-react';
 import { translateText } from '../../services/translationService';
 
 const EMOJI_OPTIONS = ['❤️', '🔥', '👍', '😂', '🚀', '🎉'];
 
 export function MessageBubble({ message }) {
   const { user } = useAuth();
-  const { addReaction, deleteMessage } = useChat();
+  const { addReaction, deleteMessage, setReplyingToMessage } = useChat();
   const isMe = message.senderId === user?.id;
 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -68,7 +68,7 @@ export function MessageBubble({ message }) {
   const isRead = message.readBy && message.readBy.length > 1;
 
   return (
-    <div className={`relative group flex flex-col mb-2.5 select-text ${isMe ? 'items-end' : 'items-start'}`}>
+    <div id={`msg-${message.id}`} className={`relative group flex flex-col mb-2.5 select-text ${isMe ? 'items-end' : 'items-start'}`}>
       <div className="relative max-w-[85%] sm:max-w-[70%]">
         {/* Quick Reaction & Action Floating Bar on Hover/Tap */}
         {!message.isDeleted && (
@@ -82,6 +82,26 @@ export function MessageBubble({ message }) {
                 {emoji}
               </button>
             ))}
+
+            {/* Quick Reply Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setReplyingToMessage({
+                  id: message.id,
+                  senderId: message.senderId,
+                  senderName: isMe ? 'You' : (message.senderName || 'User'),
+                  text: message.text,
+                  type: message.type,
+                  mediaUrl: message.mediaUrl,
+                  isDeleted: message.isDeleted || false
+                });
+              }}
+              className="hover:scale-120 transition-transform text-xs p-1 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-cyan-300 flex items-center border-l border-slate-200 dark:border-white/15 pl-1.5 ml-0.5"
+              title="Reply"
+            >
+              <Reply className="w-3.5 h-3.5" />
+            </button>
 
             {message.type === 'text' && (
               <button
@@ -128,6 +148,39 @@ export function MessageBubble({ message }) {
             </div>
           ) : (
             <>
+              {/* Quoted Reply Preview (Telegram / Instagram style) */}
+              {message.replyTo && (
+                <div 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const target = document.getElementById(`msg-${message.replyTo.id}`);
+                    if (target) {
+                      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      target.classList.add('ring-2', 'ring-blue-400', 'rounded-2xl', 'transition-all');
+                      setTimeout(() => target.classList.remove('ring-2', 'ring-blue-400', 'rounded-2xl'), 1800);
+                    }
+                  }}
+                  className={`flex items-start gap-2 p-2 mb-2 rounded-xl text-xs cursor-pointer select-none transition border ${
+                    isMe 
+                      ? 'bg-blue-800/40 border-blue-400/30 text-blue-100 hover:bg-blue-800/60' 
+                      : 'bg-slate-100/90 dark:bg-white/5 border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-white/10'
+                  }`}
+                  title="Jump to quoted message"
+                >
+                  <div className={`w-1 self-stretch rounded-full flex-shrink-0 ${isMe ? 'bg-cyan-300' : 'bg-blue-600 dark:bg-cyan-400'}`} />
+                  <div className="min-w-0 flex-1">
+                    <span className={`block font-bold text-[11px] truncate ${isMe ? 'text-cyan-200' : 'text-blue-600 dark:text-cyan-400'}`}>
+                      {message.replyTo.senderId === user?.id ? 'You' : (message.replyTo.senderName || 'User')}
+                    </span>
+                    <span className="block truncate text-[11px] opacity-85">
+                      {message.replyTo.isDeleted 
+                        ? '🚫 This message was deleted' 
+                        : (message.replyTo.text || (message.replyTo.type === 'voice' ? '🎤 Voice note' : '📎 Attachment'))}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {/* TEXT MESSAGE */}
               {message.type === 'text' && (
                 <div className="space-y-1.5">

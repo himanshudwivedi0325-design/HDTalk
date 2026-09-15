@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { useChat } from '../../context/ChatContext';
 import { useSocket } from '../../context/SocketContext';
 import { useAuth } from '../../context/AuthContext';
-import { Search, Plus, MessageSquare, Check, CheckCheck, Filter, Mic, Image as ImageIcon, PanelLeftClose } from 'lucide-react';
+import { Search, Plus, MessageSquare, Check, CheckCheck, Filter, Mic, Image as ImageIcon, PanelLeftClose, UserCheck } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { formatChatTimestamp, formatLastActive } from '../../utils/timeAgo';
 
-export function ConversationList({ onNewChatClick, onCollapse, onSelectChat }) {
+export function ConversationList({ onNewChatClick, onCollapse, onSelectChat, onOpenRequestsModal }) {
   const { user } = useAuth();
-  const { conversations, activeConversation, selectConversation, typingUsers } = useChat();
+  const { conversations, activeConversation, selectConversation, typingUsers, pendingRequestsCount } = useChat();
   const { isUserOnline, getUserLastSeen } = useSocket();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'unread'
@@ -78,8 +78,8 @@ export function ConversationList({ onNewChatClick, onCollapse, onSelectChat }) {
           />
         </div>
 
-        {/* Filter Pills (All, Unread) */}
-        <div className="flex items-center gap-2 pt-1">
+        {/* Filter Pills (All, Unread, Requests) */}
+        <div className="flex items-center gap-2 pt-1 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveFilter('all')}
             className={`px-3 py-1 rounded-lg text-xs font-medium transition ${
@@ -103,8 +103,48 @@ export function ConversationList({ onNewChatClick, onCollapse, onSelectChat }) {
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
             )}
           </button>
+          <button
+            onClick={() => onOpenRequestsModal?.()}
+            className="px-2.5 py-1 rounded-lg text-xs font-medium transition flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent"
+            title="View Sent & Received Friend Requests"
+          >
+            <UserCheck className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+            <span>Requests</span>
+            {pendingRequestsCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-extrabold shadow animate-pulse">
+                {pendingRequestsCount}
+              </span>
+            )}
+          </button>
         </div>
       </div>
+
+      {/* Pending Requests Banner (High visibility on laptop) */}
+      {pendingRequestsCount > 0 && (
+        <div className="px-3 pt-2.5">
+          <div
+            onClick={() => onOpenRequestsModal?.()}
+            className="p-2.5 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50/50 dark:from-blue-900/20 dark:to-indigo-900/10 border border-blue-200/80 dark:border-blue-500/30 flex items-center justify-between gap-2 cursor-pointer hover:border-blue-400 dark:hover:border-blue-400/50 transition shadow-xs group"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+                <UserCheck className="w-3.5 h-3.5" />
+              </div>
+              <div className="truncate">
+                <div className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-cyan-400">
+                  {pendingRequestsCount} Friend {pendingRequestsCount === 1 ? 'Request' : 'Requests'}
+                </div>
+                <div className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                  Click to view sent & received
+                </div>
+              </div>
+            </div>
+            <span className="px-2 py-0.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[10.5px] font-bold shadow-xs flex-shrink-0">
+              Review
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Conversation Cards */}
       <div className="flex-1 overflow-y-auto p-2 space-y-1">

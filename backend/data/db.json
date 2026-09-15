@@ -85,6 +85,70 @@
         "Tech",
         "Networking"
       ]
+    },
+    {
+      "id": "usr_744c0614",
+      "createdAt": "2026-09-15T05:20:49.270Z",
+      "status": "online",
+      "lastSeen": "2026-09-15T05:20:49.270Z",
+      "name": "User Alpha 5784",
+      "email": "alpha_5784@test.com",
+      "password": "$2a$10$IgY0gS.QBPdVrkgPpQiJdOjTOSjTRQS9zs5RApVbqBU3wegbHHikO",
+      "avatar": "",
+      "profession": "Professional",
+      "bio": "Excited to connect and collaborate on HDTalk!",
+      "interests": [
+        "Tech",
+        "Networking"
+      ]
+    },
+    {
+      "id": "usr_dff20d40",
+      "createdAt": "2026-09-15T05:20:49.442Z",
+      "status": "online",
+      "lastSeen": "2026-09-15T05:20:49.442Z",
+      "name": "User Beta 5784",
+      "email": "beta_5784@test.com",
+      "password": "$2a$10$Up.u11XmEEFI2zV/btJfoO5qjNpasK//uY/8qxefVBXZWwK84tvOi",
+      "avatar": "",
+      "profession": "Professional",
+      "bio": "Excited to connect and collaborate on HDTalk!",
+      "interests": [
+        "Tech",
+        "Networking"
+      ]
+    },
+    {
+      "id": "usr_337aa3cd",
+      "createdAt": "2026-09-15T05:22:16.006Z",
+      "status": "online",
+      "lastSeen": "2026-09-15T05:22:16.006Z",
+      "name": "User Alpha 8634",
+      "email": "alpha_8634@test.com",
+      "password": "$2a$10$3xiZBA60BfOZQhFzvstOjOX2fSO7D.FX8YT.qXSyGshTN/HcdQ4qS",
+      "avatar": "",
+      "profession": "Professional",
+      "bio": "Excited to connect and collaborate on HDTalk!",
+      "interests": [
+        "Tech",
+        "Networking"
+      ]
+    },
+    {
+      "id": "usr_bf21bed8",
+      "createdAt": "2026-09-15T05:22:16.173Z",
+      "status": "online",
+      "lastSeen": "2026-09-15T05:22:16.173Z",
+      "name": "User Beta 8634",
+      "email": "beta_8634@test.com",
+      "password": "$2a$10$oKrIk8UywJwiA961voQM2.78DbNRDv5h/xuL1cFBUVOcmivbpWZiK",
+      "avatar": "",
+      "profession": "Professional",
+      "bio": "Excited to connect and collaborate on HDTalk!",
+      "interests": [
+        "Tech",
+        "Networking"
+      ]
     }
   ],
   "conversations": [
@@ -126,6 +190,23 @@
         "senderId": "usr_de06d1f0",
         "timestamp": "2026-09-15T02:25:29.158Z"
       }
+    },
+    {
+      "id": "conv_2b8353a5",
+      "type": "direct",
+      "participants": [
+        "usr_337aa3cd",
+        "usr_bf21bed8"
+      ],
+      "createdAt": "2026-09-15T05:22:16.228Z",
+      "updatedAt": "2026-09-15T05:22:16.233Z",
+      "lastMessage": {
+        "text": "Original question: What is the update?",
+        "senderId": "usr_337aa3cd",
+        "timestamp": "2026-09-15T05:22:16.233Z"
+      },
+      "isPending": false,
+      "requestedBy": null
     }
   ],
   "messages": [
@@ -286,6 +367,20 @@
       "conversationId": "conv_cf417452",
       "senderId": "usr_de06d1f0",
       "text": "kya kah rhe ho bhai?",
+      "type": "text",
+      "mediaUrl": null,
+      "replyToId": null
+    },
+    {
+      "id": "msg_8457e361",
+      "timestamp": "2026-09-15T05:22:16.233Z",
+      "reactions": {},
+      "readBy": [
+        "usr_337aa3cd"
+      ],
+      "conversationId": "conv_2b8353a5",
+      "senderId": "usr_337aa3cd",
+      "text": "Original question: What is the update?",
       "type": "text",
       "mediaUrl": null,
       "replyToId": null

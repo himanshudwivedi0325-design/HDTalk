@@ -239,6 +239,26 @@ function seedDefaultUsers() {
   console.log('Database seeded with admin template user.');
 }
 
+function enrichMessage(m) {
+  if (!m) return m;
+  if (!m.replyToId) return m;
+  const orig = (memoryState.messages || []).find(o => o.id === m.replyToId);
+  if (!orig) return m;
+  const origSender = (memoryState.users || []).find(u => u.id === orig.senderId);
+  return {
+    ...m,
+    replyTo: {
+      id: orig.id,
+      senderId: orig.senderId,
+      senderName: origSender ? origSender.name : 'User',
+      text: orig.isDeleted ? 'This message was deleted' : (orig.text || (orig.type === 'voice' ? '🎤 Voice note' : '📎 Attachment')),
+      type: orig.type,
+      mediaUrl: orig.isDeleted ? null : orig.mediaUrl,
+      isDeleted: orig.isDeleted || false
+    }
+  };
+}
+
 // DATABASE API (100% Backward-Compatible)
 const db = {
   resetDb: () => {
@@ -376,7 +396,8 @@ const db = {
   getMessages: (conversationId, userId) => {
     return (memoryState.messages || [])
       .filter(m => m.conversationId === conversationId && (!userId || !m.deletedFor || !m.deletedFor.includes(userId)))
-      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+      .map(m => enrichMessage(m));
   },
 
   createMessage: (messageData) => {
@@ -400,7 +421,7 @@ const db = {
     }
 
     scheduleFlush();
-    return newMsg;
+    return enrichMessage(newMsg);
   },
 
   addReaction: (messageId, emoji, userId) => {

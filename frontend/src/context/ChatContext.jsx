@@ -17,6 +17,7 @@ export function ChatProvider({ children }) {
   const [typingUsers, setTypingUsers] = useState({}); // { [userId]: boolean }
   const [connectionRequests, setConnectionRequests] = useState([]);
   const [isLoadingRequests, setIsLoadingRequests] = useState(false);
+  const [replyingToMessage, setReplyingToMessage] = useState(null);
 
   const typingTimeoutRef = useRef(null);
   const lastTypingSentAtRef = useRef(0);
@@ -30,6 +31,7 @@ export function ChatProvider({ children }) {
       setMessages([]);
       setTypingUsers({});
       setConnectionRequests([]);
+      setReplyingToMessage(null);
     }
   }, [user?.id]);
 
@@ -309,11 +311,25 @@ export function ChatProvider({ children }) {
     }
   };
 
-  const sendMessage = async ({ text, type = 'text', mediaUrl = null, replyToId = null }) => {
+  const sendMessage = async ({ text, type = 'text', mediaUrl = null, replyToId = null, replyTo = null }) => {
     if (!activeConversation) return;
 
     // Immediately stop typing indicator
     stopTyping();
+
+    const actualReplyToId = replyToId || replyingToMessage?.id || null;
+    const actualReplyTo = replyTo || (replyingToMessage ? {
+      id: replyingToMessage.id,
+      senderId: replyingToMessage.senderId,
+      senderName: replyingToMessage.senderName,
+      text: replyingToMessage.text,
+      type: replyingToMessage.type,
+      mediaUrl: replyingToMessage.mediaUrl,
+      isDeleted: replyingToMessage.isDeleted || false
+    } : null);
+
+    // Clear replying state after sending
+    setReplyingToMessage(null);
 
     const tempId = `temp_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
     const optimisticMsg = {
@@ -323,7 +339,8 @@ export function ChatProvider({ children }) {
       text: text || '',
       type: type || 'text',
       mediaUrl: mediaUrl || null,
-      replyToId: replyToId || null,
+      replyToId: actualReplyToId,
+      replyTo: actualReplyTo,
       timestamp: new Date().toISOString(),
       reactions: {},
       readBy: [user?.id],
@@ -359,20 +376,20 @@ export function ChatProvider({ children }) {
         text,
         type,
         mediaUrl,
-        replyToId,
+        replyToId: actualReplyToId,
         tempId,
         token: sessionStorage.getItem('chatz_token') || localStorage.getItem('chatz_token')
       }, (response) => {
         if (response?.success && response?.message) {
-          setMessages(prev => prev.map(m => m.id === tempId ? response.message : m));
+          setMessages(prev => prev.map(m => m.id === tempId ? { ...response.message, replyTo: response.message.replyTo || actualReplyTo } : m));
         }
       });
     } else {
       // 4. Fallback to REST API
       try {
-        const res = await api.sendMessage(activeConversation.id, { text, type, mediaUrl, replyToId });
+        const res = await api.sendMessage(activeConversation.id, { text, type, mediaUrl, replyToId: actualReplyToId });
         if (res.success && res.message) {
-          setMessages(prev => prev.map(m => m.id === tempId ? res.message : m));
+          setMessages(prev => prev.map(m => m.id === tempId ? { ...res.message, replyTo: res.message.replyTo || actualReplyTo } : m));
         }
       } catch (err) {
         console.error('REST sendMessage fallback failed:', err);
@@ -577,6 +594,8 @@ export function ChatProvider({ children }) {
       isLoadingRequests,
       selectConversation,
       startDirectConversationWithUser,
+      replyingToMessage,
+      setReplyingToMessage,
       sendMessage,
       sendVoiceMessage,
       sendFileMessage,

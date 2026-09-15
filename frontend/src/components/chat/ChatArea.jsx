@@ -22,7 +22,9 @@ import {
   ChevronLeft,
   Clock,
   Check,
-  UserCheck
+  UserCheck,
+  Reply,
+  X
 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { formatLastActive } from '../../utils/timeAgo';
@@ -48,7 +50,9 @@ export function ChatArea({
     typingUsers,
     connectionRequests,
     acceptConnectionRequest,
-    rejectConnectionRequest
+    rejectConnectionRequest,
+    replyingToMessage,
+    setReplyingToMessage
   } = useChat();
 
   const { initiateCall, joinGroupCall } = useCall();
@@ -62,6 +66,13 @@ export function ChatArea({
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (replyingToMessage) {
+      inputRef.current?.focus();
+    }
+  }, [replyingToMessage]);
 
   const otherUser = activeConversation?.otherUser || 
     (activeConversation?.participants?.find(p => (typeof p === 'object' ? p.id : p) !== user?.id));
@@ -124,6 +135,8 @@ export function ChatArea({
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    } else if (e.key === 'Escape' && replyingToMessage) {
+      setReplyingToMessage(null);
     }
   };
 
@@ -455,43 +468,76 @@ export function ChatArea({
             onCancel={() => setShowVoiceRecorder(false)}
           />
         ) : (
-          <form onSubmit={handleSend} className="flex items-center gap-1.5 sm:gap-2">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              className="hidden"
-            />
+          <>
+            {/* Replying Preview Banner (Instagram / Telegram style) */}
+            {replyingToMessage && (
+              <div className="mb-2 p-2 sm:p-2.5 rounded-xl bg-slate-100/90 dark:bg-white/[0.07] border-l-4 border-blue-500 flex items-center justify-between gap-2 shadow-sm animate-in fade-in slide-in-from-bottom-2">
+                <div className="flex items-center gap-2 overflow-hidden min-w-0">
+                  <div className="w-6 h-6 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center flex-shrink-0">
+                    <Reply className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="overflow-hidden min-w-0 text-left">
+                    <div className="text-[11px] font-bold text-blue-600 dark:text-blue-400 truncate">
+                      Replying to {replyingToMessage.senderId === user?.id ? 'Yourself' : (replyingToMessage.senderName || 'User')}
+                    </div>
+                    <div className="text-xs text-slate-600 dark:text-slate-300 truncate">
+                      {replyingToMessage.type === 'image' && '📷 Photo'}
+                      {replyingToMessage.type === 'video' && '🎥 Video'}
+                      {replyingToMessage.type === 'audio' && '🎵 Voice message'}
+                      {replyingToMessage.type === 'file' && '📎 Document'}
+                      {(!replyingToMessage.type || replyingToMessage.type === 'text') && (replyingToMessage.text || 'Message')}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setReplyingToMessage(null)}
+                  className="p-1 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 hover:text-slate-600 dark:hover:text-white transition flex-shrink-0"
+                  title="Cancel reply"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
 
-            {/* Plus / Attach Button */}
-            <button
-              type="button"
-              onClick={() => setShowAttachMenu(prev => !prev)}
-              className="p-2 sm:p-2.5 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition flex-shrink-0"
-              title="Attach File"
-            >
-              <Paperclip className="w-4 h-4" />
-            </button>
+            <form onSubmit={handleSend} className="flex items-center gap-1.5 sm:gap-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+              />
 
-            {/* Emoji Button */}
-            <button
-              type="button"
-              onClick={() => setShowEmojiPicker(prev => !prev)}
-              className="p-2 sm:p-2.5 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-300 transition flex-shrink-0"
-              title="Emojis"
-            >
-              <Smile className="w-4 h-4" />
-            </button>
+              {/* Plus / Attach Button */}
+              <button
+                type="button"
+                onClick={() => setShowAttachMenu(prev => !prev)}
+                className="p-2 sm:p-2.5 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition flex-shrink-0"
+                title="Attach File"
+              >
+                <Paperclip className="w-4 h-4" />
+              </button>
 
-            {/* Main Input Field */}
-            <input
-              type="text"
-              placeholder={`Write a message...`}
-              value={text}
-              onChange={handleTextChange}
-              onKeyDown={handleKeyDown}
-              className="flex-1 min-w-0 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full apphitect-input text-xs sm:text-[13.5px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none"
-            />
+              {/* Emoji Button */}
+              <button
+                type="button"
+                onClick={() => setShowEmojiPicker(prev => !prev)}
+                className="p-2 sm:p-2.5 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-300 transition flex-shrink-0"
+                title="Emojis"
+              >
+                <Smile className="w-4 h-4" />
+              </button>
+
+              {/* Main Input Field */}
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder={replyingToMessage ? "Reply to message..." : "Write a message..."}
+                value={text}
+                onChange={handleTextChange}
+                onKeyDown={handleKeyDown}
+                className="flex-1 min-w-0 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full apphitect-input text-xs sm:text-[13.5px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none"
+              />
 
             {/* Dynamic Mic or Send Action Button (WhatsApp/Telegram style) */}
             {text.trim() ? (
@@ -513,6 +559,7 @@ export function ChatArea({
               </button>
             )}
           </form>
+        </>
         )}
       </div>
     </div>

@@ -68,15 +68,17 @@ export function GlassNavbar({ onOpenThemeModal, onOpenProfileModal, onOpenReques
           )}
         </button>
 
-        {/* Connection Requests Button */}
+        {/* Connection Requests Button (Prominent on laptop & tablet) */}
         <button
           onClick={onOpenRequestsModal}
-          className="relative p-2 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-cyan-400 transition hover:scale-105 active:scale-95"
-          title="Connection Requests"
+          className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-600/15 hover:bg-blue-100 dark:hover:bg-blue-600/30 border border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-300 font-semibold text-xs transition hover:scale-105 active:scale-95 shadow-xs"
+          title="Sent & Received Friend Requests"
+          aria-label="Sent and Received Friend Requests"
         >
-          <UserCheck className="w-4 h-4" />
+          <UserCheck className="w-4 h-4 text-blue-600 dark:text-cyan-400 flex-shrink-0" />
+          <span className="hidden sm:inline font-bold">Requests</span>
           {pendingRequestsCount > 0 && (
-            <span className="absolute -top-1 -right-1 px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-extrabold shadow animate-pulse">
+            <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-extrabold shadow animate-pulse">
               {pendingRequestsCount}
             </span>
           )}

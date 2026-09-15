@@ -94,6 +94,7 @@ function MainLayout() {
               <ConversationList 
                 onNewChatClick={() => setActiveTab('discover')} 
                 onCollapse={() => setIsConversationListVisible(false)}
+                onOpenRequestsModal={() => setShowRequestsModal(true)}
                 onSelectChat={() => {
                   if (window.innerWidth < 768) {
                     setIsConversationListVisible(false);
