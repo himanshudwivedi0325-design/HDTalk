@@ -66,10 +66,10 @@ export function GlassNavbar({ onOpenThemeModal, onOpenProfileModal }) {
           )}
         </button>
 
-        {/* Theme Palette Picker Button */}
+        {/* Theme Palette Picker Button (Desktop/Tablet, available in mobile bottom nav) */}
         <button
           onClick={onOpenThemeModal}
-          className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white transition"
+          className="hidden sm:flex p-2 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white transition"
           title={`Palette: ${currentThemeObj.name}`}
         >
           <Palette className="w-4 h-4 text-blue-600 dark:text-blue-400" />
