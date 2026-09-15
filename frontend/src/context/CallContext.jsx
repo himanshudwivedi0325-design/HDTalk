@@ -61,6 +61,31 @@ export function CallProvider({ children }) {
   const remoteUserRef = useRef(null);
   const callStateRef = useRef('idle');
   const activeRoomIdRef = useRef(null);
+  const titleIntervalRef = useRef(null);
+  const originalTitleRef = useRef(typeof document !== 'undefined' ? document.title : 'HDTalk');
+
+  const startTitleFlashing = (callerName) => {
+    stopTitleFlashing();
+    if (typeof document === 'undefined') return;
+    originalTitleRef.current = document.title;
+    let toggle = false;
+    titleIntervalRef.current = setInterval(() => {
+      document.title = toggle 
+        ? `📞 INCOMING CALL - ${callerName || 'Someone'} is calling...`
+        : `⚡ HDTalk - Click to Answer!`;
+      toggle = !toggle;
+    }, 800);
+  };
+
+  const stopTitleFlashing = () => {
+    if (titleIntervalRef.current) {
+      clearInterval(titleIntervalRef.current);
+      titleIntervalRef.current = null;
+    }
+    if (typeof document !== 'undefined' && originalTitleRef.current) {
+      document.title = originalTitleRef.current;
+    }
+  };
 
   useEffect(() => {
     callStateRef.current = callState;
@@ -208,7 +233,8 @@ export function CallProvider({ children }) {
       setCallType(data.callType || 'video');
       setPendingSignal(data.signalData);
       setCallState('incoming');
-      soundService.playRing();
+      soundService.playIncomingRing();
+      startTitleFlashing(data.callerName);
     };
 
     // Callee device ringing acknowledge
@@ -221,6 +247,7 @@ export function CallProvider({ children }) {
     const handleCallAccepted = async (data) => {
       console.log('[Call] Call accepted by remote peer');
       clearRingTimeout();
+      stopTitleFlashing();
       soundService.stopRing();
       setCallState('connecting');
 
@@ -233,6 +260,7 @@ export function CallProvider({ children }) {
     const handleCallRejected = (data) => {
       console.log('[Call] Call rejected:', data.reason);
       clearRingTimeout();
+      stopTitleFlashing();
       soundService.stopRing();
       soundService.playCallEnded();
       cleanup();
@@ -244,6 +272,7 @@ export function CallProvider({ children }) {
     const handleCallEnded = (data) => {
       console.log('[Call] Remote peer hung up:', data?.reason || 'normal');
       clearRingTimeout();
+      stopTitleFlashing();
       soundService.stopRing();
       soundService.playCallEnded();
       cleanup();
@@ -435,6 +464,7 @@ export function CallProvider({ children }) {
     setRecordingDuration(0);
 
     webrtcService.cleanupAll();
+    stopTitleFlashing();
     remoteUserRef.current = null;
     activeRoomIdRef.current = null;
 
@@ -461,7 +491,7 @@ export function CallProvider({ children }) {
       setRemoteUser(targetUser);
       setCallType(type);
       setCallState('calling');
-      soundService.playRing();
+      soundService.playOutgoingRing();
 
       // Start 45-second ring timeout
       startRingTimeout(targetUser);
@@ -500,6 +530,7 @@ export function CallProvider({ children }) {
     if (!socket || !target) return;
     try {
       clearRingTimeout();
+      stopTitleFlashing();
       soundService.stopRing();
       setCallState('connecting');
 
@@ -523,6 +554,7 @@ export function CallProvider({ children }) {
     } catch (err) {
       console.error('Failed to accept call:', err);
       soundService.stopRing();
+      stopTitleFlashing();
       rejectCall('Hardware permission error');
     }
   };
@@ -530,6 +562,7 @@ export function CallProvider({ children }) {
   // 3. Reject Incoming Call
   const rejectCall = (reason = 'declined') => {
     clearRingTimeout();
+    stopTitleFlashing();
     soundService.stopRing();
     const target = remoteUserRef.current || remoteUser;
     if (socket && target) {

@@ -183,13 +183,16 @@
 ## 6. Comprehensive Product Roadmap & Planned Upgrades
 
 ### Tier 1: Critical Infrastructure & Stability Hardening
-1. **Cloud Media Storage (Cloudinary / AWS S3)**:
-   - *Problem*: Render free-tier dynos have ephemeral disk storage. User uploads in `/uploads` are lost on app restart/redeploy.
-   - *Solution*: Stream uploaded photos, voice notes, and docs to free-tier Cloudinary or AWS S3 buckets.
+1. **Incoming Call Ringing Overlay Screen & Loud Audio Alert (COMPLETED ✅)**:
+   - Full-screen glassmorphic incoming call stage with caller avatar, concentric sonar radar rings, and glowing accept/decline action buttons.
+   - High-gain melodic trill ringtone via Web Audio API + vibration loop (`navigator.vibrate([600, 250, 600, 250, 1000])`).
+   - Dynamic tab title flashing (`📞 INCOMING CALL - [Caller]...`) for desktop background tab awareness.
+   - Keyboard accessibility (`Enter` to accept, `Escape` to decline).
 2. **Web Push Notifications (Service Worker + Web Push API)**:
    - Ring and alert users on phone/desktop even when the browser tab is in background or device is locked.
-3. **TURN Server Relay (Coturn / Metered.ca)**:
-   - Ensure 100% video/audio call connectivity across restrictive 4G/5G mobile carrier firewalls (symmetric NAT).
+3. **Cloud Media Storage (Cloudinary / AWS S3)**:
+   - *Problem*: Render free-tier dynos have ephemeral disk storage. User uploads in `/uploads` are lost on app restart/redeploy.
+   - *Solution*: Stream uploaded photos, voice notes, and docs to free-tier Cloudinary or AWS S3 buckets.
 4. **Database Migration to Hosted Engine**:
    - Migrate from `db.json` to PostgreSQL (Supabase / Neon) or MongoDB Atlas to support 10,000+ concurrent connections.
 
