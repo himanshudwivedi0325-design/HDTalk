@@ -119,9 +119,9 @@ export function ChatArea({
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-100/60 dark:bg-[#090d18] relative overflow-hidden transition-colors duration-200">
+    <div className="flex-1 flex flex-col h-full min-h-0 bg-slate-100/60 dark:bg-[#090d18] relative overflow-hidden transition-colors duration-200">
       {/* Apphitect Top Bar Header */}
-      <div className="h-14 sm:h-16 px-3 sm:px-4 md:px-6 border-b border-slate-200/80 dark:border-white/10 flex items-center justify-between z-10 bg-white/95 dark:bg-[#0d1322]/95 backdrop-blur-md select-none transition-colors duration-200 gap-2">
+      <div className="h-14 sm:h-16 px-3 sm:px-4 md:px-6 border-b border-slate-200/80 dark:border-white/10 flex items-center justify-between z-10 bg-white/95 dark:bg-[#0d1322]/95 backdrop-blur-md select-none transition-colors duration-200 gap-2 flex-shrink-0">
         {/* Recipient Profile Info */}
         <div className="flex items-center gap-2 min-w-0 flex-1">
           {/* Mobile Back to Conversations Button */}
@@ -254,7 +254,7 @@ export function ChatArea({
       </div>
 
       {/* Message Feed */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 bg-slate-50/50 dark:bg-[#090d18] transition-colors duration-200">
+      <div className="flex-1 overflow-y-auto min-h-0 p-4 md:p-6 space-y-3 bg-slate-50/50 dark:bg-[#090d18] transition-colors duration-200">
         {/* End-to-end encryption banner */}
         <div className="flex items-center justify-center mb-3">
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-600/10 border border-blue-200 dark:border-blue-500/20 text-[10.5px] sm:text-[11px] text-slate-600 dark:text-slate-300 shadow-xs text-center">
@@ -295,7 +295,7 @@ export function ChatArea({
       </div>
 
       {/* Input Bar */}
-      <div className="p-2.5 sm:p-3 md:p-4 border-t border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0c1220] relative select-none transition-colors duration-200">
+      <div className="p-2.5 sm:p-3 md:p-4 border-t border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0c1220] relative select-none transition-colors duration-200 flex-shrink-0 z-20">
         {/* Attachment Options Menu */}
         {showAttachMenu && (
           <div className="absolute bottom-16 sm:bottom-20 left-2 sm:left-4 p-2 bg-white dark:bg-[#141b2e] border border-slate-200 dark:border-white/15 rounded-2xl shadow-xl dark:shadow-2xl z-30 flex flex-col gap-1 w-44 animate-in zoom-in-95">

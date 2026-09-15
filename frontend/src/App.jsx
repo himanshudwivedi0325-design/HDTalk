@@ -56,7 +56,7 @@ function MainLayout() {
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 transition-colors duration-200">
       {/* Top Navbar: On desktop always shown; on mobile hidden during active chat */}
-      <div className={isChatOpenOnMobile ? 'hidden md:block' : 'block'}>
+      <div className={`flex-shrink-0 ${isChatOpenOnMobile ? 'hidden md:block' : 'block'}`}>
         <GlassNavbar
           onOpenThemeModal={() => setShowThemeModal(true)}
           onOpenProfileModal={() => setShowProfileModal(true)}
@@ -64,9 +64,9 @@ function MainLayout() {
       </div>
 
       {/* Main Apphitect Layout */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Leftmost Activity Rail: Desktop only (hidden on mobile) */}
-        <div className="hidden md:flex flex-shrink-0">
+        <div className="hidden md:flex flex-shrink-0 h-full">
           <ApphitectSidebar
             activeTab={activeTab}
             onTabChange={(tab) => {
@@ -80,7 +80,7 @@ function MainLayout() {
 
         {/* Dynamic Center Workspaces */}
         {activeTab === 'chats' ? (
-          <div className="flex-1 flex overflow-hidden relative">
+          <div className="flex-1 flex overflow-hidden relative min-h-0 h-full">
             {/* Conversation List with Collapsible Animation */}
             <div className={`transition-all duration-300 ease-in-out overflow-hidden flex-shrink-0 flex h-full ${
               isConversationListVisible 
@@ -99,7 +99,7 @@ function MainLayout() {
             </div>
 
             {/* Chat Workspace */}
-            <div className={`flex-1 h-full overflow-hidden ${
+            <div className={`flex-1 h-full overflow-hidden min-h-0 flex flex-col ${
               !isConversationListVisible ? 'flex' : 'hidden md:flex'
             }`}>
               <ChatArea 

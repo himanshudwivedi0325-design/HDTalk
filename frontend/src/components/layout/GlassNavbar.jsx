@@ -22,7 +22,7 @@ export function GlassNavbar({ onOpenThemeModal, onOpenProfileModal }) {
   const { currentThemeObj, isDark, toggleMode } = useTheme();
 
   return (
-    <header className="h-15 px-4 md:px-6 flex items-center justify-between bg-white/80 dark:bg-[#070c18]/90 border-b border-slate-200/80 dark:border-white/10 backdrop-blur-xl z-20 select-none transition-colors duration-200">
+    <header className="h-14 sm:h-16 px-4 md:px-6 flex items-center justify-between bg-white/80 dark:bg-[#070c18]/90 border-b border-slate-200/80 dark:border-white/10 backdrop-blur-xl z-20 select-none transition-colors duration-200 flex-shrink-0">
       {/* Brand */}
       <div className="flex items-center gap-3">
         <HDTalkLogo size="md" showText={true} />
