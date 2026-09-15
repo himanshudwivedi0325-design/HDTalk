@@ -47,5 +47,6 @@ router.post('/avatar', upload.single('avatar'), userController.uploadAvatar);
 router.get('/connections/requests', userController.getConnectionRequests);
 router.post('/connections/request', userController.sendConnectionRequest);
 router.put('/connections/requests/:requestId', userController.respondConnectionRequest);
+router.delete('/friends/:friendUserId', userController.removeFriend);
 
 module.exports = router;

@@ -143,6 +143,7 @@ function MainLayout() {
             {isInfoDrawerOpen && (
               <ContactDetailsDrawer
                 user={activeConversation?.otherUser}
+                conversationId={activeConversation?.id}
                 onClose={() => setIsInfoDrawerOpen(false)}
               />
             )}

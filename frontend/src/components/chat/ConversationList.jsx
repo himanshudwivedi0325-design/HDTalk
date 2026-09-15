@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { useChat } from '../../context/ChatContext';
 import { useSocket } from '../../context/SocketContext';
 import { useAuth } from '../../context/AuthContext';
-import { Search, Plus, MessageSquare, Check, CheckCheck, Filter, Mic, Image as ImageIcon, PanelLeftClose, UserCheck } from 'lucide-react';
+import { Search, Plus, MessageSquare, Check, CheckCheck, Filter, Mic, Image as ImageIcon, PanelLeftClose, UserCheck, Trash2 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { formatChatTimestamp, formatLastActive } from '../../utils/timeAgo';
 
 export function ConversationList({ onNewChatClick, onCollapse, onSelectChat, onOpenRequestsModal }) {
   const { user } = useAuth();
-  const { conversations, activeConversation, selectConversation, typingUsers, pendingRequestsCount } = useChat();
+  const { conversations, activeConversation, selectConversation, typingUsers, pendingRequestsCount, deleteConversation } = useChat();
   const { isUserOnline, getUserLastSeen } = useSocket();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'unread'
@@ -173,7 +173,7 @@ export function ConversationList({ onNewChatClick, onCollapse, onSelectChat, onO
                   selectConversation(c);
                   onSelectChat?.(c);
                 }}
-                className={`w-full p-3 rounded-2xl flex items-center gap-3.5 transition duration-150 cursor-pointer ${
+                className={`group w-full p-3 rounded-2xl flex items-center gap-3.5 transition duration-150 cursor-pointer ${
                   isSelected
                     ? 'bg-blue-50 dark:bg-blue-600/20 border border-blue-200 dark:border-blue-500/35 shadow-xs dark:shadow-md dark:shadow-blue-500/10'
                     : 'hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent'
@@ -193,9 +193,23 @@ export function ConversationList({ onNewChatClick, onCollapse, onSelectChat, onO
                     <span className="font-display font-bold text-[14.5px] text-slate-900 dark:text-white truncate flex-1 tracking-tight">
                       {other?.name}
                     </span>
-                    <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex-shrink-0">
-                      {formatChatTimestamp(c.lastMessage?.timestamp || c.updatedAt || c.createdAt)}
-                    </span>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm(`Delete conversation with ${other?.name || 'this user'}?`)) {
+                            deleteConversation(c.id, false);
+                          }
+                        }}
+                        title="Delete chat"
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                        {formatChatTimestamp(c.lastMessage?.timestamp || c.updatedAt || c.createdAt)}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between gap-2">

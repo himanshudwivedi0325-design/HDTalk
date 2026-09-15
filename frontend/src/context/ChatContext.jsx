@@ -94,6 +94,9 @@ export function ChatProvider({ children }) {
       .then(res => {
         if (res.success) {
           setMessages(res.messages);
+          if (socket) {
+            socket.emit('mark_read', { conversationId: activeConversation.id });
+          }
         }
       })
       .catch(console.warn)
@@ -134,6 +137,13 @@ export function ChatProvider({ children }) {
         // Play chime if message from another user
         if (newMsg.senderId !== user?.id) {
           soundService.playMessageReceived();
+        }
+      }
+
+      // Acknowledge delivery immediately to server/sender since this client received it
+      if (newMsg.senderId !== user?.id) {
+        socket.emit('message_ack_delivered', { messageId: newMsg.id, conversationId: newMsg.conversationId });
+        if (activeConversation?.id === newMsg.conversationId) {
           socket.emit('mark_read', { conversationId: activeConversation.id });
         }
       }
@@ -216,13 +226,56 @@ export function ChatProvider({ children }) {
     };
 
     // Messages marked read
-    const handleMessagesMarkedRead = ({ conversationId }) => {
+    const handleMessagesMarkedRead = ({ conversationId, readBy, messageIds }) => {
       if (activeConversation?.id === conversationId) {
-        setMessages(prev => prev.map(m => ({ ...m, readBy: [...new Set([...m.readBy, user?.id])] })));
+        setMessages(prev => prev.map(m => {
+          if (!messageIds || messageIds.includes(m.id)) {
+            const existingReadBy = Array.isArray(m.readBy) ? m.readBy : [];
+            const updatedReadBy = readBy && !existingReadBy.includes(readBy) ? [...existingReadBy, readBy] : existingReadBy;
+            return {
+              ...m,
+              status: 'read',
+              readBy: updatedReadBy
+            };
+          }
+          return m;
+        }));
       }
     };
 
-    // Socket delivery ack
+    // Single message delivered to recipient
+    const handleMessageDelivered = ({ messageId, conversationId, deliveredTo }) => {
+      setMessages(prev => prev.map(m => {
+        if (m.id === messageId) {
+          const list = Array.isArray(m.deliveredTo) ? m.deliveredTo : [];
+          return {
+            ...m,
+            status: m.status === 'read' ? 'read' : 'delivered',
+            deliveredTo: deliveredTo && !list.includes(deliveredTo) ? [...list, deliveredTo] : list
+          };
+        }
+        return m;
+      }));
+    };
+
+    // Batch messages delivered (e.g. when recipient connects)
+    const handleMessagesDelivered = ({ messageIds, deliveredTo }) => {
+      if (!Array.isArray(messageIds) || messageIds.length === 0) return;
+      const idSet = new Set(messageIds);
+      setMessages(prev => prev.map(m => {
+        if (idSet.has(m.id)) {
+          const list = Array.isArray(m.deliveredTo) ? m.deliveredTo : [];
+          return {
+            ...m,
+            status: m.status === 'read' ? 'read' : 'delivered',
+            deliveredTo: deliveredTo && !list.includes(deliveredTo) ? [...list, deliveredTo] : list
+          };
+        }
+        return m;
+      }));
+    };
+
+    // Socket delivery ack for optimistic message
     const handleMessageSentAck = ({ tempId, message }) => {
       if (tempId && message) {
         setMessages(prev => prev.map(m => m.id === tempId ? { ...message, replyTo: message.replyTo || m.replyTo } : m));
@@ -252,6 +305,30 @@ export function ChatProvider({ children }) {
       }
     };
 
+    // Conversation deleted event
+    const handleConversationDeleted = ({ conversationId, deletedBy, alsoRemoveFriend }) => {
+      setConversations(prev => prev.filter(c => c.id !== conversationId));
+      setActiveConversation(prev => {
+        if (prev?.id === conversationId) {
+          setMessages([]);
+          return null;
+        }
+        return prev;
+      });
+      if (alsoRemoveFriend) {
+        fetchConnectionRequests();
+      }
+    };
+
+    // Friend removed event
+    const handleFriendRemoved = ({ friendUserId }) => {
+      setConnectionRequests(prev => prev.filter(r => 
+        !( (r.senderId === friendUserId && r.receiverId === user?.id) || 
+           (r.receiverId === friendUserId && r.senderId === user?.id) )
+      ));
+      fetchConversations();
+    };
+
     // New connection request incoming
     const handleNewConnectionRequest = (req) => {
       setConnectionRequests(prev => {
@@ -277,7 +354,11 @@ export function ChatProvider({ children }) {
 
     socket.on('receive_message', handleReceiveMessage);
     socket.on('message_sent_ack', handleMessageSentAck);
+    socket.on('message_delivered', handleMessageDelivered);
+    socket.on('messages_delivered', handleMessagesDelivered);
     socket.on('message_deleted', handleMessageDeleted);
+    socket.on('conversation_deleted', handleConversationDeleted);
+    socket.on('friend_removed', handleFriendRemoved);
     socket.on('new_connection_request', handleNewConnectionRequest);
     socket.on('connection_request_status_updated', handleConnectionRequestUpdated);
     socket.on('user_typing', handleUserTyping);
@@ -288,7 +369,11 @@ export function ChatProvider({ children }) {
     return () => {
       socket.off('receive_message', handleReceiveMessage);
       socket.off('message_sent_ack', handleMessageSentAck);
+      socket.off('message_delivered', handleMessageDelivered);
+      socket.off('messages_delivered', handleMessagesDelivered);
       socket.off('message_deleted', handleMessageDeleted);
+      socket.off('conversation_deleted', handleConversationDeleted);
+      socket.off('friend_removed', handleFriendRemoved);
       socket.off('new_connection_request', handleNewConnectionRequest);
       socket.off('connection_request_status_updated', handleConnectionRequestUpdated);
       socket.off('user_typing', handleUserTyping);
@@ -302,7 +387,10 @@ export function ChatProvider({ children }) {
   const selectConversation = (conv) => {
     setActiveConversation(conv);
     // Clear unread count locally
-    setConversations(prev => prev.map(c => c.id === conv.id ? { ...c, unreadCount: 0 } : c));
+    setConversations(prev => prev.map(c => c.id === conv?.id ? { ...c, unreadCount: 0 } : c));
+    if (conv && socket) {
+      socket.emit('mark_read', { conversationId: conv.id });
+    }
   };
 
   const startDirectConversationWithUser = async (targetUserId) => {
@@ -584,6 +672,45 @@ export function ChatProvider({ children }) {
     }
   };
 
+  const deleteConversation = async (conversationId, alsoRemoveFriend = false) => {
+    try {
+      if (socket) {
+        socket.emit('delete_conversation', { conversationId, alsoRemoveFriend });
+      }
+      const res = await api.deleteConversation(conversationId, alsoRemoveFriend);
+      setConversations(prev => prev.filter(c => c.id !== conversationId));
+      if (activeConversation?.id === conversationId) {
+        setActiveConversation(null);
+        setMessages([]);
+      }
+      if (alsoRemoveFriend) {
+        fetchConnectionRequests();
+      }
+      return res;
+    } catch (err) {
+      console.error('Error deleting conversation:', err);
+      throw err;
+    }
+  };
+
+  const removeFriend = async (friendUserId) => {
+    try {
+      if (socket) {
+        socket.emit('remove_friend', { friendUserId });
+      }
+      const res = await api.removeFriend(friendUserId);
+      setConnectionRequests(prev => prev.filter(r => 
+        !( (r.senderId === friendUserId && r.receiverId === user?.id) || 
+           (r.receiverId === friendUserId && r.senderId === user?.id) )
+      ));
+      await fetchConversations();
+      return res;
+    } catch (err) {
+      console.error('Error removing friend:', err);
+      throw err;
+    }
+  };
+
   return (
     <ChatContext.Provider value={{
       conversations,
@@ -603,6 +730,8 @@ export function ChatProvider({ children }) {
       sendVoiceMessage,
       sendFileMessage,
       deleteMessage,
+      deleteConversation,
+      removeFriend,
       addReaction,
       notifyTyping,
       stopTyping,

@@ -427,9 +427,12 @@ const db = {
       timestamp: new Date().toISOString(),
       reactions: {},
       readBy: [messageData.senderId],
+      deliveredTo: Array.isArray(messageData.deliveredTo) ? messageData.deliveredTo : [],
+      status: messageData.status || 'sent',
       ...messageData
     };
     memoryState.messages.push(newMsg);
+    mongoAdapter.persistUpsert('messages', newMsg);
 
     const convIndex = memoryState.conversations.findIndex(c => c.id === messageData.conversationId);
     if (convIndex !== -1) {
@@ -439,6 +442,7 @@ const db = {
         timestamp: newMsg.timestamp
       };
       memoryState.conversations[convIndex].updatedAt = newMsg.timestamp;
+      mongoAdapter.persistUpsert('conversations', memoryState.conversations[convIndex]);
     }
 
     scheduleFlush();
@@ -457,20 +461,120 @@ const db = {
     } else {
       msg.reactions[emoji].push(userId);
     }
+    mongoAdapter.persistUpsert('messages', msg);
     scheduleFlush();
     return msg;
   },
 
+  markAsDelivered: (messageId, userId) => {
+    const msg = memoryState.messages.find(m => m.id === messageId);
+    if (!msg) return null;
+    if (!msg.deliveredTo) msg.deliveredTo = [];
+    if (!msg.deliveredTo.includes(userId)) {
+      msg.deliveredTo.push(userId);
+    }
+    if (msg.status !== 'read') {
+      msg.status = 'delivered';
+    }
+    mongoAdapter.persistUpsert('messages', msg);
+    scheduleFlush();
+    return msg;
+  },
+
+  markConversationDeliveredForUser: (userId) => {
+    const updatedMessages = [];
+    const userConvs = (memoryState.conversations || []).filter(c => c.participants && c.participants.includes(userId));
+    const convIds = new Set(userConvs.map(c => c.id));
+
+    (memoryState.messages || []).forEach(m => {
+      if (convIds.has(m.conversationId) && m.senderId !== userId) {
+        if (!m.deliveredTo) m.deliveredTo = [];
+        if (!m.deliveredTo.includes(userId)) {
+          m.deliveredTo.push(userId);
+          if (m.status !== 'read') {
+            m.status = 'delivered';
+          }
+          mongoAdapter.persistUpsert('messages', m);
+          updatedMessages.push(m);
+        }
+      }
+    });
+
+    if (updatedMessages.length > 0) scheduleFlush();
+    return updatedMessages;
+  },
+
   markAsRead: (conversationId, userId) => {
     let updated = false;
+    const readMessageIds = [];
     memoryState.messages.forEach(m => {
       if (m.conversationId === conversationId && (!m.readBy || !m.readBy.includes(userId))) {
         if (!m.readBy) m.readBy = [];
         m.readBy.push(userId);
+        if (!m.deliveredTo) m.deliveredTo = [];
+        if (!m.deliveredTo.includes(userId)) m.deliveredTo.push(userId);
+        m.status = 'read';
+        readMessageIds.push(m.id);
+        mongoAdapter.persistUpsert('messages', m);
         updated = true;
       }
     });
     if (updated) scheduleFlush();
+    return readMessageIds;
+  },
+
+  deleteConversation: (conversationId, userId, alsoRemoveFriend = false) => {
+    const convIndex = (memoryState.conversations || []).findIndex(c => c.id === conversationId);
+    if (convIndex === -1) return null;
+
+    const conv = memoryState.conversations[convIndex];
+    const participants = conv.participants || [];
+    const otherUserId = participants.find(p => p !== userId);
+
+    // 1. Remove conversation from memory & mongo
+    memoryState.conversations.splice(convIndex, 1);
+    mongoAdapter.persistDelete('conversations', { id: conversationId });
+
+    // 2. Delete all messages of this conversation
+    memoryState.messages = (memoryState.messages || []).filter(m => {
+      if (m.conversationId === conversationId) {
+        mongoAdapter.persistDelete('messages', { id: m.id });
+        return false;
+      }
+      return true;
+    });
+
+    // 3. Remove friend relationship if requested
+    if (alsoRemoveFriend && otherUserId) {
+      memoryState.connectionRequests = (memoryState.connectionRequests || []).filter(r => {
+        const match = (r.fromUserId === userId && r.toUserId === otherUserId) ||
+                      (r.fromUserId === otherUserId && r.toUserId === userId);
+        if (match) {
+          mongoAdapter.persistDelete('connectionRequests', { id: r.id });
+          return false;
+        }
+        return true;
+      });
+    }
+
+    scheduleFlush();
+    return { conversationId, otherUserId, alsoRemoveFriend };
+  },
+
+  removeFriend: (userId, friendId) => {
+    let removed = false;
+    memoryState.connectionRequests = (memoryState.connectionRequests || []).filter(r => {
+      const match = (r.fromUserId === userId && r.toUserId === friendId) ||
+                    (r.fromUserId === friendId && r.toUserId === userId);
+      if (match) {
+        mongoAdapter.persistDelete('connectionRequests', { id: r.id });
+        removed = true;
+        return false;
+      }
+      return true;
+    });
+    if (removed) scheduleFlush();
+    return removed;
   },
 
   deleteMessage: (messageId, userId, deleteForEveryone = true) => {

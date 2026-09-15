@@ -297,3 +297,37 @@ exports.postBotReply = (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to post bot reply.' });
   }
 };
+
+exports.deleteConversation = (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const alsoRemoveFriend = req.body.alsoRemoveFriend === true;
+
+    const result = db.deleteConversation(conversationId, req.user.id, alsoRemoveFriend);
+    if (!result) {
+      return res.status(404).json({ success: false, message: 'Conversation not found.' });
+    }
+
+    try {
+      const io = socketManager.getIO();
+      if (io) {
+        const payload = { conversationId, deletedBy: req.user.id, alsoRemoveFriend };
+        io.to(`conv:${conversationId}`).emit('conversation_deleted', payload);
+        io.to(`user:${req.user.id}`).emit('conversation_deleted', payload);
+        if (result.otherUserId) {
+          io.to(`user:${result.otherUserId}`).emit('conversation_deleted', payload);
+          if (alsoRemoveFriend) {
+            io.to(`user:${result.otherUserId}`).emit('friend_removed', { friendUserId: req.user.id });
+            io.to(`user:${req.user.id}`).emit('friend_removed', { friendUserId: result.otherUserId });
+          }
+        }
+      }
+    } catch (_) {}
+
+    res.json({ success: true, message: 'Conversation deleted successfully.', conversationId, alsoRemoveFriend });
+  } catch (err) {
+    console.error('Delete conversation error:', err);
+    res.status(500).json({ success: false, message: 'Failed to delete conversation.' });
+  }
+};
+

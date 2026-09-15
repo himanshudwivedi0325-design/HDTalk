@@ -28,6 +28,17 @@ export function MessageBubble({ message }) {
   const partnerName = (typeof otherUser === 'object' ? otherUser?.name : null) || 'Partner';
   const senderDisplayName = isMe ? 'You' : (message.senderName || partnerName);
 
+  const partnerId = otherUser ? (typeof otherUser === 'object' ? otherUser.id : otherUser) : null;
+  const isRead = Boolean(
+    message.status === 'read' ||
+    (message.readBy && partnerId && message.readBy.includes(partnerId))
+  );
+  const isDelivered = Boolean(
+    isRead ||
+    message.status === 'delivered' ||
+    (message.deliveredTo && partnerId && message.deliveredTo.includes(partnerId))
+  );
+
   const handleReply = (e) => {
     e?.stopPropagation?.();
     setReplyingToMessage({
@@ -111,8 +122,6 @@ export function MessageBubble({ message }) {
     if (!iso) return '';
     return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
-
-  const isRead = message.readBy && message.readBy.length > 1;
 
   return (
     <div 
@@ -383,11 +392,20 @@ export function MessageBubble({ message }) {
           <div className={`flex items-center justify-end gap-1.5 mt-1 text-[10px] ${isMe ? 'text-blue-100/90' : 'text-slate-500 dark:text-slate-400'}`}>
             <span>{formatTime(message.timestamp)}</span>
             {isMe && !message.isDeleted && (
-              <span>
+              <span 
+                className="inline-flex items-center ml-0.5" 
+                title={
+                  isRead ? 'Seen by partner' :
+                  isDelivered ? 'Delivered to partner' :
+                  'Sent to server'
+                }
+              >
                 {isRead ? (
-                  <CheckCheck className="w-3.5 h-3.5 text-cyan-200 inline" />
+                  <CheckCheck className="w-3.5 h-3.5 text-cyan-300 dark:text-cyan-300 inline drop-shadow-xs" />
+                ) : isDelivered ? (
+                  <CheckCheck className="w-3.5 h-3.5 text-white/80 dark:text-slate-400 inline" />
                 ) : (
-                  <Check className="w-3.5 h-3.5 text-white/70 inline" />
+                  <Check className="w-3.5 h-3.5 text-white/70 dark:text-slate-400/80 inline" />
                 )}
               </span>
             )}

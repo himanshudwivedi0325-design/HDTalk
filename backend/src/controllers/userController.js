@@ -219,3 +219,24 @@ exports.uploadAvatar = async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to upload avatar.' });
   }
 };
+
+exports.removeFriend = (req, res) => {
+  try {
+    const { friendUserId } = req.params;
+    const removed = db.removeFriend(req.user.id, friendUserId);
+
+    try {
+      const io = socketManager.getIO();
+      if (io) {
+        io.to(`user:${req.user.id}`).emit('friend_removed', { friendUserId });
+        io.to(`user:${friendUserId}`).emit('friend_removed', { friendUserId: req.user.id });
+      }
+    } catch (_) {}
+
+    res.json({ success: true, message: 'Friend removed successfully.' });
+  } catch (err) {
+    console.error('Error removing friend:', err);
+    res.status(500).json({ success: false, message: 'Failed to remove friend.' });
+  }
+};
+

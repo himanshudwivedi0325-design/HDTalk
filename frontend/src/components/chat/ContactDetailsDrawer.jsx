@@ -1,17 +1,51 @@
-import React from 'react';
-import { X, Phone, Video, Globe, BookOpen, Hash, Mail, ShieldCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Phone, Video, Globe, BookOpen, Hash, Mail, ShieldCheck, Trash2, UserMinus } from 'lucide-react';
 import { useCall } from '../../context/CallContext';
 import { useSocket } from '../../context/SocketContext';
+import { useChat } from '../../context/ChatContext';
 import { Avatar } from '../ui/Avatar';
 import { formatLastActive } from '../../utils/timeAgo';
 
-export function ContactDetailsDrawer({ user, onClose }) {
+export function ContactDetailsDrawer({ user, conversationId, onClose }) {
   const { initiateCall } = useCall();
   const { isUserOnline, getUserLastSeen } = useSocket();
+  const { activeConversation, deleteConversation } = useChat();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   if (!user) return null;
   const isOnline = isUserOnline(user.id);
   const lastSeenIso = getUserLastSeen(user.id, user.lastSeen);
+  const targetConvId = conversationId || activeConversation?.id;
+
+  const handleDeleteChat = async () => {
+    if (!targetConvId) return;
+    if (window.confirm(`Delete entire conversation with ${user.name}? This will erase all chat messages.`)) {
+      try {
+        setIsDeleting(true);
+        await deleteConversation(targetConvId, false);
+        onClose?.();
+      } catch (err) {
+        console.error('Failed to delete chat:', err);
+      } finally {
+        setIsDeleting(false);
+      }
+    }
+  };
+
+  const handleDeleteChatAndFriend = async () => {
+    if (!targetConvId) return;
+    if (window.confirm(`Delete conversation AND remove ${user.name} from your friends list?`)) {
+      try {
+        setIsDeleting(true);
+        await deleteConversation(targetConvId, true);
+        onClose?.();
+      } catch (err) {
+        console.error('Failed to delete chat and friend:', err);
+      } finally {
+        setIsDeleting(false);
+      }
+    }
+  };
 
   return (
     <div className="w-72 lg:w-80 h-full bg-white dark:bg-[#0d1322] border-l border-slate-200/80 dark:border-white/10 flex flex-col p-5 overflow-y-auto select-none animate-in slide-in-from-right duration-200 transition-colors duration-200">
@@ -93,7 +127,7 @@ export function ContactDetailsDrawer({ user, onClose }) {
 
       {/* Interests */}
       {user.interests && user.interests.length > 0 && (
-        <div className="py-4 text-xs">
+        <div className="py-4 border-b border-slate-200/80 dark:border-white/10 text-xs">
           <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2">
             Interests & Skills
           </span>
@@ -109,6 +143,31 @@ export function ContactDetailsDrawer({ user, onClose }) {
           </div>
         </div>
       )}
+
+      {/* Chat & Contact Management */}
+      <div className="py-4 border-b border-slate-200/80 dark:border-white/10 space-y-2 text-xs">
+        <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
+          Chat & Contact Options
+        </span>
+        
+        <button
+          onClick={handleDeleteChat}
+          disabled={isDeleting}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-slate-200 dark:border-white/10 hover:border-rose-300 dark:hover:border-rose-900/50 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 font-semibold text-xs transition disabled:opacity-50"
+        >
+          <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+          <span>Delete Chat History</span>
+        </button>
+
+        <button
+          onClick={handleDeleteChatAndFriend}
+          disabled={isDeleting}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-600 border border-rose-500/20 hover:border-rose-600 text-rose-600 hover:text-white dark:text-rose-400 dark:hover:text-white font-semibold text-xs transition disabled:opacity-50"
+        >
+          <UserMinus className="w-3.5 h-3.5" />
+          <span>Delete Chat & Remove Friend</span>
+        </button>
+      </div>
 
       {/* Encryption security footer */}
       <div className="mt-auto pt-4 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">

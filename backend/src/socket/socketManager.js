@@ -95,6 +95,23 @@ function initSocket(io) {
       const onlineUserIds = Array.from(userSocketMap.keys());
       socket.emit('online_users_list', onlineUserIds);
 
+      // Check for undelivered messages to this user and mark them delivered
+      const newlyDelivered = db.markConversationDeliveredForUser(userId);
+      if (newlyDelivered && newlyDelivered.length > 0) {
+        const bySender = {};
+        newlyDelivered.forEach(m => {
+          if (!bySender[m.senderId]) bySender[m.senderId] = [];
+          bySender[m.senderId].push(m.id);
+        });
+
+        Object.entries(bySender).forEach(([sId, mIds]) => {
+          io.to(`user:${sId}`).emit('messages_delivered', {
+            deliveredTo: userId,
+            messageIds: mIds
+          });
+        });
+      }
+
       console.log(`[Socket] User registered: ${userId} (${socket.id}). Online users: ${onlineUserIds.length}`);
     });
 
@@ -142,13 +159,31 @@ function initSocket(io) {
         return;
       }
 
+      const conv = db.getConversationById(conversationId);
+      let initialStatus = 'sent';
+      const deliveredTo = [];
+      if (conv && conv.participants) {
+        const otherParticipants = conv.participants.filter(pId => pId !== senderId);
+        const anyOnline = otherParticipants.some(pId => userSocketMap.has(pId) && userSocketMap.get(pId).size > 0);
+        if (anyOnline) {
+          initialStatus = 'delivered';
+          otherParticipants.forEach(pId => {
+            if (userSocketMap.has(pId) && userSocketMap.get(pId).size > 0) {
+              deliveredTo.push(pId);
+            }
+          });
+        }
+      }
+
       const newMsg = db.createMessage({
         conversationId,
         senderId,
         text: text || '',
         type: type || 'text',
         mediaUrl: mediaUrl || null,
-        replyToId: replyToId || null
+        replyToId: replyToId || null,
+        status: initialStatus,
+        deliveredTo
       });
 
       // 1. Broadcast to conversation room
@@ -166,7 +201,6 @@ function initSocket(io) {
       const sender = db.getUserById(senderId);
 
       // 3. Also broadcast to every participant's personal user room so all devices/tabs receive it
-      const conv = db.getConversationById(conversationId);
       if (conv && conv.participants) {
         conv.participants.forEach(pId => {
           // Notify personal user room
@@ -260,12 +294,65 @@ function initSocket(io) {
       }
     });
 
+    // Client confirms receipt of incoming message
+    socket.on('message_ack_delivered', ({ messageId, conversationId }) => {
+      const recipientId = socketUserMap.get(socket.id);
+      if (!recipientId) return;
+
+      const msg = db.markAsDelivered(messageId, recipientId);
+      if (msg) {
+        io.to(`user:${msg.senderId}`).emit('message_delivered', {
+          messageId,
+          conversationId,
+          deliveredTo: recipientId
+        });
+      }
+    });
+
     socket.on('mark_read', ({ conversationId }) => {
       const userId = socketUserMap.get(socket.id);
       if (!userId) return;
 
-      db.markAsRead(conversationId, userId);
-      socket.to(`conv:${conversationId}`).emit('messages_marked_read', { conversationId, readBy: userId });
+      const readMessageIds = db.markAsRead(conversationId, userId);
+      const payload = { conversationId, readBy: userId, messageIds: readMessageIds };
+      
+      io.to(`conv:${conversationId}`).emit('messages_marked_read', payload);
+      const conv = db.getConversationById(conversationId);
+      if (conv && conv.participants) {
+        conv.participants.forEach(pId => {
+          if (pId !== userId) {
+            io.to(`user:${pId}`).emit('messages_marked_read', payload);
+          }
+        });
+      }
+    });
+
+    socket.on('delete_conversation', ({ conversationId, alsoRemoveFriend }) => {
+      const userId = socketUserMap.get(socket.id);
+      if (!userId) return;
+
+      const result = db.deleteConversation(conversationId, userId, alsoRemoveFriend);
+      if (result) {
+        const payload = { conversationId, deletedBy: userId, alsoRemoveFriend };
+        io.to(`conv:${conversationId}`).emit('conversation_deleted', payload);
+        io.to(`user:${userId}`).emit('conversation_deleted', payload);
+        if (result.otherUserId) {
+          io.to(`user:${result.otherUserId}`).emit('conversation_deleted', payload);
+          if (alsoRemoveFriend) {
+            io.to(`user:${result.otherUserId}`).emit('friend_removed', { friendUserId: userId });
+            io.to(`user:${userId}`).emit('friend_removed', { friendUserId: result.otherUserId });
+          }
+        }
+      }
+    });
+
+    socket.on('remove_friend', ({ friendUserId }) => {
+      const userId = socketUserMap.get(socket.id);
+      if (!userId) return;
+
+      db.removeFriend(userId, friendUserId);
+      io.to(`user:${userId}`).emit('friend_removed', { friendUserId });
+      io.to(`user:${friendUserId}`).emit('friend_removed', { friendUserId: userId });
     });
 
     socket.on('delete_message', ({ messageId, conversationId, deleteForEveryone }) => {

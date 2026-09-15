@@ -1,60 +1,6 @@
 {
   "users": [
     {
-      "id": "usr_demo_alice",
-      "createdAt": "2026-09-14T01:52:49.888Z",
-      "status": "offline",
-      "lastSeen": "2026-09-15T01:50:49.888Z",
-      "name": "Alice Sterling",
-      "email": "alice.sterling@demo.hdtalk.local",
-      "password": "$2a$10$Yex0qICiAMiBKlffUD0Di.9mHkAJQqmBUzKo6j4P8L2AOfiP1vopK",
-      "profession": "Senior Frontend Architect",
-      "bio": "Specializing in real-time WebRTC media rendering, accessible UI systems, and client performance.",
-      "interests": [
-        "WebRTC",
-        "React",
-        "Design Systems",
-        "Accessibility"
-      ],
-      "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150"
-    },
-    {
-      "id": "usr_demo_bob",
-      "createdAt": "2026-09-14T01:52:49.888Z",
-      "status": "offline",
-      "lastSeen": "2026-09-15T01:51:49.888Z",
-      "name": "Bob Vance",
-      "email": "bob.vance@demo.hdtalk.local",
-      "password": "$2a$10$Yex0qICiAMiBKlffUD0Di.9mHkAJQqmBUzKo6j4P8L2AOfiP1vopK",
-      "profession": "Cloud Infrastructure Specialist",
-      "bio": "Passionate about high-throughput Socket.io networks, media server tuning, and STUN/TURN relays.",
-      "interests": [
-        "DevOps",
-        "Coturn",
-        "Docker",
-        "NodeJS"
-      ],
-      "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
-    },
-    {
-      "id": "usr_demo_clara",
-      "createdAt": "2026-09-14T01:52:49.888Z",
-      "status": "offline",
-      "lastSeen": "2026-09-15T01:47:49.888Z",
-      "name": "Clara Oswald",
-      "email": "clara.oswald@demo.hdtalk.local",
-      "password": "$2a$10$Yex0qICiAMiBKlffUD0Di.9mHkAJQqmBUzKo6j4P8L2AOfiP1vopK",
-      "profession": "Full Stack Engineer",
-      "bio": "Building next-generation collaborative workflows and distributed messaging architectures.",
-      "interests": [
-        "FullStack",
-        "WebSocket",
-        "GraphQL",
-        "TypeScript"
-      ],
-      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"
-    },
-    {
       "id": "usr_7e9078f9",
       "createdAt": "2026-09-15T02:04:29.369Z",
       "status": "offline",
@@ -73,9 +19,9 @@
     {
       "id": "usr_de06d1f0",
       "createdAt": "2026-09-15T02:05:05.547Z",
-      "status": "offline",
-      "lastSeen": "2026-09-15T02:25:53.135Z",
-      "name": "shikhar",
+      "status": "online",
+      "lastSeen": "2026-09-15T07:51:48.460Z",
+      "name": "Himanshu Dwivedi ",
       "email": "shikhar@gmail.com",
       "password": "$2a$10$SQtZ5av0SnzRupRbCAUJy.DGhdhry77xihLX.I.FZ89umDn3ONObW",
       "avatar": "/uploads/avatar-1789437895687-34c86af2.png",
@@ -87,95 +33,23 @@
       ]
     },
     {
-      "id": "usr_744c0614",
-      "createdAt": "2026-09-15T05:20:49.270Z",
-      "status": "online",
-      "lastSeen": "2026-09-15T05:20:49.270Z",
-      "name": "User Alpha 5784",
-      "email": "alpha_5784@test.com",
-      "password": "$2a$10$IgY0gS.QBPdVrkgPpQiJdOjTOSjTRQS9zs5RApVbqBU3wegbHHikO",
+      "id": "usr_19b1fb3d",
       "avatar": "",
-      "profession": "Professional",
       "bio": "Excited to connect and collaborate on HDTalk!",
+      "createdAt": "2026-09-15T07:44:59.580Z",
+      "email": "adi@gmail.com",
       "interests": [
         "Tech",
         "Networking"
-      ]
-    },
-    {
-      "id": "usr_dff20d40",
-      "createdAt": "2026-09-15T05:20:49.442Z",
-      "status": "online",
-      "lastSeen": "2026-09-15T05:20:49.442Z",
-      "name": "User Beta 5784",
-      "email": "beta_5784@test.com",
-      "password": "$2a$10$Up.u11XmEEFI2zV/btJfoO5qjNpasK//uY/8qxefVBXZWwK84tvOi",
-      "avatar": "",
-      "profession": "Professional",
-      "bio": "Excited to connect and collaborate on HDTalk!",
-      "interests": [
-        "Tech",
-        "Networking"
-      ]
-    },
-    {
-      "id": "usr_337aa3cd",
-      "createdAt": "2026-09-15T05:22:16.006Z",
-      "status": "online",
-      "lastSeen": "2026-09-15T05:22:16.006Z",
-      "name": "User Alpha 8634",
-      "email": "alpha_8634@test.com",
-      "password": "$2a$10$3xiZBA60BfOZQhFzvstOjOX2fSO7D.FX8YT.qXSyGshTN/HcdQ4qS",
-      "avatar": "",
-      "profession": "Professional",
-      "bio": "Excited to connect and collaborate on HDTalk!",
-      "interests": [
-        "Tech",
-        "Networking"
-      ]
-    },
-    {
-      "id": "usr_bf21bed8",
-      "createdAt": "2026-09-15T05:22:16.173Z",
-      "status": "online",
-      "lastSeen": "2026-09-15T05:22:16.173Z",
-      "name": "User Beta 8634",
-      "email": "beta_8634@test.com",
-      "password": "$2a$10$oKrIk8UywJwiA961voQM2.78DbNRDv5h/xuL1cFBUVOcmivbpWZiK",
-      "avatar": "",
-      "profession": "Professional",
-      "bio": "Excited to connect and collaborate on HDTalk!",
-      "interests": [
-        "Tech",
-        "Networking"
-      ]
+      ],
+      "lastSeen": "2026-09-15T08:09:23.375Z",
+      "name": "Aditya skdkidgsnaaksodh aosidgsnaks aoxidgsnaksos wocidta a",
+      "password": "$2a$10$Z8zgQEVj.XoL5670zzWSIeME/.rQFr4coqEDjssA8th8vWI8bTmYG",
+      "profession": "Student",
+      "status": "online"
     }
   ],
   "conversations": [
-    {
-      "id": "conv_850a0d15",
-      "type": "direct",
-      "participants": [
-        "usr_demo_alice",
-        "usr_demo_bob"
-      ],
-      "createdAt": "2026-09-15T01:52:49.892Z",
-      "updatedAt": "2026-09-15T01:51:49.888Z",
-      "lastMessage": {
-        "id": "msg_2dc3a81f",
-        "timestamp": "2026-09-15T01:51:49.888Z",
-        "reactions": {},
-        "readBy": [
-          "usr_demo_bob"
-        ],
-        "conversationId": "conv_850a0d15",
-        "senderId": "usr_demo_bob",
-        "text": "Received and reviewed. The peer-to-peer signaling fallback works seamlessly!",
-        "type": "text",
-        "mediaUrl": null,
-        "replyToId": null
-      }
-    },
     {
       "id": "conv_cf417452",
       "type": "direct",
@@ -192,110 +66,37 @@
       }
     },
     {
-      "id": "conv_2b8353a5",
-      "type": "direct",
-      "participants": [
-        "usr_337aa3cd",
-        "usr_bf21bed8"
-      ],
-      "createdAt": "2026-09-15T05:22:16.228Z",
-      "updatedAt": "2026-09-15T05:22:16.233Z",
-      "lastMessage": {
-        "text": "Original question: What is the update?",
-        "senderId": "usr_337aa3cd",
-        "timestamp": "2026-09-15T05:22:16.233Z"
-      },
+      "id": "conv_e3f20066",
+      "createdAt": "2026-09-15T07:45:53.455Z",
       "isPending": false,
-      "requestedBy": null
+      "lastMessage": {
+        "text": "Okkk",
+        "senderId": "usr_de06d1f0",
+        "timestamp": "2026-09-15T07:49:30.647Z"
+      },
+      "participants": [
+        "usr_19b1fb3d",
+        "usr_de06d1f0"
+      ],
+      "requestedBy": "usr_19b1fb3d",
+      "type": "direct",
+      "updatedAt": "2026-09-15T07:49:30.647Z"
+    },
+    {
+      "id": "conv_a012ab10",
+      "createdAt": "2026-09-15T07:55:34.588Z",
+      "isPending": false,
+      "lastMessage": null,
+      "participants": [
+        "usr_19b1fb3d",
+        "usr_7e9078f9"
+      ],
+      "requestedBy": null,
+      "type": "direct",
+      "updatedAt": "2026-09-15T07:55:34.588Z"
     }
   ],
   "messages": [
-    {
-      "id": "msg_c7b501b0",
-      "timestamp": "2026-09-15T01:32:49.888Z",
-      "reactions": {
-        "👍": [
-          "usr_demo_bob"
-        ]
-      },
-      "readBy": [
-        "usr_demo_alice",
-        "usr_demo_bob"
-      ],
-      "conversationId": "conv_850a0d15",
-      "senderId": "usr_demo_alice",
-      "text": "Hi Bob! The WebRTC audio and video mesh streams are looking remarkably clear in HDTalk.",
-      "type": "text",
-      "mediaUrl": null,
-      "replyToId": null
-    },
-    {
-      "id": "msg_3aa41815",
-      "timestamp": "2026-09-15T01:37:49.888Z",
-      "reactions": {
-        "🚀": [
-          "usr_demo_alice"
-        ]
-      },
-      "readBy": [
-        "usr_demo_alice",
-        "usr_demo_bob"
-      ],
-      "conversationId": "conv_850a0d15",
-      "senderId": "usr_demo_bob",
-      "text": "Hey Alice! Just finished configuring the media relay pipeline. Real-time latency is under 30ms!",
-      "type": "text",
-      "mediaUrl": null,
-      "replyToId": null
-    },
-    {
-      "id": "msg_3b2c061c",
-      "timestamp": "2026-09-15T01:42:49.888Z",
-      "reactions": {},
-      "readBy": [
-        "usr_demo_alice",
-        "usr_demo_bob"
-      ],
-      "conversationId": "conv_850a0d15",
-      "senderId": "usr_demo_alice",
-      "text": "That is fantastic. Let me send over the updated architecture specs for review.",
-      "type": "text",
-      "mediaUrl": null,
-      "replyToId": null
-    },
-    {
-      "id": "msg_ab0bbd61",
-      "timestamp": "2026-09-15T01:47:49.888Z",
-      "reactions": {
-        "✨": [
-          "usr_demo_bob"
-        ]
-      },
-      "readBy": [
-        "usr_demo_alice",
-        "usr_demo_bob"
-      ],
-      "conversationId": "conv_850a0d15",
-      "senderId": "usr_demo_alice",
-      "text": "hdtalk-architecture-preview.png",
-      "type": "image",
-      "mediaUrl": "/uploads/hdtalk-architecture-preview.png",
-      "replyToId": null
-    },
-    {
-      "id": "msg_2dc3a81f",
-      "timestamp": "2026-09-15T01:51:49.888Z",
-      "reactions": {},
-      "readBy": [
-        "usr_demo_bob"
-      ],
-      "conversationId": "conv_850a0d15",
-      "senderId": "usr_demo_bob",
-      "text": "Received and reviewed. The peer-to-peer signaling fallback works seamlessly!",
-      "type": "text",
-      "mediaUrl": null,
-      "replyToId": null
-    },
     {
       "id": "msg_470896e5",
       "timestamp": "2026-09-15T02:05:50.855Z",
@@ -372,20 +173,6 @@
       "replyToId": null
     },
     {
-      "id": "msg_8457e361",
-      "timestamp": "2026-09-15T05:22:16.233Z",
-      "reactions": {},
-      "readBy": [
-        "usr_337aa3cd"
-      ],
-      "conversationId": "conv_2b8353a5",
-      "senderId": "usr_337aa3cd",
-      "text": "Original question: What is the update?",
-      "type": "text",
-      "mediaUrl": null,
-      "replyToId": null
-    },
-    {
       "id": "msg_752e7980",
       "timestamp": "2026-09-15T05:54:38.570Z",
       "reactions": {},
@@ -397,26 +184,197 @@
       "text": "Testing reply to first",
       "type": "text",
       "replyToId": "msg_470896e5"
+    },
+    {
+      "id": "msg_56db6c64",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_19b1fb3d",
+        "usr_de06d1f0"
+      ],
+      "replyToId": null,
+      "senderId": "usr_19b1fb3d",
+      "text": "Hello",
+      "timestamp": "2026-09-15T07:46:01.770Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_c236ab5c",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Hii sir",
+      "timestamp": "2026-09-15T07:47:02.450Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_dcd23143",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Kaise hai?",
+      "timestamp": "2026-09-15T07:47:06.647Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_67a1c533",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": "/uploads/1789458444452-c9db7965.mp4",
+      "reactions": {},
+      "readBy": [
+        "usr_19b1fb3d",
+        "usr_de06d1f0"
+      ],
+      "replyToId": null,
+      "senderId": "usr_19b1fb3d",
+      "text": "vidssave.com After Dark - Fight Club _ REJECT WEAKNESS, EMBRACE MASCULINITY 480p.mp4",
+      "timestamp": "2026-09-15T07:47:49.460Z",
+      "type": "file"
+    },
+    {
+      "id": "msg_2a8beff5",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Call ja rhi thii?",
+      "timestamp": "2026-09-15T07:47:50.806Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_5770e735",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_19b1fb3d",
+        "usr_de06d1f0"
+      ],
+      "replyToId": null,
+      "senderId": "usr_19b1fb3d",
+      "text": "Thik hu, abhi train me hu awaz nhi aayegi",
+      "timestamp": "2026-09-15T07:47:51.345Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_1b649a79",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_19b1fb3d",
+        "usr_de06d1f0"
+      ],
+      "replyToId": null,
+      "senderId": "usr_19b1fb3d",
+      "text": "Ha",
+      "timestamp": "2026-09-15T07:47:55.865Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_b0d3ef4e",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {
+        "👍": [
+          "usr_19b1fb3d"
+        ]
+      },
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": "msg_67a1c533",
+      "senderId": "usr_de06d1f0",
+      "text": "Aa gya 😅",
+      "timestamp": "2026-09-15T07:48:24.744Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_10435a02",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": "msg_5770e735",
+      "senderId": "usr_de06d1f0",
+      "text": "Okkk",
+      "timestamp": "2026-09-15T07:48:33.078Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_e94430dd",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Aur kya kya fixes kru isme sirji??",
+      "timestamp": "2026-09-15T07:48:46.571Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_fb4e5203",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {
+        "❤️": [
+          "usr_de06d1f0"
+        ]
+      },
+      "readBy": [
+        "usr_19b1fb3d",
+        "usr_de06d1f0"
+      ],
+      "replyToId": null,
+      "senderId": "usr_19b1fb3d",
+      "text": "Bataunga",
+      "timestamp": "2026-09-15T07:49:26.023Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_9c59f716",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Okkk",
+      "timestamp": "2026-09-15T07:49:30.647Z",
+      "type": "text"
     }
   ],
   "connectionRequests": [
-    {
-      "id": "req_097d167f",
-      "fromUserId": "usr_demo_alice",
-      "toUserId": "usr_demo_bob",
-      "note": "Let us collaborate on HDTalk WebRTC mesh architecture.",
-      "status": "accepted",
-      "createdAt": "2026-09-15T01:52:49.891Z",
-      "updatedAt": "2026-09-15T01:52:49.892Z"
-    },
-    {
-      "id": "req_146db3db",
-      "fromUserId": "usr_demo_clara",
-      "toUserId": "usr_demo_alice",
-      "note": "Hi Alice, would love to collaborate on the frontend WebRTC interface!",
-      "status": "pending",
-      "createdAt": "2026-09-15T01:52:49.892Z"
-    },
     {
       "id": "req_89a2d505",
       "fromUserId": "usr_de06d1f0",
@@ -424,6 +382,15 @@
       "note": "Hey, let's connect on HDTalk!",
       "status": "pending",
       "createdAt": "2026-09-15T02:05:43.263Z"
+    },
+    {
+      "id": "req_97d058d3",
+      "createdAt": "2026-09-15T07:50:45.061Z",
+      "fromUserId": "usr_19b1fb3d",
+      "note": "Hey, let's connect on HDTalk!",
+      "status": "accepted",
+      "toUserId": "usr_de06d1f0",
+      "updatedAt": "2026-09-15T07:51:50.920Z"
     }
   ],
   "pushSubscriptions": []
