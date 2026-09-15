@@ -7,11 +7,13 @@ import {
   Palette, 
   Settings, 
   Sparkles,
-  LogOut
+  LogOut,
+  Download
 } from 'lucide-react';
 import { useChat } from '../../context/ChatContext';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
+import { usePwa } from '../../context/PwaContext';
 import { HDTalkLogo } from '../ui/HDTalkLogo';
 import { Avatar } from '../ui/Avatar';
 
@@ -25,6 +27,7 @@ export function ApphitectSidebar({
   const { conversations, pendingRequestsCount } = useChat();
   const { user, logout } = useAuth();
   const { isConnected } = useSocket();
+  const { installApp, isInstalled } = usePwa();
 
   const totalUnread = conversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
 
@@ -32,7 +35,8 @@ export function ApphitectSidebar({
     { id: 'chats', label: 'All Chats', icon: MessageSquare, badge: totalUnread },
     { id: 'discover', label: 'Matchmaking', icon: Compass },
     { id: 'requests', label: 'Friend Requests', icon: Users, badge: pendingRequestsCount, action: onOpenRequestsModal },
-    { id: 'theme', label: 'Themes', icon: Palette, action: onOpenThemeModal }
+    { id: 'theme', label: 'Themes', icon: Palette, action: onOpenThemeModal },
+    ...(!isInstalled ? [{ id: 'download', label: 'Download App (PWA)', icon: Download, action: installApp }] : [])
   ];
 
   return (

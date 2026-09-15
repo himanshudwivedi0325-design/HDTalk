@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useChat } from '../../context/ChatContext';
+import { usePwa } from '../../context/PwaContext';
 import { 
   Sparkles, 
   UserCheck, 
@@ -13,7 +14,8 @@ import {
   Sun,
   Moon,
   Monitor,
-  Bell
+  Bell,
+  Download
 } from 'lucide-react';
 import { HDTalkLogo, CreatorBadge } from '../ui/HDTalkLogo';
 import { Avatar } from '../ui/Avatar';
@@ -23,6 +25,7 @@ export function GlassNavbar({ onOpenThemeModal, onOpenProfileModal, onOpenReques
   const { isConnected } = useSocket();
   const { currentThemeObj, isDark, toggleMode } = useTheme();
   const { pendingRequestsCount } = useChat();
+  const { installApp, isInstalled } = usePwa();
 
   return (
     <header className="h-14 sm:h-16 px-4 md:px-6 flex items-center justify-between bg-white/80 dark:bg-[#070c18]/90 border-b border-slate-200/80 dark:border-white/10 backdrop-blur-xl z-20 select-none transition-colors duration-200 flex-shrink-0">
@@ -68,6 +71,20 @@ export function GlassNavbar({ onOpenThemeModal, onOpenProfileModal, onOpenReques
             <Moon className="w-4 h-4 text-blue-600 group-hover:-rotate-12 transition-transform duration-300" />
           )}
         </button>
+
+        {/* Download & Install HDTalk App Button */}
+        {!isInstalled && (
+          <button
+            onClick={installApp}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold text-xs shadow-md shadow-blue-500/25 transition hover:scale-105 active:scale-95 group"
+            title="Download & Install HDTalk App"
+            aria-label="Download HDTalk App"
+          >
+            <Download className="w-3.5 h-3.5 group-hover:-translate-y-0.5 transition-transform" />
+            <span className="hidden sm:inline">Download App</span>
+            <span className="sm:hidden">App</span>
+          </button>
+        )}
 
         {/* Connection Requests Button (Prominent on laptop & tablet) */}
         <button

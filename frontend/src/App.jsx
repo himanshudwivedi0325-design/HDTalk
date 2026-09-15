@@ -21,11 +21,15 @@ import { FriendRequestsModal } from './components/modals/FriendRequestsModal';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
 import { NotificationManagerModal } from './components/notifications/NotificationManagerModal';
 import { NotificationBanner } from './components/notifications/NotificationBanner';
+import { PwaProvider, usePwa } from './context/PwaContext';
+import { PwaInstallBanner } from './components/pwa/PwaInstallBanner';
+import { PwaInstallModal } from './components/pwa/PwaInstallModal';
 import { registerServiceWorker } from './services/pushService';
 
 function MainLayout() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { activeConversation, conversations, pendingRequestsCount, selectConversation } = useChat();
+  const { showInstallModal, setShowInstallModal } = usePwa();
   const [activeTab, setActiveTab] = useState('chats'); // 'chats' | 'discover'
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -184,6 +188,15 @@ function MainLayout() {
         isOpen={showNotificationModal} 
         onClose={() => setShowNotificationModal(false)} 
       />
+
+      {/* PWA Download Banner (Floating at bottom, dismissible) */}
+      <PwaInstallBanner />
+
+      {/* PWA Install Step-by-Step Guide Modal */}
+      <PwaInstallModal 
+        isOpen={showInstallModal} 
+        onClose={() => setShowInstallModal(false)} 
+      />
     </div>
   );
 }
@@ -195,7 +208,9 @@ export default function App() {
         <SocketProvider>
           <CallProvider>
             <ChatProvider>
-              <MainLayout />
+              <PwaProvider>
+                <MainLayout />
+              </PwaProvider>
             </ChatProvider>
           </CallProvider>
         </SocketProvider>

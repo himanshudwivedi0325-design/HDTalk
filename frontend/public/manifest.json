@@ -1,23 +1,82 @@
 {
-  "name": "HDTalk - Real-Time Communication & Calling",
+  "name": "HDTalk PRO - Real-Time Chat & HD Calling",
   "short_name": "HDTalk",
   "description": "High-Definition Real-Time Communication, WebRTC Calling & Professional Networking by Himanshu Dwivedi",
-  "start_url": "/",
+  "id": "/?source=pwa",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "any",
   "background_color": "#070b14",
   "theme_color": "#0066FF",
+  "categories": [
+    "social",
+    "productivity",
+    "communication",
+    "utilities"
+  ],
   "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
     {
       "src": "/hdtalk-logo.jpg",
       "sizes": "192x192",
       "type": "image/jpeg",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/hdtalk-logo.jpg",
       "sizes": "512x512",
       "type": "image/jpeg",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/hdtalk-logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "maskable"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "Open Chats",
+      "short_name": "Chats",
+      "description": "View active conversations and messages",
+      "url": "/?tab=chats",
+      "icons": [
+        {
+          "src": "/icon.svg",
+          "sizes": "any"
+        }
+      ]
+    },
+    {
+      "name": "Friend Requests",
+      "short_name": "Requests",
+      "description": "Review incoming and sent friend requests",
+      "url": "/?tab=requests",
+      "icons": [
+        {
+          "src": "/icon.svg",
+          "sizes": "any"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false
 }
