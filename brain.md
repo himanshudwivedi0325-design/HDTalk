@@ -207,6 +207,13 @@
    - High-throughput write-through cache maintains sub-millisecond memory read latency while persisting to MongoDB cloud cluster.
    - Graceful local fallback to atomic `db.json` when no remote URI is configured.
    - Complete `.env.example` created documenting all environment configurations.
+5. **High-Speed Avatar & DP Optimization Engine (Zero-Flicker Progressive Loading) (COMPLETED ✅)**:
+   - **Instant Initials Fallback**: Base layer always renders colorful gradient with crisp initials immediately in DOM. Eliminates blank white space and layout shift during image download.
+   - **Edge CDN & URL Optimizer (`frontend/src/utils/imageOptimizer.js`)**: Automatically transforms Unsplash (`w=160, auto=format, fit=crop, q=75`) and Cloudinary (`f_auto, q_auto, w_160, c_fill, g_face`) URLs into tiny 6-12KB WebP/AVIF thumbnails.
+   - **Client-Side In-Memory Cache (`avatarLoadedCache`)**: Global `Set` tracks loaded image URLs so that chat navigation, tab switching, and dialogs render cached avatars in 0ms with zero fade delay.
+   - **Async Browser Decoding & Lazy Loading**: Uses `decoding="async"`, `loading="lazy"` (or `eager` for priority headers), and smooth CSS opacity fade-in.
+   - **Server-Side Disk Caching**: Enabled `maxAge: '7d'`, `etag`, and `lastModified` headers on Express `/uploads` route so uploaded user profile pictures and attachments are persistently cached in the user's browser.
+   - **Message Media Optimization**: Applied responsive dimensions and async loading to image attachments in `MessageBubble.jsx` and updated `DemoSwitcherModal.jsx` to use the unified `Avatar` component.
 
 ### Tier 2: Elite Chat Experience (WhatsApp & Telegram Parity)
 1. **Voice Note Audio Waveform**:
