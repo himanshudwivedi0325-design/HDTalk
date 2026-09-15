@@ -214,6 +214,12 @@
    - **Async Browser Decoding & Lazy Loading**: Uses `decoding="async"`, `loading="lazy"` (or `eager` for priority headers), and smooth CSS opacity fade-in.
    - **Server-Side Disk Caching**: Enabled `maxAge: '7d'`, `etag`, and `lastModified` headers on Express `/uploads` route so uploaded user profile pictures and attachments are persistently cached in the user's browser.
    - **Message Media Optimization**: Applied responsive dimensions and async loading to image attachments in `MessageBubble.jsx` and updated `DemoSwitcherModal.jsx` to use the unified `Avatar` component.
+6. **Progressive Web App (PWA) App Download & Install Engine (COMPLETED ✅)**:
+   - **Native 1-Click Install**: Intercepts `beforeinstallprompt` so users can click `[ 📲 Download App ]` on the Navbar, Sidebar, or floating banner to install HDTalk directly onto their Android phone or PC/Mac desktop.
+   - **Interactive Platform Guide Modal (`PwaInstallModal.jsx`)**: Step-by-step visual walkthrough for iOS Safari (Share -> Add to Home Screen), Android (1-tap APK/PWA prompt), and Desktop (Chrome/Edge URL bar install).
+   - **Floating Install Banner (`PwaInstallBanner.jsx`)**: Non-intrusive, dismissible smart banner offering instant app download for new mobile and desktop users.
+   - **True Standalone App Experience**: Runs in `display: "standalone"`, eliminating browser address bars for 100% fullscreen chat, persistent camera/mic permissions, loud incoming call ringtones, and offline app shell caching.
+   - **Service Worker (`sw.js`) & Vector Icons (`icon.svg`, `manifest.json`)**: Precaches core assets and provides offline network-first fallback meeting all Chromium PWA criteria.
 
 ### Tier 2: Elite Chat Experience (WhatsApp & Telegram Parity)
 1. **Voice Note Audio Waveform**:
