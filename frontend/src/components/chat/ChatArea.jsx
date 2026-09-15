@@ -125,7 +125,12 @@ export function ChatArea({
   const handleSend = (e) => {
     e?.preventDefault();
     if (!text.trim()) return;
-    sendMessage({ text: text.trim(), type: 'text' });
+    sendMessage({ 
+      text: text.trim(), 
+      type: 'text',
+      replyToId: replyingToMessage?.id || null,
+      replyTo: replyingToMessage || null
+    });
     setText('');
     stopTyping();
     setShowEmojiPicker(false);

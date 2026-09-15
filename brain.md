@@ -30,9 +30,11 @@
 ## 2. Completed Core Features
 
 ### A. Telegram & Instagram Style Message Quoting & Reply
-1. **Floating Action Bar**:
-   - Each message bubble has a floating quick-action pill containing a `Reply` button with icon.
-   - Clicking it triggers `setReplyingToMessage(message)`.
+1. **Multiple Intuitive Ways to Reply (Touch & Desktop)**:
+   - **Swipe to Reply (Mobile)**: Swipe any message to the right on a touchscreen. A reply icon appears with slight haptic feedback, opening the reply banner.
+   - **Double Click / Double Tap**: Double-clicking or double-tapping any message immediately initiates a reply.
+   - **Dedicated Hover/Shortcut Icon (Desktop)**: Hovering over any incoming or outgoing message displays a direct Reply arrow icon beside the bubble.
+   - **Action Bar on Tap / Click**: Tapping or right-clicking any message reveals the quick reaction bar with a prominent **[↩ Reply]** button with text & icon.
 2. **Docked Reply Preview Banner**:
    - Renders right above the text input bar on both desktop and mobile.
    - Shows:
@@ -43,10 +45,10 @@
      - Cancel (X) button to dismiss reply mode.
    - Automatically auto-focuses the text input field.
    - Pressing the `Escape` key also dismisses the reply banner.
-3. **Message Bubble Quoting Display**:
-   - Replying sends `replyToId` to backend.
-   - Backend automatically enriches the message with `replyTo: { id, senderId, senderName, text, type, mediaUrl, isDeleted }`.
-   - Message bubble displays an Instagram/Telegram style quoted card inside the bubble with vertical accent line, author name, and message snippet.
+3. **Robust Message Bubble Quoting Display**:
+   - Sent reply messages display an Instagram/Telegram style quoted card inside the bubble with vertical accent line, author name, and message snippet.
+   - Robust fallback: Looks up quoted metadata from `replyTo` or dynamically matches `replyToId` within the client messages cache.
+   - Optimistic message preservation: Prevents race conditions from overwriting `replyTo` during Socket.IO ack/receive.
    - Clicking on the quoted card smoothly scrolls to the original message (`#msg-${replyTo.id}`) and briefly applies a glowing highlight outline.
 
 ### B. Friend Connection & Request Management System

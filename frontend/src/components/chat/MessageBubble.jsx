@@ -8,7 +8,7 @@ const EMOJI_OPTIONS = ['❤️', '🔥', '👍', '😂', '🚀', '🎉'];
 
 export function MessageBubble({ message }) {
   const { user } = useAuth();
-  const { addReaction, deleteMessage, setReplyingToMessage } = useChat();
+  const { addReaction, deleteMessage, setReplyingToMessage, activeConversation, messages } = useChat();
   const isMe = message.senderId === user?.id;
 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -17,7 +17,53 @@ export function MessageBubble({ message }) {
   const [isTranslating, setIsTranslating] = useState(false);
   const [showOriginal, setShowOriginal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showActions, setShowActions] = useState(false);
+  const [touchStartX, setTouchStartX] = useState(null);
+  const [swipeOffset, setSwipeOffset] = useState(0);
   const audioRef = useRef(null);
+
+  const otherUser = activeConversation?.otherUser || 
+    (activeConversation?.participants?.find(p => (typeof p === 'object' ? p.id : p) !== user?.id));
+  const partnerName = (typeof otherUser === 'object' ? otherUser?.name : null) || 'Partner';
+  const senderDisplayName = isMe ? 'You' : (message.senderName || partnerName);
+
+  const handleReply = (e) => {
+    e?.stopPropagation?.();
+    setReplyingToMessage({
+      id: message.id,
+      senderId: message.senderId,
+      senderName: senderDisplayName,
+      text: message.text,
+      type: message.type,
+      mediaUrl: message.mediaUrl,
+      isDeleted: message.isDeleted || false
+    });
+    setShowActions(false);
+  };
+
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    if (touchStartX === null) return;
+    const currentX = e.touches[0].clientX;
+    const diff = currentX - touchStartX;
+    if (diff > 0 && diff < 80) {
+      setSwipeOffset(diff);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (swipeOffset > 35) {
+      handleReply();
+      if (navigator.vibrate) navigator.vibrate(25);
+    }
+    setSwipeOffset(0);
+    setTouchStartX(null);
+  };
+
+  const quotedReply = message.replyTo || (message.replyToId ? messages?.find(m => m.id === message.replyToId) : null);
 
   const toggleAudio = () => {
     if (!audioRef.current) return;
@@ -68,39 +114,69 @@ export function MessageBubble({ message }) {
   const isRead = message.readBy && message.readBy.length > 1;
 
   return (
-    <div id={`msg-${message.id}`} className={`relative group flex flex-col mb-2.5 select-text ${isMe ? 'items-end' : 'items-start'}`}>
-      <div className="relative max-w-[85%] sm:max-w-[70%]">
-        {/* Quick Reaction & Action Floating Bar on Hover/Tap */}
+    <div 
+      id={`msg-${message.id}`} 
+      className={`relative group flex items-center mb-2.5 select-text ${isMe ? 'justify-end' : 'justify-start'}`}
+    >
+      {/* Direct Desktop Reply Shortcut Button for Outgoing (Instagram / Telegram style) */}
+      {!message.isDeleted && isMe && (
+        <button
+          type="button"
+          onClick={handleReply}
+          className="hidden sm:flex opacity-0 group-hover:opacity-100 p-1.5 mr-1.5 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 transition self-center flex-shrink-0 cursor-pointer"
+          title="Reply (or double-click message)"
+        >
+          <Reply className="w-4 h-4" />
+        </button>
+      )}
+
+      <div 
+        className="relative max-w-[85%] sm:max-w-[70%]"
+        onDoubleClick={handleReply}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          setShowActions(prev => !prev);
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          transform: swipeOffset ? `translateX(${swipeOffset}px)` : undefined,
+          transition: swipeOffset ? 'none' : 'transform 0.2s ease'
+        }}
+      >
+        {/* Swipe-to-Reply indicator on Mobile */}
+        {swipeOffset > 10 && (
+          <div className="absolute -left-7 top-1/2 -translate-y-1/2 text-blue-500 transition animate-pulse">
+            <Reply className="w-4 h-4" />
+          </div>
+        )}
+
+        {/* Quick Reaction & Action Floating Bar (Desktop Hover & Mobile Tap) */}
         {!message.isDeleted && (
-          <div className={`absolute -top-7 ${isMe ? 'right-0' : 'left-0'} hidden group-hover:flex group-focus-within:flex active:flex items-center gap-1 px-2 py-1 rounded-full bg-white dark:bg-[#162035] border border-slate-200 dark:border-white/15 shadow-lg dark:shadow-xl z-20 transition-all`}>
+          <div className={`absolute -top-8 ${isMe ? 'right-0' : 'left-0'} ${showActions ? 'flex' : 'hidden group-hover:flex'} items-center gap-1 px-2.5 py-1 rounded-full bg-white dark:bg-[#162035] border border-slate-200 dark:border-white/15 shadow-xl z-30 transition-all select-none animate-in fade-in`}>
             {EMOJI_OPTIONS.map(emoji => (
               <button
                 key={emoji}
-                onClick={() => addReaction(message.id, emoji)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  addReaction(message.id, emoji);
+                  setShowActions(false);
+                }}
                 className="hover:scale-130 transition-transform text-xs p-0.5"
               >
                 {emoji}
               </button>
             ))}
 
-            {/* Quick Reply Button */}
+            {/* Prominent Reply Action Button */}
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setReplyingToMessage({
-                  id: message.id,
-                  senderId: message.senderId,
-                  senderName: isMe ? 'You' : (message.senderName || 'User'),
-                  text: message.text,
-                  type: message.type,
-                  mediaUrl: message.mediaUrl,
-                  isDeleted: message.isDeleted || false
-                });
-              }}
-              className="hover:scale-120 transition-transform text-xs p-1 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-cyan-300 flex items-center border-l border-slate-200 dark:border-white/15 pl-1.5 ml-0.5"
-              title="Reply"
+              onClick={handleReply}
+              className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-xs hover:scale-105 active:scale-95 transition border-l border-slate-200 dark:border-white/15 ml-0.5 cursor-pointer"
+              title="Reply to this message"
             >
               <Reply className="w-3.5 h-3.5" />
+              <span>Reply</span>
             </button>
 
             {message.type === 'text' && (
@@ -117,6 +193,7 @@ export function MessageBubble({ message }) {
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                setShowActions(false);
                 setShowDeleteModal(true);
               }}
               className="hover:scale-120 transition-transform text-xs p-1 text-rose-500 hover:text-rose-600 flex items-center border-l border-slate-200 dark:border-white/15 pl-1.5 ml-0.5"
@@ -129,7 +206,8 @@ export function MessageBubble({ message }) {
 
         {/* Message Bubble */}
         <div
-          className={`px-4 py-2.5 rounded-2xl text-[13px] leading-relaxed transition-all ${
+          onClick={() => setShowActions(prev => !prev)}
+          className={`px-4 py-2.5 rounded-2xl text-[13px] leading-relaxed transition-all cursor-pointer ${
             isMe
               ? (message.isDeleted
                   ? 'bg-blue-600/20 text-blue-200 border border-blue-400/20 rounded-br-xs'
@@ -149,11 +227,11 @@ export function MessageBubble({ message }) {
           ) : (
             <>
               {/* Quoted Reply Preview (Telegram / Instagram style) */}
-              {message.replyTo && (
+              {quotedReply && (
                 <div 
                   onClick={(e) => {
                     e.stopPropagation();
-                    const target = document.getElementById(`msg-${message.replyTo.id}`);
+                    const target = document.getElementById(`msg-${quotedReply.id}`);
                     if (target) {
                       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                       target.classList.add('ring-2', 'ring-blue-400', 'rounded-2xl', 'transition-all');
@@ -170,12 +248,12 @@ export function MessageBubble({ message }) {
                   <div className={`w-1 self-stretch rounded-full flex-shrink-0 ${isMe ? 'bg-cyan-300' : 'bg-blue-600 dark:bg-cyan-400'}`} />
                   <div className="min-w-0 flex-1">
                     <span className={`block font-bold text-[11px] truncate ${isMe ? 'text-cyan-200' : 'text-blue-600 dark:text-cyan-400'}`}>
-                      {message.replyTo.senderId === user?.id ? 'You' : (message.replyTo.senderName || 'User')}
+                      {quotedReply.senderName || (quotedReply.senderId === user?.id ? 'You' : partnerName)}
                     </span>
                     <span className="block truncate text-[11px] opacity-85">
-                      {message.replyTo.isDeleted 
+                      {quotedReply.isDeleted 
                         ? '🚫 This message was deleted' 
-                        : (message.replyTo.text || (message.replyTo.type === 'voice' ? '🎤 Voice note' : '📎 Attachment'))}
+                        : (quotedReply.text || (quotedReply.type === 'voice' ? '🎤 Voice note' : '📎 Attachment'))}
                     </span>
                   </div>
                 </div>
@@ -331,6 +409,18 @@ export function MessageBubble({ message }) {
           </div>
         )}
       </div>
+
+      {/* Direct Desktop Reply Shortcut Button for Incoming (Instagram / Telegram style) */}
+      {!message.isDeleted && !isMe && (
+        <button
+          type="button"
+          onClick={handleReply}
+          className="hidden sm:flex opacity-0 group-hover:opacity-100 p-1.5 ml-1.5 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 transition self-center flex-shrink-0 cursor-pointer"
+          title="Reply (or double-click message)"
+        >
+          <Reply className="w-4 h-4" />
+        </button>
+      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (

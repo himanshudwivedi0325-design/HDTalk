@@ -184,11 +184,11 @@
         "usr_de06d1f0"
       ],
       "createdAt": "2026-09-15T02:07:10.606Z",
-      "updatedAt": "2026-09-15T02:25:29.158Z",
+      "updatedAt": "2026-09-15T05:54:38.570Z",
       "lastMessage": {
-        "text": "kya kah rhe ho bhai?",
+        "text": "Testing reply to first",
         "senderId": "usr_de06d1f0",
-        "timestamp": "2026-09-15T02:25:29.158Z"
+        "timestamp": "2026-09-15T05:54:38.570Z"
       }
     },
     {
@@ -384,6 +384,19 @@
       "type": "text",
       "mediaUrl": null,
       "replyToId": null
+    },
+    {
+      "id": "msg_752e7980",
+      "timestamp": "2026-09-15T05:54:38.570Z",
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0"
+      ],
+      "conversationId": "conv_cf417452",
+      "senderId": "usr_de06d1f0",
+      "text": "Testing reply to first",
+      "type": "text",
+      "replyToId": "msg_470896e5"
     }
   ],
   "connectionRequests": [

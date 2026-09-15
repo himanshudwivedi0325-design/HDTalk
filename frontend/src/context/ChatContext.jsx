@@ -117,11 +117,14 @@ export function ChatProvider({ children }) {
           // If message already exists by real id, ignore duplicate
           if (prev.some(m => m.id === newMsg.id)) return prev;
 
-          // If there is an optimistic temp message matching this text & sender, replace it
+          // If there is an optimistic temp message matching this text & sender, replace it while preserving replyTo
           const tempIdx = prev.findIndex(m => m.id?.startsWith('temp_') && m.text === newMsg.text && m.senderId === newMsg.senderId);
           if (tempIdx !== -1) {
             const next = [...prev];
-            next[tempIdx] = newMsg;
+            next[tempIdx] = {
+              ...newMsg,
+              replyTo: newMsg.replyTo || prev[tempIdx].replyTo
+            };
             return next;
           }
 
@@ -222,7 +225,7 @@ export function ChatProvider({ children }) {
     // Socket delivery ack
     const handleMessageSentAck = ({ tempId, message }) => {
       if (tempId && message) {
-        setMessages(prev => prev.map(m => m.id === tempId ? message : m));
+        setMessages(prev => prev.map(m => m.id === tempId ? { ...message, replyTo: message.replyTo || m.replyTo } : m));
       }
     };
 
