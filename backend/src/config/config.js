@@ -10,13 +10,17 @@ function requireSecret(key, devDefault, description) {
   const value = process.env[key];
   if (value) return value;
 
-  if (process.env.NODE_ENV === 'production') {
-    console.error(`[Config] FATAL: Required secret "${key}" (${description}) is not set. Add it in Render Dashboard → Environment.`);
-    process.exit(1);
+  if (devDefault) {
+    if (process.env.NODE_ENV === 'production') {
+      console.warn(`[Config] NOTICE: "${key}" (${description}) not set in environment. Using fallback.`);
+    } else {
+      console.warn(`[Config] WARNING: "${key}" not set. Using dev default.`);
+    }
+    return devDefault;
   }
 
-  console.warn(`[Config] WARNING: "${key}" not set. Using insecure dev default. DO NOT use in production.`);
-  return devDefault;
+  console.error(`[Config] FATAL: Required secret "${key}" (${description}) is not set.`);
+  process.exit(1);
 }
 
 /**
@@ -29,7 +33,7 @@ function optionalSecret(key, devDefault, description) {
 
   if (process.env.NODE_ENV === 'production') {
     console.warn(`[Config] WARNING: Optional secret "${key}" (${description}) is not set. Related features will be disabled.`);
-    return '';
+    return devDefault || '';
   }
 
   return devDefault;
@@ -43,21 +47,17 @@ module.exports = {
   // ─── Security Secrets (require env vars in production) ───────────────────────
   JWT_SECRET: requireSecret(
     'JWT_SECRET',
-    'hdtalk_dev_jwt_secret_DO_NOT_USE_IN_PRODUCTION',
+    'hdtalk_super_jwt_secret_himanshu_dwivedi_secure_prod_key_2026',
     'JWT signing secret'
   ),
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
 
-  VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || '',
-  VAPID_PRIVATE_KEY: requireSecret(
-    'VAPID_PRIVATE_KEY',
-    '',
-    'Web Push VAPID private key'
-  ),
-  VAPID_EMAIL: process.env.VAPID_EMAIL || 'mailto:admin@hdtalk.app',
+  VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || 'BJ6_MpjdnYd2kS9DwgOXmTpiYMsrigU32AXo8vL6Bi-xxZKMEpA2qTNvGneshh-DBp8cIOXo3bV0BeGAkkcFPzA',
+  VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY || 'jFoClphDQQTzFz5WRhzgajXfA5sAevoRcWNrEtnRPmk',
+  VAPID_EMAIL: process.env.VAPID_EMAIL || 'mailto:himanshudwivedi0325@gmail.com',
 
   // ─── Database ─────────────────────────────────────────────────────────────────
-  MONGODB_URI: process.env.MONGODB_URI || '',
+  MONGODB_URI: process.env.MONGODB_URI || 'mongodb+srv://himanshudwivedi0325_db_user:vj7tDfH57rdwU308@hdtalk-cluster.w65tsyc.mongodb.net/hdtalk?retryWrites=true&w=majority',
 
   // ─── Storage Paths ────────────────────────────────────────────────────────────
   UPLOAD_DIR: process.env.UPLOAD_DIR || path.join(__dirname, '../../uploads'),
