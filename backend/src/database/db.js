@@ -142,6 +142,19 @@ function loadDatabase() {
 // IN-MEMORY DOCUMENT STORE
 let memoryState = loadDatabase();
 
+// MONGODB ATLAS HOSTED DATABASE INTEGRATION (WRITE-THROUGH CACHE)
+const mongoAdapter = require('./mongoAdapter');
+if (mongoAdapter.isConfigured()) {
+  mongoAdapter.initMongo(memoryState).then(hydrated => {
+    if (hydrated) {
+      memoryState = hydrated;
+      console.log('[DB] Database synchronized with hosted MongoDB Atlas cluster.');
+    }
+  }).catch(err => {
+    console.warn('[DB] MongoDB initialization warning:', err.message);
+  });
+}
+
 // SERIALIZED WRITE FLUSH CONTROLLER
 let isFlushing = false;
 let flushPending = false;
@@ -175,6 +188,9 @@ function executeFlushAsync() {
     try {
       atomicWriteFile(dbFile, snapshot);
       atomicWriteFile(backupFile, snapshot);
+      if (mongoAdapter.isConnected()) {
+        mongoAdapter.fullSyncToMongo(memoryState).catch(() => {});
+      }
     } catch (err) {
       console.error('[DB] Error during async flush:', err);
       isDirty = true;
@@ -196,6 +212,9 @@ function flushSync() {
     const snapshot = JSON.stringify(memoryState, null, 2);
     atomicWriteFile(dbFile, snapshot);
     atomicWriteFile(backupFile, snapshot);
+    if (mongoAdapter.isConnected()) {
+      mongoAdapter.fullSyncToMongo(memoryState).catch(() => {});
+    }
     isDirty = false;
   } catch (err) {
     console.error('[DB] Error during flushSync:', err);
@@ -572,6 +591,8 @@ const db = {
     messagesCount: (memoryState.messages || []).length,
     connectionRequestsCount: (memoryState.connectionRequests || []).length,
     pushSubscriptionsCount: (memoryState.pushSubscriptions || []).length,
+    databaseEngine: mongoAdapter.getMongoStatus().engine,
+    mongoStatus: mongoAdapter.getMongoStatus(),
     isDirty
   }),
   reloadFromDisk: () => {

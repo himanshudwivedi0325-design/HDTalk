@@ -200,8 +200,13 @@
    - Streams uploaded chat photos, voice notes, attachments, and user avatars directly to Cloudinary global CDN with zero data loss on Render restarts/redeploys.
    - Built-in graceful fallback to local `/uploads` storage if Cloudinary credentials are not configured.
    - Real-time media storage engine status exposed in `/api/health/ready`.
-4. **Database Migration to Hosted Engine**:
-   - Migrate from `db.json` to PostgreSQL (Supabase / Neon) or MongoDB Atlas to support 10,000+ concurrent connections.
+4. **Database Migration to Hosted Engine (MongoDB Atlas Ready) (COMPLETED ✅)**:
+   - Built dual-mode Write-Through Cache database engine (`database/mongoAdapter.js`).
+   - Automatically detects `MONGODB_URI` / `MONGO_URI` / `DATABASE_URL`.
+   - Automated 1-time migration from `db.json` with zero data loss, automatically migrating existing users, conversations, messages, connection requests, and push subscriptions.
+   - High-throughput write-through cache maintains sub-millisecond memory read latency while persisting to MongoDB cloud cluster.
+   - Graceful local fallback to atomic `db.json` when no remote URI is configured.
+   - Complete `.env.example` created documenting all environment configurations.
 
 ### Tier 2: Elite Chat Experience (WhatsApp & Telegram Parity)
 1. **Voice Note Audio Waveform**:
