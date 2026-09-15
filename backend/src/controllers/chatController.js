@@ -331,3 +331,57 @@ exports.deleteConversation = (req, res) => {
   }
 };
 
+exports.editMessage = (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { text } = req.body;
+
+    if (!text || !text.trim()) {
+      return res.status(400).json({ success: false, message: 'Message text cannot be empty.' });
+    }
+
+    const result = db.editMessage(messageId, req.user.id, text);
+    if (!result || result.error) {
+      return res.status(400).json({ success: false, message: result?.error || 'Failed to edit message.' });
+    }
+
+    const targetConvId = result.message.conversationId;
+    const payload = {
+      messageId,
+      conversationId: targetConvId,
+      text: result.message.text,
+      isEdited: true,
+      editedAt: result.message.editedAt,
+      message: result.message
+    };
+
+    try {
+      const io = socketManager.getIO();
+      if (io) {
+        io.to(`conv:${targetConvId}`).emit('message_edited', payload);
+        const conv = db.getConversationById(targetConvId);
+        if (conv && conv.participants) {
+          conv.participants.forEach(pId => {
+            io.to(`user:${pId}`).emit('message_edited', payload);
+            io.to(`user:${pId}`).emit('conversation_updated', {
+              conversationId: targetConvId,
+              lastMessage: conv.lastMessage,
+              updatedAt: conv.updatedAt
+            });
+          });
+        }
+      }
+    } catch (socketErr) {
+      console.warn('Socket broadcast error on editMessage:', socketErr.message);
+    }
+
+    res.json({
+      success: true,
+      message: result.message
+    });
+  } catch (err) {
+    console.error('Edit message error:', err);
+    res.status(500).json({ success: false, message: 'Failed to edit message.' });
+  }
+};
+

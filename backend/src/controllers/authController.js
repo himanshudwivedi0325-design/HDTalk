@@ -27,10 +27,10 @@ exports.register = (req, res) => {
     }
 
     const cleanEmail = email.trim().toLowerCase();
-    const cleanName = name.trim();
+    const cleanName = name.trim().replace(/\s+/g, ' ');
 
-    if (cleanName.length < 2) {
-      return res.status(400).json({ success: false, message: 'Name must be at least 2 characters.' });
+    if (cleanName.length < 2 || cleanName.length > 30) {
+      return res.status(400).json({ success: false, message: 'Name must be between 2 and 30 characters.' });
     }
 
     if (password.length < 6) {

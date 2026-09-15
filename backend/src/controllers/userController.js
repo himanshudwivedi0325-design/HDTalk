@@ -84,6 +84,14 @@ exports.updateProfile = (req, res) => {
       }
     }
 
+    if (updates.name !== undefined) {
+      const cleanName = String(updates.name).trim().replace(/\s+/g, ' ');
+      if (cleanName.length < 2 || cleanName.length > 30) {
+        return res.status(400).json({ success: false, message: 'Name must be between 2 and 30 characters.' });
+      }
+      updates.name = cleanName;
+    }
+
     const updated = db.updateUser(req.user.id, updates);
     res.json({
       success: true,

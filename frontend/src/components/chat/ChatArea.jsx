@@ -24,6 +24,8 @@ import {
   Check,
   UserCheck,
   Reply,
+  Pencil,
+  Share2,
   X
 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
@@ -43,6 +45,7 @@ export function ChatArea({
     messages, 
     isLoadingMessages, 
     sendMessage, 
+    editMessage,
     sendVoiceMessage, 
     sendFileMessage, 
     notifyTyping, 
@@ -52,7 +55,9 @@ export function ChatArea({
     acceptConnectionRequest,
     rejectConnectionRequest,
     replyingToMessage,
-    setReplyingToMessage
+    setReplyingToMessage,
+    editingMessage,
+    setEditingMessage
   } = useChat();
 
   const { initiateCall, joinGroupCall } = useCall();
@@ -69,10 +74,13 @@ export function ChatArea({
   const inputRef = useRef(null);
 
   useEffect(() => {
-    if (replyingToMessage) {
+    if (editingMessage) {
+      setText(editingMessage.text || '');
+      inputRef.current?.focus();
+    } else if (replyingToMessage) {
       inputRef.current?.focus();
     }
-  }, [replyingToMessage]);
+  }, [editingMessage, replyingToMessage]);
 
   const otherUser = activeConversation?.otherUser || 
     (activeConversation?.participants?.find(p => (typeof p === 'object' ? p.id : p) !== user?.id));
@@ -122,9 +130,35 @@ export function ChatArea({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOtherTyping]);
 
+  const handleShareChatLink = async () => {
+    if (!otherUser?.id) return;
+    const url = `${window.location.origin}/?u=${otherUser.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Chat with ${otherUser.name} on HDTalk`,
+          text: `Join me on HDTalk for real-time messaging and HD calling!`,
+          url
+        });
+        return;
+      } catch (_) {}
+    }
+    navigator.clipboard.writeText(url);
+    alert(`Direct chat link copied to clipboard!\n\nShare with your friend to connect directly:\n${url}`);
+  };
+
   const handleSend = (e) => {
     e?.preventDefault();
     if (!text.trim()) return;
+
+    if (editingMessage) {
+      editMessage(editingMessage.id, text.trim());
+      setEditingMessage(null);
+      setText('');
+      stopTyping();
+      return;
+    }
+
     sendMessage({ 
       text: text.trim(), 
       type: 'text',
@@ -140,8 +174,13 @@ export function ChatArea({
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
-    } else if (e.key === 'Escape' && replyingToMessage) {
-      setReplyingToMessage(null);
+    } else if (e.key === 'Escape') {
+      if (editingMessage) {
+        setEditingMessage(null);
+        setText('');
+      } else if (replyingToMessage) {
+        setReplyingToMessage(null);
+      }
     }
   };
 
@@ -230,7 +269,7 @@ export function ChatArea({
 
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 overflow-hidden">
-                <span className="font-display font-bold text-sm sm:text-base text-slate-900 dark:text-white tracking-tight truncate leading-tight whitespace-nowrap">
+                <span className="font-display font-bold text-sm sm:text-base text-slate-900 dark:text-white tracking-tight truncate leading-tight max-w-[120px] sm:max-w-[200px] md:max-w-xs block">
                   {otherUser?.name}
                 </span>
                 {otherUser?.profession && (
@@ -264,7 +303,7 @@ export function ChatArea({
           </div>
         </div>
 
-        {/* Action Buttons: Audio, HD Video, Contact Details */}
+        {/* Action Buttons: Audio, HD Video, Share Link, Contact Details */}
         <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           {/* Audio Call */}
           <button
@@ -308,6 +347,15 @@ export function ChatArea({
           >
             <Video className="w-4 h-4 flex-shrink-0" />
             <span className="hidden xl:inline whitespace-nowrap">{activeConversation?.isGroup ? "Group Video" : "HD Video"}</span>
+          </button>
+
+          {/* Share Direct Chat Link */}
+          <button
+            onClick={handleShareChatLink}
+            className="h-9 w-9 rounded-xl border transition flex items-center justify-center flex-shrink-0 bg-slate-100 dark:bg-white/5 hover:bg-blue-50 dark:hover:bg-blue-600/20 text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-cyan-300 border-slate-200/80 dark:border-white/10"
+            title="Share Direct Chat Link"
+          >
+            <Share2 className="w-4 h-4 flex-shrink-0" />
           </button>
 
           {/* Contact Details Drawer Toggle */}
@@ -474,6 +522,36 @@ export function ChatArea({
           />
         ) : (
           <>
+            {/* Editing Message Banner */}
+            {editingMessage && (
+              <div className="mb-2 p-2 sm:p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-500 flex items-center justify-between gap-2 shadow-sm animate-in fade-in slide-in-from-bottom-2">
+                <div className="flex items-center gap-2 overflow-hidden min-w-0">
+                  <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
+                    <Pencil className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="overflow-hidden min-w-0 text-left">
+                    <div className="text-[11px] font-bold text-amber-600 dark:text-amber-400 truncate">
+                      Editing message
+                    </div>
+                    <div className="text-xs text-slate-600 dark:text-slate-300 truncate">
+                      {editingMessage.text}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingMessage(null);
+                    setText('');
+                  }}
+                  className="p-1 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 hover:text-slate-600 dark:hover:text-white transition flex-shrink-0"
+                  title="Cancel edit (Esc)"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
             {/* Replying Preview Banner (Instagram / Telegram style) */}
             {replyingToMessage && (
               <div className="mb-2 p-2 sm:p-2.5 rounded-xl bg-slate-100/90 dark:bg-white/[0.07] border-l-4 border-blue-500 flex items-center justify-between gap-2 shadow-sm animate-in fade-in slide-in-from-bottom-2">

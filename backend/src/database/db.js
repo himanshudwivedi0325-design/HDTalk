@@ -609,6 +609,33 @@ const db = {
     }
   },
 
+  editMessage: (messageId, userId, newText) => {
+    const msg = memoryState.messages.find(m => m.id === messageId);
+    if (!msg) return { error: 'Message not found' };
+    if (msg.senderId !== userId) return { error: 'Only the sender can edit this message.' };
+    if (msg.isDeleted) return { error: 'Cannot edit a deleted message.' };
+    if (msg.type !== 'text') return { error: 'Only text messages can be edited.' };
+
+    const trimmed = (newText || '').trim();
+    if (!trimmed) return { error: 'Message text cannot be empty.' };
+
+    msg.text = trimmed;
+    msg.isEdited = true;
+    msg.editedAt = new Date().toISOString();
+
+    mongoAdapter.persistUpsert('messages', msg);
+
+    // Update conversation lastMessage preview if this was the last message
+    const conv = memoryState.conversations.find(c => c.id === msg.conversationId);
+    if (conv && conv.lastMessage && conv.lastMessage.timestamp === msg.timestamp) {
+      conv.lastMessage.text = trimmed;
+      mongoAdapter.persistUpsert('conversations', conv);
+    }
+
+    scheduleFlush();
+    return { success: true, message: enrichMessage(msg) };
+  },
+
   getConnectionRequests: (userId) => {
     return (memoryState.connectionRequests || []).filter(r => r.toUserId === userId || r.fromUserId === userId);
   },

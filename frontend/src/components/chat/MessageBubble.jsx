@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useChat } from '../../context/ChatContext';
-import { Check, CheckCheck, Play, Pause, Paperclip, Download, Languages, Trash2, Ban, Reply } from 'lucide-react';
+import { Check, CheckCheck, Play, Pause, Paperclip, Download, Languages, Trash2, Ban, Reply, Pencil } from 'lucide-react';
 import { translateText } from '../../services/translationService';
 import { optimizeChatMediaUrl } from '../../utils/imageOptimizer';
 
@@ -9,7 +9,7 @@ const EMOJI_OPTIONS = ['❤️', '🔥', '👍', '😂', '🚀', '🎉'];
 
 export function MessageBubble({ message }) {
   const { user } = useAuth();
-  const { addReaction, deleteMessage, setReplyingToMessage, activeConversation, messages } = useChat();
+  const { addReaction, deleteMessage, setReplyingToMessage, setEditingMessage, activeConversation, messages } = useChat();
   const isMe = message.senderId === user?.id;
 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -188,6 +188,21 @@ export function MessageBubble({ message }) {
               <Reply className="w-3.5 h-3.5" />
               <span>Reply</span>
             </button>
+
+            {isMe && message.type === 'text' && !message.isDeleted && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowActions(false);
+                  setEditingMessage({ id: message.id, text: message.text });
+                }}
+                className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs hover:scale-105 active:scale-95 transition border-l border-slate-200 dark:border-white/15 ml-0.5 cursor-pointer"
+                title="Edit message"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                <span>Edit</span>
+              </button>
+            )}
 
             {message.type === 'text' && (
               <button
@@ -390,6 +405,9 @@ export function MessageBubble({ message }) {
 
           {/* Timestamp and Read Status */}
           <div className={`flex items-center justify-end gap-1.5 mt-1 text-[10px] ${isMe ? 'text-blue-100/90' : 'text-slate-500 dark:text-slate-400'}`}>
+            {message.isEdited && (
+              <span className="text-[9.5px] italic opacity-80 font-normal">edited</span>
+            )}
             <span>{formatTime(message.timestamp)}</span>
             {isMe && !message.isDeleted && (
               <span 

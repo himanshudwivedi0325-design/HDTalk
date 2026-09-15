@@ -397,6 +397,48 @@ function initSocket(io) {
       }
     });
 
+    socket.on('edit_message', ({ messageId, conversationId, text }, ackCallback) => {
+      let userId = socketUserMap.get(socket.id);
+      if (!userId) {
+        if (typeof ackCallback === 'function') ackCallback({ success: false, message: 'Unauthorized' });
+        return;
+      }
+
+      const result = db.editMessage(messageId, userId, text);
+      if (!result || result.error) {
+        socket.emit('socket_error', { message: result?.error || 'Failed to edit message' });
+        if (typeof ackCallback === 'function') ackCallback({ success: false, message: result?.error });
+        return;
+      }
+
+      const targetConvId = conversationId || result.message.conversationId;
+      const payload = {
+        messageId,
+        conversationId: targetConvId,
+        text: result.message.text,
+        isEdited: true,
+        editedAt: result.message.editedAt,
+        message: result.message
+      };
+
+      io.to(`conv:${targetConvId}`).emit('message_edited', payload);
+      const conv = db.getConversationById(targetConvId);
+      if (conv && conv.participants) {
+        conv.participants.forEach(pId => {
+          io.to(`user:${pId}`).emit('message_edited', payload);
+          io.to(`user:${pId}`).emit('conversation_updated', {
+            conversationId: targetConvId,
+            lastMessage: conv.lastMessage,
+            updatedAt: conv.updatedAt
+          });
+        });
+      }
+
+      if (typeof ackCallback === 'function') {
+        ackCallback({ success: true, message: result.message });
+      }
+    });
+
     // ----------------------------------------------------
     // WEBRTC 1:1 CALLING SIGNALING & SESSION SECURITY
     // ----------------------------------------------------

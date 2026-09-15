@@ -18,6 +18,7 @@ export function ChatProvider({ children }) {
   const [connectionRequests, setConnectionRequests] = useState([]);
   const [isLoadingRequests, setIsLoadingRequests] = useState(false);
   const [replyingToMessage, setReplyingToMessage] = useState(null);
+  const [editingMessage, setEditingMessage] = useState(null);
 
   const typingTimeoutRef = useRef(null);
   const lastTypingSentAtRef = useRef(0);
@@ -32,6 +33,7 @@ export function ChatProvider({ children }) {
       setTypingUsers({});
       setConnectionRequests([]);
       setReplyingToMessage(null);
+      setEditingMessage(null);
     }
   }, [user?.id]);
 
@@ -352,11 +354,30 @@ export function ChatProvider({ children }) {
       }
     };
 
+    // Message edited event
+    const handleMessageEdited = ({ messageId, conversationId, text, editedAt, isEdited, message }) => {
+      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, text, isEdited: true, editedAt: editedAt || new Date().toISOString() } : m));
+
+      setConversations(prev => prev.map(c => {
+        if (c.id === conversationId && c.lastMessage) {
+          return {
+            ...c,
+            lastMessage: {
+              ...c.lastMessage,
+              text
+            }
+          };
+        }
+        return c;
+      }));
+    };
+
     socket.on('receive_message', handleReceiveMessage);
     socket.on('message_sent_ack', handleMessageSentAck);
     socket.on('message_delivered', handleMessageDelivered);
     socket.on('messages_delivered', handleMessagesDelivered);
     socket.on('message_deleted', handleMessageDeleted);
+    socket.on('message_edited', handleMessageEdited);
     socket.on('conversation_deleted', handleConversationDeleted);
     socket.on('friend_removed', handleFriendRemoved);
     socket.on('new_connection_request', handleNewConnectionRequest);
@@ -372,6 +393,7 @@ export function ChatProvider({ children }) {
       socket.off('message_delivered', handleMessageDelivered);
       socket.off('messages_delivered', handleMessagesDelivered);
       socket.off('message_deleted', handleMessageDeleted);
+      socket.off('message_edited', handleMessageEdited);
       socket.off('conversation_deleted', handleConversationDeleted);
       socket.off('friend_removed', handleFriendRemoved);
       socket.off('new_connection_request', handleNewConnectionRequest);
@@ -711,6 +733,39 @@ export function ChatProvider({ children }) {
     }
   };
 
+  const editMessage = async (messageId, newText) => {
+    const trimmed = (newText || '').trim();
+    if (!trimmed) return;
+
+    // Optimistic update
+    setMessages(prev => prev.map(m => m.id === messageId ? { ...m, text: trimmed, isEdited: true, editedAt: new Date().toISOString() } : m));
+    if (activeConversation) {
+      setConversations(prev => prev.map(c => {
+        if (c.id === activeConversation.id && c.lastMessage) {
+          return {
+            ...c,
+            lastMessage: { ...c.lastMessage, text: trimmed }
+          };
+        }
+        return c;
+      }));
+    }
+
+    if (socket && socket.connected) {
+      socket.emit('edit_message', {
+        messageId,
+        conversationId: activeConversation?.id,
+        text: trimmed
+      });
+    } else {
+      try {
+        await api.editMessage(messageId, trimmed);
+      } catch (err) {
+        console.error('REST editMessage fallback failed:', err);
+      }
+    }
+  };
+
   return (
     <ChatContext.Provider value={{
       conversations,
@@ -726,7 +781,10 @@ export function ChatProvider({ children }) {
       startDirectConversationWithUser,
       replyingToMessage,
       setReplyingToMessage,
+      editingMessage,
+      setEditingMessage,
       sendMessage,
+      editMessage,
       sendVoiceMessage,
       sendFileMessage,
       deleteMessage,

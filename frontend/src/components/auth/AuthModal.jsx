@@ -149,15 +149,23 @@ export function AuthModal() {
           {isRegister && (
             <>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">Full Name</label>
+                  {name.length > 0 && (
+                    <span className={`text-[10px] font-mono ${name.length >= 30 ? 'text-rose-500 font-bold' : 'text-slate-400'}`}>
+                      {name.length}/30
+                    </span>
+                  )}
+                </div>
                 <div className="relative">
                   <User className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Himanshu Dwivedi"
+                    maxLength={30}
+                    placeholder="e.g. Himanshu Dwivedi (max 30 chars)"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => setName(e.target.value.slice(0, 30))}
                     className="w-full pl-9 pr-3 py-2.5 rounded-xl vision-glass-input text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none"
                   />
                 </div>

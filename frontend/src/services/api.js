@@ -56,6 +56,7 @@ export const api = {
   getMessages: (conversationId) => request(`/api/chat/conversations/${conversationId}/messages`),
   sendMessage: (conversationId, body) => request(`/api/chat/conversations/${conversationId}/messages`, { method: 'POST', body: JSON.stringify(body) }),
   addReaction: (messageId, emoji) => request(`/api/chat/messages/${messageId}/reactions`, { method: 'POST', body: JSON.stringify({ emoji }) }),
+  editMessage: (messageId, text) => request(`/api/chat/messages/${messageId}`, { method: 'PUT', body: JSON.stringify({ text }) }),
   deleteMessage: (messageId, deleteForEveryone = true) => request(`/api/chat/messages/${messageId}`, { method: 'DELETE', body: JSON.stringify({ deleteForEveryone }) }),
   deleteConversation: (conversationId, alsoRemoveFriend = false) => request(`/api/chat/conversations/${conversationId}`, { method: 'DELETE', body: JSON.stringify({ alsoRemoveFriend }) }),
   removeFriend: (friendUserId) => request(`/api/users/friends/${friendUserId}`, { method: 'DELETE' }),

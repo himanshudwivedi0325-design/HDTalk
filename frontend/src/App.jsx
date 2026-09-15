@@ -28,7 +28,7 @@ import { registerServiceWorker } from './services/pushService';
 
 function MainLayout() {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const { activeConversation, conversations, pendingRequestsCount, selectConversation } = useChat();
+  const { activeConversation, conversations, pendingRequestsCount, selectConversation, startDirectConversationWithUser } = useChat();
   const { showInstallModal, setShowInstallModal } = usePwa();
   const [activeTab, setActiveTab] = useState('chats'); // 'chats' | 'discover'
   const [showThemeModal, setShowThemeModal] = useState(false);
@@ -38,11 +38,79 @@ function MainLayout() {
   const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState(false);
   const [isConversationListVisible, setIsConversationListVisible] = useState(true);
 
+  // 1. Initial Deep Link / URL Handling
+  const handledInitialUrlRef = React.useRef(false);
+
   React.useEffect(() => {
     if (isAuthenticated) {
       registerServiceWorker();
     }
   }, [isAuthenticated]);
+
+  React.useEffect(() => {
+    if (!isAuthenticated || isLoading || handledInitialUrlRef.current) return;
+
+    // Check if there was a saved redirect from before login
+    const savedRedirect = sessionStorage.getItem('hdtalk_redirect');
+    if (savedRedirect) {
+      sessionStorage.removeItem('hdtalk_redirect');
+      window.history.replaceState({}, '', savedRedirect);
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const targetTab = params.get('tab');
+    const targetChat = params.get('chat');
+    const targetUser = params.get('u');
+
+    if (targetTab === 'discover') {
+      setActiveTab('discover');
+      handledInitialUrlRef.current = true;
+    } else if (targetChat && conversations.length > 0) {
+      const found = conversations.find(c => c.id === targetChat);
+      if (found) {
+        selectConversation(found);
+        setActiveTab('chats');
+        setIsConversationListVisible(false);
+        handledInitialUrlRef.current = true;
+      }
+    } else if (targetUser && targetUser !== user?.id) {
+      const existing = (conversations || []).find(c => !c.isGroup && c.participants?.includes(targetUser));
+      if (existing) {
+        selectConversation(existing);
+        setActiveTab('chats');
+        setIsConversationListVisible(false);
+        handledInitialUrlRef.current = true;
+      } else if (startDirectConversationWithUser) {
+        startDirectConversationWithUser(targetUser).then(newConv => {
+          if (newConv) {
+            selectConversation(newConv);
+            setActiveTab('chats');
+            setIsConversationListVisible(false);
+          }
+        }).catch(console.warn);
+        handledInitialUrlRef.current = true;
+      }
+    }
+  }, [isAuthenticated, isLoading, conversations, user?.id]);
+
+  // 2. Keep browser URL bar dynamically in sync with state
+  React.useEffect(() => {
+    if (!isAuthenticated || isLoading) return;
+
+    let search = '';
+    if (activeTab === 'discover') {
+      search = '?tab=discover';
+    } else if (activeTab === 'chats') {
+      if (activeConversation?.id) {
+        search = `?chat=${activeConversation.id}`;
+      }
+    }
+
+    const newUrl = window.location.pathname + search;
+    if (window.location.search !== search) {
+      window.history.replaceState({ tab: activeTab, chat: activeConversation?.id }, '', newUrl);
+    }
+  }, [activeTab, activeConversation?.id, isAuthenticated, isLoading]);
 
   const totalUnread = (conversations || []).reduce((acc, c) => acc + (c.unreadCount || 0), 0);
 
@@ -64,6 +132,9 @@ function MainLayout() {
   }
 
   if (!isAuthenticated) {
+    if (window.location.search) {
+      sessionStorage.setItem('hdtalk_redirect', window.location.search);
+    }
     return <AuthModal />;
   }
 
@@ -141,11 +212,13 @@ function MainLayout() {
 
             {/* Right Contact Info Drawer (Apphitect feature) */}
             {isInfoDrawerOpen && (
-              <ContactDetailsDrawer
-                user={activeConversation?.otherUser}
-                conversationId={activeConversation?.id}
-                onClose={() => setIsInfoDrawerOpen(false)}
-              />
+              <div className="fixed inset-0 z-50 md:static md:z-auto flex justify-end bg-slate-900/40 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none animate-in fade-in">
+                <ContactDetailsDrawer
+                  user={activeConversation?.otherUser}
+                  conversationId={activeConversation?.id}
+                  onClose={() => setIsInfoDrawerOpen(false)}
+                />
+              </div>
             )}
           </div>
         ) : (

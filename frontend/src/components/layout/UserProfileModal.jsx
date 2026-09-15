@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
-import { X, Save, User, Globe, Sparkles, Upload, Camera, Trash2, Loader2, Check } from 'lucide-react';
+import { X, Save, User, Globe, Sparkles, Upload, Camera, Trash2, Loader2, Check, Share2, Copy } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 
 export function UserProfileModal({ isOpen, onClose }) {
@@ -18,7 +18,21 @@ export function UserProfileModal({ isOpen, onClose }) {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   const fileInputRef = useRef(null);
+
+  const shareUrl = `${window.location.origin}/?u=${user?.id || user?._id || ''}`;
+  const handleCopyLink = async () => {
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl);
+        setCopiedLink(true);
+        setTimeout(() => setCopiedLink(false), 2500);
+      }
+    } catch (err) {
+      console.warn('Failed to copy share link:', err);
+    }
+  };
 
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
@@ -201,12 +215,19 @@ export function UserProfileModal({ isOpen, onClose }) {
 
           {/* Full Name */}
           <div>
-            <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">Display Name</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Display Name</label>
+              <span className={`text-[10px] ${formData.name.length >= 30 ? 'text-amber-500 font-bold' : 'text-slate-400'}`}>
+                {formData.name.length}/30 max
+              </span>
+            </div>
             <input
               type="text"
               required
+              maxLength={30}
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="Your name"
               className="w-full px-3 py-2 rounded-xl vision-glass-input text-xs text-slate-900 dark:text-white focus:outline-none"
             />
           </div>
@@ -245,6 +266,36 @@ export function UserProfileModal({ isOpen, onClose }) {
               placeholder="WebRTC, React, System Design, Cloud Architecture"
               className="w-full px-3 py-2 rounded-xl vision-glass-input text-xs text-slate-900 dark:text-white focus:outline-none"
             />
+          </div>
+
+          {/* Direct Chat & Invite Link */}
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-blue-500/20 text-xs">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200">
+                <Share2 className="w-3.5 h-3.5 text-blue-500" />
+                <span>Your Direct Chat & Invite Link</span>
+              </div>
+              <span className="text-[10px] text-blue-600 dark:text-cyan-300 font-semibold">1-Click Invite</span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2.5">
+              Share this link with friends so they can open HDTalk and instantly chat with you!
+            </p>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                readOnly
+                value={shareUrl}
+                className="flex-1 px-3 py-1.5 rounded-xl bg-white/80 dark:bg-black/40 border border-slate-200/80 dark:border-white/10 text-[11px] text-slate-700 dark:text-slate-300 select-all font-mono"
+              />
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-sm transition active:scale-95 flex-shrink-0"
+              >
+                {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedLink ? 'Copied!' : 'Copy'}</span>
+              </button>
+            </div>
           </div>
 
           {/* About HDTalk & Creator Info */}
