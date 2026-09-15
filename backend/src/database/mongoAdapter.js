@@ -7,16 +7,14 @@ let dbInstance = null;
 let isConnected = false;
 let isConfigured = false;
 
-const defaultUri = 'mongodb+srv://himanshudwivedi0325_db_user:vj7tDfH57rdwU308@hdtalk-cluster.w65tsyc.mongodb.net/hdtalk?retryWrites=true&w=majority';
-
 const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI || 
   (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('mongodb') ? process.env.DATABASE_URL : null) ||
   config.MONGODB_URI ||
-  defaultUri;
+  null;
 
 if (mongoUri) {
   isConfigured = true;
-  console.log('[MongoDB] MONGODB_URI configured for cluster: hdtalk-cluster.');
+  console.log('[MongoDB] MONGODB_URI configured.');
 } else {
   console.log('[MongoDB] No MONGODB_URI detected. Active Database Engine: Local JSON (db.json).');
 }

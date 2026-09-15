@@ -19,6 +19,7 @@ const webrtcRoutes = require('./routes/webrtcRoutes');
 const pushRoutes = require('./routes/pushRoutes');
 
 const app = express();
+app.disable('x-powered-by');
 
 // Enable reverse proxy trust (Nginx / Cloudflare / Render / Railway)
 app.set('trust proxy', 1);
@@ -89,7 +90,7 @@ app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=()');
   res.setHeader(
     'Content-Security-Policy',
     [

@@ -21,6 +21,7 @@
     "test:crash": "node test_crash_recovery_audit.cjs",
     "test:realworld": "node test_realworld_compatibility_audit.cjs",
     "test:soak": "node soak_test_runner.cjs",
+    "test:unit": "node --test tests/**/*.test.js",
     "test:all": "node test_security_and_health.cjs && node test_turn_config.cjs && node mixed_workload_resilience.cjs"
   },
   "dependencies": {

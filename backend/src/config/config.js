@@ -52,12 +52,12 @@ module.exports = {
   ),
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
 
-  VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || 'BJ6_MpjdnYd2kS9DwgOXmTpiYMsrigU32AXo8vL6Bi-xxZKMEpA2qTNvGneshh-DBp8cIOXo3bV0BeGAkkcFPzA',
-  VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY || 'jFoClphDQQTzFz5WRhzgajXfA5sAevoRcWNrEtnRPmk',
+  VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || '',
+  VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY || '',
   VAPID_EMAIL: process.env.VAPID_EMAIL || 'mailto:himanshudwivedi0325@gmail.com',
 
   // ─── Database ─────────────────────────────────────────────────────────────────
-  MONGODB_URI: process.env.MONGODB_URI || 'mongodb+srv://himanshudwivedi0325_db_user:vj7tDfH57rdwU308@hdtalk-cluster.w65tsyc.mongodb.net/hdtalk?retryWrites=true&w=majority',
+  MONGODB_URI: process.env.MONGODB_URI || '',
 
   // ─── Storage Paths ────────────────────────────────────────────────────────────
   UPLOAD_DIR: process.env.UPLOAD_DIR || path.join(__dirname, '../../uploads'),
