@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { isPushSupported, getPermissionState, subscribeToPush } from '../../services/pushService';
 
 export function NotificationBanner({ onOpenModal }) {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +24,7 @@ export function NotificationBanner({ onOpenModal }) {
   const handleQuickEnable = async () => {
     setLoading(true);
     try {
-      await subscribeToPush(user?.token);
+      await subscribeToPush(token);
       setVisible(false);
     } catch (err) {
       if (onOpenModal) onOpenModal();

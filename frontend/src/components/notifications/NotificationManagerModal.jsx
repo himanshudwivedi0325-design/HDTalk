@@ -9,7 +9,7 @@ import {
 } from '../../services/pushService';
 
 export function NotificationManagerModal({ isOpen, onClose }) {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [permission, setPermission] = useState('default');
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null);
@@ -32,7 +32,7 @@ export function NotificationManagerModal({ isOpen, onClose }) {
     setLoading(true);
     setStatusMessage(null);
     try {
-      const res = await subscribeToPush(user?.token);
+      const res = await subscribeToPush(token);
       setPermission('granted');
       setStatusMessage({
         type: 'success',
@@ -53,7 +53,7 @@ export function NotificationManagerModal({ isOpen, onClose }) {
     setLoading(true);
     setStatusMessage(null);
     try {
-      const res = await sendTestPushNotification(user?.token);
+      const res = await sendTestPushNotification(token);
       setStatusMessage({
         type: 'success',
         text: res.message || 'Test push alert dispatched! Check your device notification tray.'
@@ -61,7 +61,7 @@ export function NotificationManagerModal({ isOpen, onClose }) {
     } catch (err) {
       setStatusMessage({
         type: 'error',
-        text: 'Failed to send test push alert: ' + err.message
+        text: err.message || 'Failed to send test push alert.'
       });
     } finally {
       setLoading(false);

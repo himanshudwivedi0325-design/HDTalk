@@ -43,9 +43,29 @@ export const registerServiceWorker = async () => {
   }
 };
 
+const getAuthToken = (explicitToken) => {
+  if (explicitToken && explicitToken !== 'undefined' && explicitToken !== 'null' && typeof explicitToken === 'string') {
+    return explicitToken;
+  }
+  const sessionToken = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('chatz_token') : null;
+  if (sessionToken && sessionToken !== 'undefined' && sessionToken !== 'null') {
+    return sessionToken;
+  }
+  const localToken = typeof localStorage !== 'undefined' ? localStorage.getItem('chatz_token') : null;
+  if (localToken && localToken !== 'undefined' && localToken !== 'null') {
+    return localToken;
+  }
+  return null;
+};
+
 export const subscribeToPush = async (token) => {
   if (!isPushSupported()) {
     throw new Error('Push notifications are not supported in this browser.');
+  }
+
+  const authToken = getAuthToken(token);
+  if (!authToken) {
+    throw new Error('Authentication session not found. Please log in to HDTalk.');
   }
 
   const permission = await Notification.requestPermission();
@@ -80,13 +100,13 @@ export const subscribeToPush = async (token) => {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${authToken}`
     },
     body: JSON.stringify({ subscription })
   });
 
   const subData = await subRes.json();
-  if (!subData.success) {
+  if (!subRes.ok || !subData.success) {
     throw new Error(subData.message || 'Failed to save subscription on server.');
   }
 
@@ -94,12 +114,22 @@ export const subscribeToPush = async (token) => {
 };
 
 export const sendTestPushNotification = async (token) => {
+  const authToken = getAuthToken(token);
+  if (!authToken) {
+    throw new Error('Authentication session not found. Please log in to HDTalk.');
+  }
+
   const res = await fetch(`${API_URL}/api/push/test`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${authToken}`
     }
   });
-  return res.json();
+
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.message || 'Failed to send test push alert.');
+  }
+  return data;
 };

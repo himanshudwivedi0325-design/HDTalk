@@ -11,7 +11,7 @@ module.exports = (req, res, next) => {
     token = req.headers['x-access-token'];
   }
 
-  if (!token) {
+  if (!token || token === 'undefined' || token === 'null' || token.trim() === '') {
     return res.status(401).json({ success: false, message: 'Authentication required. No token provided.' });
   }
 
