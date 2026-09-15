@@ -19,9 +19,10 @@ export function ApphitectSidebar({
   activeTab, 
   onTabChange, 
   onOpenThemeModal, 
-  onOpenProfileModal
+  onOpenProfileModal,
+  onOpenRequestsModal
 }) {
-  const { conversations } = useChat();
+  const { conversations, pendingRequestsCount } = useChat();
   const { user, logout } = useAuth();
   const { isConnected } = useSocket();
 
@@ -30,6 +31,7 @@ export function ApphitectSidebar({
   const navItems = [
     { id: 'chats', label: 'All Chats', icon: MessageSquare, badge: totalUnread },
     { id: 'discover', label: 'Matchmaking', icon: Compass },
+    { id: 'requests', label: 'Friend Requests', icon: Users, badge: pendingRequestsCount, action: onOpenRequestsModal },
     { id: 'theme', label: 'Themes', icon: Palette, action: onOpenThemeModal }
   ];
 

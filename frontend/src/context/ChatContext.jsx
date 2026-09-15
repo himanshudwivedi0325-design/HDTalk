@@ -15,6 +15,8 @@ export function ChatProvider({ children }) {
   const [messages, setMessages] = useState([]);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [typingUsers, setTypingUsers] = useState({}); // { [userId]: boolean }
+  const [connectionRequests, setConnectionRequests] = useState([]);
+  const [isLoadingRequests, setIsLoadingRequests] = useState(false);
 
   const typingTimeoutRef = useRef(null);
   const lastTypingSentAtRef = useRef(0);
@@ -27,6 +29,7 @@ export function ChatProvider({ children }) {
       setActiveConversation(null);
       setMessages([]);
       setTypingUsers({});
+      setConnectionRequests([]);
     }
   }, [user?.id]);
 
@@ -52,9 +55,26 @@ export function ChatProvider({ children }) {
     }
   }, [user?.id]);
 
+  // Load connection requests on mount & user change
+  const fetchConnectionRequests = useCallback(async () => {
+    if (!user) return;
+    try {
+      setIsLoadingRequests(true);
+      const res = await api.getConnectionRequests();
+      if (res.success) {
+        setConnectionRequests(res.requests || []);
+      }
+    } catch (err) {
+      console.warn('Error fetching connection requests:', err);
+    } finally {
+      setIsLoadingRequests(false);
+    }
+  }, [user?.id]);
+
   useEffect(() => {
     fetchConversations();
-  }, [fetchConversations]);
+    fetchConnectionRequests();
+  }, [fetchConversations, fetchConnectionRequests]);
 
   // Load messages when activeConversation changes
   useEffect(() => {
@@ -204,8 +224,57 @@ export function ChatProvider({ children }) {
       }
     };
 
+    // Message deleted event
+    const handleMessageDeleted = ({ messageId, conversationId, deleteForEveryone, message, deletedForUserId }) => {
+      setMessages(prev => {
+        if (deleteForEveryone) {
+          return prev.map(m => m.id === messageId ? (message || { ...m, isDeleted: true, text: 'This message was deleted', mediaUrl: null, reactions: {} }) : m);
+        } else {
+          return prev.filter(m => m.id !== messageId);
+        }
+      });
+
+      if (deleteForEveryone) {
+        setConversations(prev => prev.map(c => {
+          if (c.id === conversationId) {
+            return {
+              ...c,
+              lastMessage: c.lastMessage ? { ...c.lastMessage, text: '🚫 This message was deleted' } : c.lastMessage
+            };
+          }
+          return c;
+        }));
+      }
+    };
+
+    // New connection request incoming
+    const handleNewConnectionRequest = (req) => {
+      setConnectionRequests(prev => {
+        if (prev.some(r => r.id === req.id)) return prev;
+        return [req, ...prev];
+      });
+      soundService.playMessageReceived();
+    };
+
+    // Connection request status updated (accepted/rejected)
+    const handleConnectionRequestUpdated = ({ requestId, status, conversation, updated }) => {
+      setConnectionRequests(prev => prev.map(r => r.id === requestId ? { ...r, status, ...updated } : r));
+      if (status === 'accepted') {
+        fetchConversations();
+        setActiveConversation(prev => {
+          if (prev && (conversation?.id === prev.id || prev.isPending)) {
+            return { ...(conversation || prev), isPending: false };
+          }
+          return prev;
+        });
+      }
+    };
+
     socket.on('receive_message', handleReceiveMessage);
     socket.on('message_sent_ack', handleMessageSentAck);
+    socket.on('message_deleted', handleMessageDeleted);
+    socket.on('new_connection_request', handleNewConnectionRequest);
+    socket.on('connection_request_status_updated', handleConnectionRequestUpdated);
     socket.on('user_typing', handleUserTyping);
     socket.on('user_stop_typing', handleUserStopTyping);
     socket.on('reaction_updated', handleReactionUpdated);
@@ -214,6 +283,9 @@ export function ChatProvider({ children }) {
     return () => {
       socket.off('receive_message', handleReceiveMessage);
       socket.off('message_sent_ack', handleMessageSentAck);
+      socket.off('message_deleted', handleMessageDeleted);
+      socket.off('new_connection_request', handleNewConnectionRequest);
+      socket.off('connection_request_status_updated', handleConnectionRequestUpdated);
       socket.off('user_typing', handleUserTyping);
       socket.off('user_stop_typing', handleUserStopTyping);
       socket.off('reaction_updated', handleReactionUpdated);
@@ -397,6 +469,101 @@ export function ChatProvider({ children }) {
     }, 2200);
   };
 
+  // Delete message with instant optimistic update and socket/REST sync
+  const deleteMessage = async (messageId, deleteForEveryone = true) => {
+    if (!activeConversation) return;
+
+    // Optimistically update local message list
+    setMessages(prev => {
+      if (deleteForEveryone) {
+        return prev.map(m => m.id === messageId ? { ...m, isDeleted: true, text: 'This message was deleted', mediaUrl: null, reactions: {} } : m);
+      } else {
+        return prev.filter(m => m.id !== messageId);
+      }
+    });
+
+    // Optimistically update conversation list preview
+    if (deleteForEveryone) {
+      setConversations(prev => prev.map(c => {
+        if (c.id === activeConversation.id && c.lastMessage) {
+          return {
+            ...c,
+            lastMessage: { ...c.lastMessage, text: '🚫 This message was deleted' }
+          };
+        }
+        return c;
+      }));
+    }
+
+    if (socket && socket.connected) {
+      socket.emit('delete_message', {
+        messageId,
+        conversationId: activeConversation.id,
+        deleteForEveryone
+      });
+    } else {
+      try {
+        await api.deleteMessage(messageId, deleteForEveryone);
+      } catch (err) {
+        console.error('REST deleteMessage fallback failed:', err);
+      }
+    }
+  };
+
+  // Connection request helpers
+  const pendingIncomingRequests = (connectionRequests || []).filter(
+    r => r.toUserId === user?.id && r.status === 'pending'
+  );
+  const pendingRequestsCount = pendingIncomingRequests.length;
+
+  const acceptConnectionRequest = async (requestId) => {
+    try {
+      const res = await api.respondConnectionRequest(requestId, 'accepted');
+      if (res.success) {
+        setConnectionRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'accepted' } : r));
+        await fetchConversations();
+        if (res.conversation) {
+          setActiveConversation(res.conversation);
+        } else {
+          setActiveConversation(prev => prev ? { ...prev, isPending: false } : prev);
+        }
+        return res;
+      }
+    } catch (err) {
+      console.error('Error accepting connection request:', err);
+      throw err;
+    }
+  };
+
+  const rejectConnectionRequest = async (requestId) => {
+    try {
+      const res = await api.respondConnectionRequest(requestId, 'rejected');
+      if (res.success) {
+        setConnectionRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'rejected' } : r));
+        return res;
+      }
+    } catch (err) {
+      console.error('Error rejecting connection request:', err);
+      throw err;
+    }
+  };
+
+  const sendConnectionRequest = async (toUserId, note = "Hey, let's connect on HDTalk!") => {
+    try {
+      const res = await api.sendConnectionRequest(toUserId, note);
+      if (res.success) {
+        setConnectionRequests(prev => {
+          if (prev.some(r => r.id === res.request.id)) return prev;
+          return [...prev, res.request];
+        });
+        return res;
+      }
+    } catch (err) {
+      console.error('Error sending connection request:', err);
+      throw err;
+    }
+  };
+
   return (
     <ChatContext.Provider value={{
       conversations,
@@ -404,14 +571,23 @@ export function ChatProvider({ children }) {
       messages,
       isLoadingMessages,
       typingUsers,
+      connectionRequests,
+      pendingIncomingRequests,
+      pendingRequestsCount,
+      isLoadingRequests,
       selectConversation,
       startDirectConversationWithUser,
       sendMessage,
       sendVoiceMessage,
       sendFileMessage,
+      deleteMessage,
       addReaction,
       notifyTyping,
       stopTyping,
+      fetchConnectionRequests,
+      acceptConnectionRequest,
+      rejectConnectionRequest,
+      sendConnectionRequest,
       refreshConversations: fetchConversations
     }}>
       {children}

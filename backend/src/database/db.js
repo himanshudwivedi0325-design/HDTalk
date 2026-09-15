@@ -344,6 +344,15 @@ const db = {
       c.participants.includes(userA) &&
       c.participants.includes(userB)
     );
+
+    const req = (memoryState.connectionRequests || []).find(r =>
+      (r.fromUserId === userA && r.toUserId === userB) ||
+      (r.fromUserId === userB && r.toUserId === userA)
+    );
+
+    const isPending = req ? req.status === 'pending' : false;
+    const requestedBy = req ? req.fromUserId : null;
+
     if (!conv) {
       conv = {
         id: 'conv_' + uuidv4().slice(0, 8),
@@ -351,17 +360,22 @@ const db = {
         participants: [userA, userB],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        lastMessage: null
+        lastMessage: null,
+        isPending,
+        requestedBy
       };
       memoryState.conversations.push(conv);
       scheduleFlush();
+    } else {
+      conv.isPending = isPending;
+      conv.requestedBy = requestedBy;
     }
     return conv;
   },
 
-  getMessages: (conversationId) => {
+  getMessages: (conversationId, userId) => {
     return (memoryState.messages || [])
-      .filter(m => m.conversationId === conversationId)
+      .filter(m => m.conversationId === conversationId && (!userId || !m.deletedFor || !m.deletedFor.includes(userId)))
       .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
   },
 
@@ -415,6 +429,38 @@ const db = {
       }
     });
     if (updated) scheduleFlush();
+  },
+
+  deleteMessage: (messageId, userId, deleteForEveryone = true) => {
+    const msg = memoryState.messages.find(m => m.id === messageId);
+    if (!msg) return null;
+
+    if (deleteForEveryone) {
+      if (msg.senderId !== userId) {
+        return { error: 'Only the sender can delete this message for everyone.' };
+      }
+      msg.isDeleted = true;
+      msg.text = 'This message was deleted';
+      msg.mediaUrl = null;
+      msg.fileName = null;
+      msg.reactions = {};
+
+      // Update conversation preview if needed
+      const conv = memoryState.conversations.find(c => c.id === msg.conversationId);
+      if (conv && conv.lastMessage && conv.lastMessage.timestamp === msg.timestamp) {
+        conv.lastMessage.text = '🚫 This message was deleted';
+      }
+      scheduleFlush();
+      return { message: msg, deleteForEveryone: true };
+    } else {
+      // Delete for me
+      if (!msg.deletedFor) msg.deletedFor = [];
+      if (!msg.deletedFor.includes(userId)) {
+        msg.deletedFor.push(userId);
+      }
+      scheduleFlush();
+      return { message: msg, deleteForEveryone: false };
+    }
   },
 
   getConnectionRequests: (userId) => {

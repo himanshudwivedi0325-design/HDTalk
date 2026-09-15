@@ -3,6 +3,7 @@ import { api } from '../../services/api';
 import { useSocket } from '../../context/SocketContext';
 import { useChat } from '../../context/ChatContext';
 import { useCall } from '../../context/CallContext';
+import { useAuth } from '../../context/AuthContext';
 import { 
   Search, 
   Sparkles, 
@@ -30,8 +31,9 @@ export function PartnerDiscovery({ onNavigateToChat }) {
   const [onlineOnly, setOnlineOnly] = useState(false);
   const [sentRequests, setSentRequests] = useState(new Set());
 
+  const { user } = useAuth();
   const { isUserOnline, getUserLastSeen } = useSocket();
-  const { startDirectConversationWithUser } = useChat();
+  const { startDirectConversationWithUser, connectionRequests, sendConnectionRequest } = useChat();
   const { initiateCall } = useCall();
 
   useEffect(() => {
@@ -59,7 +61,7 @@ export function PartnerDiscovery({ onNavigateToChat }) {
 
   const handleConnect = async (userId) => {
     try {
-      await api.sendConnectionRequest(userId, 'Hey, let\'s connect on HDTalk!');
+      await sendConnectionRequest(userId, "Hey, let's connect on HDTalk!");
       setSentRequests(prev => new Set(prev).add(userId));
     } catch (e) {
       console.warn(e);
@@ -160,7 +162,9 @@ export function PartnerDiscovery({ onNavigateToChat }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredUsers.map(u => {
             const isOnline = isUserOnline(u.id);
-            const isSent = sentRequests.has(u.id);
+            const isSent = sentRequests.has(u.id) || (connectionRequests || []).some(
+              r => r.fromUserId === user?.id && r.toUserId === u.id
+            );
             const match = u.matchScore || 75;
 
             return (

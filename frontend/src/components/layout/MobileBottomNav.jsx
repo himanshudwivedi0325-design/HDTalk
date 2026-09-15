@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare, Compass, Palette, User } from 'lucide-react';
+import { MessageSquare, Compass, Palette, User, UserCheck } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 
 export function MobileBottomNav({
@@ -7,7 +7,9 @@ export function MobileBottomNav({
   onTabChange,
   onOpenThemeModal,
   onOpenProfileModal,
+  onOpenRequestsModal,
   unreadCount = 0,
+  pendingRequestsCount = 0,
   user
 }) {
   return (
@@ -43,6 +45,22 @@ export function MobileBottomNav({
       >
         <Compass className="w-5 h-5" />
         <span className="text-[10px] mt-0.5">Discover</span>
+      </button>
+
+      {/* Friend Requests Button */}
+      <button
+        onClick={onOpenRequestsModal}
+        className="flex flex-col items-center justify-center flex-1 py-1 relative text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 transition-colors"
+      >
+        <div className="relative">
+          <UserCheck className="w-5 h-5" />
+          {pendingRequestsCount > 0 && (
+            <span className="absolute -top-1 -right-2 px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-extrabold shadow animate-pulse">
+              {pendingRequestsCount}
+            </span>
+          )}
+        </div>
+        <span className="text-[10px] mt-0.5">Requests</span>
       </button>
 
       {/* Themes Button */}

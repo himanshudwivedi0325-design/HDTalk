@@ -133,6 +133,14 @@ function initSocket(io) {
         return;
       }
 
+      const existingConv = db.getConversationById(conversationId);
+      if (existingConv && existingConv.isPending) {
+        console.warn(`[Socket] send_message blocked: conversation ${conversationId} is pending connection acceptance`);
+        if (typeof ackCallback === 'function') ackCallback({ success: false, message: 'Connection request is pending acceptance.' });
+        socket.emit('socket_error', { message: 'Chat is locked until the connection request is accepted.' });
+        return;
+      }
+
       const newMsg = db.createMessage({
         conversationId,
         senderId,
@@ -257,6 +265,48 @@ function initSocket(io) {
 
       db.markAsRead(conversationId, userId);
       socket.to(`conv:${conversationId}`).emit('messages_marked_read', { conversationId, readBy: userId });
+    });
+
+    socket.on('delete_message', ({ messageId, conversationId, deleteForEveryone }) => {
+      let userId = socketUserMap.get(socket.id);
+      if (!userId) return;
+
+      const isForEveryone = deleteForEveryone !== false;
+      const result = db.deleteMessage(messageId, userId, isForEveryone);
+      if (!result) {
+        socket.emit('socket_error', { message: 'Message not found' });
+        return;
+      }
+      if (result.error) {
+        socket.emit('socket_error', { message: result.error });
+        return;
+      }
+
+      const targetConvId = conversationId || result.message.conversationId;
+      const payload = {
+        messageId,
+        conversationId: targetConvId,
+        deleteForEveryone: isForEveryone,
+        message: result.message
+      };
+
+      if (isForEveryone) {
+        io.to(`conv:${targetConvId}`).emit('message_deleted', payload);
+        const conv = db.getConversationById(targetConvId);
+        if (conv && conv.participants) {
+          conv.participants.forEach(pId => {
+            io.to(`user:${pId}`).emit('message_deleted', payload);
+            io.to(`user:${pId}`).emit('conversation_updated', {
+              conversationId: targetConvId,
+              lastMessage: conv.lastMessage,
+              updatedAt: conv.updatedAt
+            });
+          });
+        }
+      } else {
+        socket.emit('message_deleted', payload);
+        io.to(`user:${userId}`).emit('message_deleted', payload);
+      }
     });
 
     // ----------------------------------------------------

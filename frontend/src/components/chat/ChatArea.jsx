@@ -19,7 +19,10 @@ import {
   FileText,
   PanelLeftOpen,
   PanelLeftClose,
-  ChevronLeft
+  ChevronLeft,
+  Clock,
+  Check,
+  UserCheck
 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { formatLastActive } from '../../utils/timeAgo';
@@ -42,7 +45,10 @@ export function ChatArea({
     sendFileMessage, 
     notifyTyping, 
     stopTyping,
-    typingUsers 
+    typingUsers,
+    connectionRequests,
+    acceptConnectionRequest,
+    rejectConnectionRequest
   } = useChat();
 
   const { initiateCall, joinGroupCall } = useCall();
@@ -52,6 +58,7 @@ export function ChatArea({
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [isRespondingConnection, setIsRespondingConnection] = useState(false);
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -64,6 +71,41 @@ export function ChatArea({
     (activeConversation && typingUsers[activeConversation.id])
   );
   const lastSeenIso = otherUser ? getUserLastSeen(otherUser.id, otherUser.lastSeen) : null;
+
+  // Connection request resolution
+  const matchingRequest = (connectionRequests || []).find(r => 
+    otherUser?.id && (
+      (r.fromUserId === user?.id && r.toUserId === otherUser.id) ||
+      (r.fromUserId === otherUser.id && r.toUserId === user?.id)
+    )
+  );
+
+  const isPending = Boolean(activeConversation?.isPending || (matchingRequest && matchingRequest.status === 'pending'));
+  const isSender = (activeConversation?.requestedBy === user?.id) || (matchingRequest && matchingRequest.fromUserId === user?.id);
+
+  const handleAcceptConnection = async () => {
+    if (!matchingRequest) return;
+    try {
+      setIsRespondingConnection(true);
+      await acceptConnectionRequest(matchingRequest.id);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsRespondingConnection(false);
+    }
+  };
+
+  const handleDeclineConnection = async () => {
+    if (!matchingRequest) return;
+    try {
+      setIsRespondingConnection(true);
+      await rejectConnectionRequest(matchingRequest.id);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsRespondingConnection(false);
+    }
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -208,15 +250,21 @@ export function ChatArea({
         <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           {/* Audio Call */}
           <button
+            disabled={isPending}
             onClick={() => {
+              if (isPending) return;
               if (activeConversation?.isGroup) {
                 joinGroupCall(activeConversation.id, 'audio');
               } else {
                 initiateCall(otherUser, 'audio');
               }
             }}
-            className="h-9 px-2.5 sm:px-3 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white transition text-xs font-semibold flex items-center justify-center gap-1.5 flex-shrink-0 whitespace-nowrap"
-            title={activeConversation?.isGroup ? "Join Group Voice Call" : "Start Audio Call"}
+            className={`h-9 px-2.5 sm:px-3 rounded-xl border transition text-xs font-semibold flex items-center justify-center gap-1.5 flex-shrink-0 whitespace-nowrap ${
+              isPending
+                ? 'opacity-40 cursor-not-allowed bg-slate-100 dark:bg-white/5 border-slate-200/50 dark:border-white/5 text-slate-400'
+                : 'bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white'
+            }`}
+            title={isPending ? "Calls locked until connection is accepted" : (activeConversation?.isGroup ? "Join Group Voice Call" : "Start Audio Call")}
           >
             <Phone className="w-4 h-4 text-blue-600 dark:text-cyan-400 flex-shrink-0" />
             <span className="hidden xl:inline whitespace-nowrap">{activeConversation?.isGroup ? "Group Voice" : "Voice Call"}</span>
@@ -224,15 +272,21 @@ export function ChatArea({
 
           {/* HD Video Call */}
           <button
+            disabled={isPending}
             onClick={() => {
+              if (isPending) return;
               if (activeConversation?.isGroup) {
                 joinGroupCall(activeConversation.id, 'video');
               } else {
                 initiateCall(otherUser, 'video');
               }
             }}
-            className="h-9 px-2.5 sm:px-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md shadow-blue-600/30 transition hover:scale-105 active:scale-95 flex items-center justify-center gap-1.5 flex-shrink-0 whitespace-nowrap"
-            title={activeConversation?.isGroup ? "Join Group HD Video Mesh" : "Start HD Video Call"}
+            className={`h-9 px-2.5 sm:px-3.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 flex-shrink-0 whitespace-nowrap ${
+              isPending
+                ? 'opacity-40 cursor-not-allowed bg-slate-200 dark:bg-white/10 text-slate-400'
+                : 'bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-600/30 transition hover:scale-105 active:scale-95'
+            }`}
+            title={isPending ? "Video calls locked until connection is accepted" : (activeConversation?.isGroup ? "Join Group HD Video Mesh" : "Start HD Video Call")}
           >
             <Video className="w-4 h-4 flex-shrink-0" />
             <span className="hidden xl:inline whitespace-nowrap">{activeConversation?.isGroup ? "Group Video" : "HD Video"}</span>
@@ -340,7 +394,59 @@ export function ChatArea({
           </div>
         )}
 
-        {showVoiceRecorder ? (
+        {isPending ? (
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-white/95 dark:bg-[#111728]/95 border border-slate-200/80 dark:border-white/10 shadow-lg select-none">
+            {isSender ? (
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center flex-shrink-0">
+                  <Clock className="w-5 h-5 animate-spin" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">
+                    Connection Request Pending
+                  </h4>
+                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
+                    Waiting for <strong className="text-slate-800 dark:text-slate-200">{otherUser?.name || 'this user'}</strong> to accept your connection request before you can chat.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-500 text-white flex items-center justify-center flex-shrink-0 shadow-md shadow-blue-500/20">
+                    <UserCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">
+                      {otherUser?.name || 'This user'} sent you a connection request
+                    </h4>
+                    <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
+                      Accept to unlock messaging and video calling.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <button
+                    onClick={handleAcceptConnection}
+                    disabled={isRespondingConnection}
+                    className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-md shadow-blue-600/20 active:scale-95 transition flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Accept Request</span>
+                  </button>
+                  <button
+                    onClick={handleDeclineConnection}
+                    disabled={isRespondingConnection}
+                    className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-rose-500/20 text-slate-700 dark:text-slate-300 hover:text-rose-500 text-xs font-medium transition disabled:opacity-50"
+                  >
+                    Decline
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : showVoiceRecorder ? (
           <VoiceRecorder
             onAudioReady={(blob) => {
               sendVoiceMessage(blob);

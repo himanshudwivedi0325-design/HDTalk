@@ -54,6 +54,7 @@ router.get('/conversations/:conversationId/messages', chatController.getMessages
 router.post('/conversations/:conversationId/messages', chatController.sendMessage);
 router.post('/conversations/:conversationId/read', chatController.markRead);
 router.post('/messages/:messageId/reactions', chatController.addReaction);
+router.delete('/messages/:messageId', chatController.deleteMessage);
 router.post('/upload', uploadLimiter, upload.single('file'), chatController.uploadFile);
 
 module.exports = router;

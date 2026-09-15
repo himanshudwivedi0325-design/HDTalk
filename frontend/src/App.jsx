@@ -17,14 +17,16 @@ import { CallModal } from './components/call/CallModal';
 import { AuthModal } from './components/auth/AuthModal';
 
 import { HDTalkLogo } from './components/ui/HDTalkLogo';
+import { FriendRequestsModal } from './components/modals/FriendRequestsModal';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
 
 function MainLayout() {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const { activeConversation, conversations } = useChat();
+  const { activeConversation, conversations, pendingRequestsCount, selectConversation } = useChat();
   const [activeTab, setActiveTab] = useState('chats'); // 'chats' | 'discover'
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showRequestsModal, setShowRequestsModal] = useState(false);
   const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState(false);
   const [isConversationListVisible, setIsConversationListVisible] = useState(true);
 
@@ -60,6 +62,7 @@ function MainLayout() {
         <GlassNavbar
           onOpenThemeModal={() => setShowThemeModal(true)}
           onOpenProfileModal={() => setShowProfileModal(true)}
+          onOpenRequestsModal={() => setShowRequestsModal(true)}
         />
       </div>
 
@@ -75,6 +78,7 @@ function MainLayout() {
             }}
             onOpenThemeModal={() => setShowThemeModal(true)}
             onOpenProfileModal={() => setShowProfileModal(true)}
+            onOpenRequestsModal={() => setShowRequestsModal(true)}
           />
         </div>
 
@@ -141,7 +145,9 @@ function MainLayout() {
           }}
           onOpenThemeModal={() => setShowThemeModal(true)}
           onOpenProfileModal={() => setShowProfileModal(true)}
+          onOpenRequestsModal={() => setShowRequestsModal(true)}
           unreadCount={totalUnread}
+          pendingRequestsCount={pendingRequestsCount}
           user={user}
         />
       )}
@@ -150,6 +156,15 @@ function MainLayout() {
       <CallModal />
       <ThemeSelector isOpen={showThemeModal} onClose={() => setShowThemeModal(false)} />
       <UserProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
+      <FriendRequestsModal 
+        isOpen={showRequestsModal} 
+        onClose={() => setShowRequestsModal(false)}
+        onOpenChat={(conv) => {
+          setActiveTab('chats');
+          setIsConversationListVisible(false);
+          selectConversation(conv);
+        }}
+      />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useChat } from '../../context/ChatContext';
 import { 
   Sparkles, 
   UserCheck, 
@@ -16,10 +17,11 @@ import {
 import { HDTalkLogo, CreatorBadge } from '../ui/HDTalkLogo';
 import { Avatar } from '../ui/Avatar';
 
-export function GlassNavbar({ onOpenThemeModal, onOpenProfileModal }) {
+export function GlassNavbar({ onOpenThemeModal, onOpenProfileModal, onOpenRequestsModal }) {
   const { user, logout } = useAuth();
   const { isConnected } = useSocket();
   const { currentThemeObj, isDark, toggleMode } = useTheme();
+  const { pendingRequestsCount } = useChat();
 
   return (
     <header className="h-14 sm:h-16 px-4 md:px-6 flex items-center justify-between bg-white/80 dark:bg-[#070c18]/90 border-b border-slate-200/80 dark:border-white/10 backdrop-blur-xl z-20 select-none transition-colors duration-200 flex-shrink-0">
@@ -63,6 +65,20 @@ export function GlassNavbar({ onOpenThemeModal, onOpenProfileModal }) {
             <Sun className="w-4 h-4 text-amber-400 group-hover:rotate-45 transition-transform duration-300" />
           ) : (
             <Moon className="w-4 h-4 text-blue-600 group-hover:-rotate-12 transition-transform duration-300" />
+          )}
+        </button>
+
+        {/* Connection Requests Button */}
+        <button
+          onClick={onOpenRequestsModal}
+          className="relative p-2 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-cyan-400 transition hover:scale-105 active:scale-95"
+          title="Connection Requests"
+        >
+          <UserCheck className="w-4 h-4" />
+          {pendingRequestsCount > 0 && (
+            <span className="absolute -top-1 -right-1 px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-extrabold shadow animate-pulse">
+              {pendingRequestsCount}
+            </span>
           )}
         </button>
 

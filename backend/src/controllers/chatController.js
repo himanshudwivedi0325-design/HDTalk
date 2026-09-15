@@ -17,12 +17,26 @@ exports.getConversations = (req, res) => {
       const participants = c.participants.map(id => sanitizeUser(db.getUserById(id))).filter(Boolean);
       const otherUser = participants.find(p => p.id !== currentUserId) || null;
 
+      // Dynamically evaluate pending connection status
+      let isPending = c.isPending || false;
+      let requestedBy = c.requestedBy || null;
+      if (c.type === 'direct' && otherUser) {
+        const reqItem = (db.getDb().connectionRequests || []).find(r =>
+          (r.fromUserId === currentUserId && r.toUserId === otherUser.id) ||
+          (r.fromUserId === otherUser.id && r.toUserId === currentUserId)
+        );
+        isPending = reqItem ? reqItem.status === 'pending' : false;
+        requestedBy = reqItem ? reqItem.fromUserId : null;
+      }
+
       // Count unread messages
-      const msgs = db.getMessages(c.id);
-      const unreadCount = msgs.filter(m => m.senderId !== currentUserId && !m.readBy.includes(currentUserId)).length;
+      const msgs = db.getMessages(c.id, currentUserId);
+      const unreadCount = msgs.filter(m => m.senderId !== currentUserId && !m.readBy?.includes(currentUserId)).length;
 
       return {
         ...c,
+        isPending,
+        requestedBy,
         participants,
         otherUser,
         unreadCount
@@ -71,7 +85,7 @@ exports.getMessages = (req, res) => {
     }
 
     db.markAsRead(conversationId, req.user.id);
-    const messages = db.getMessages(conversationId);
+    const messages = db.getMessages(conversationId, req.user.id);
 
     res.json({
       success: true,
@@ -91,6 +105,9 @@ exports.sendMessage = (req, res) => {
     const conv = db.getConversationById(conversationId);
     if (!conv || !conv.participants.includes(req.user.id)) {
       return res.status(403).json({ success: false, message: 'Access denied to this conversation.' });
+    }
+    if (conv.isPending) {
+      return res.status(403).json({ success: false, message: 'Connection request is pending. Cannot send messages until accepted.' });
     }
 
     const newMsg = db.createMessage({
@@ -177,6 +194,56 @@ exports.markRead = (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false });
+  }
+};
+
+exports.deleteMessage = (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const deleteForEveryone = req.body.deleteForEveryone !== false;
+
+    const result = db.deleteMessage(messageId, req.user.id, deleteForEveryone);
+    if (!result) {
+      return res.status(404).json({ success: false, message: 'Message not found.' });
+    }
+    if (result.error) {
+      return res.status(403).json({ success: false, message: result.error });
+    }
+
+    // Broadcast in real-time via Socket.IO
+    try {
+      const io = socketManager.getIO();
+      if (io) {
+        const payload = {
+          messageId,
+          conversationId: result.message.conversationId,
+          deleteForEveryone,
+          message: result.message
+        };
+        if (deleteForEveryone) {
+          io.to(`conv:${result.message.conversationId}`).emit('message_deleted', payload);
+          const conv = db.getConversationById(result.message.conversationId);
+          if (conv && conv.participants) {
+            conv.participants.forEach(pId => {
+              io.to(`user:${pId}`).emit('message_deleted', payload);
+            });
+          }
+        } else {
+          io.to(`user:${req.user.id}`).emit('message_deleted', payload);
+        }
+      }
+    } catch (socketErr) {
+      console.warn('Socket broadcast error on delete:', socketErr.message);
+    }
+
+    res.json({
+      success: true,
+      message: result.message,
+      deleteForEveryone
+    });
+  } catch (err) {
+    console.error('Delete message error:', err);
+    res.status(500).json({ success: false, message: 'Failed to delete message.' });
   }
 };
 

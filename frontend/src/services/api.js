@@ -56,6 +56,7 @@ export const api = {
   getMessages: (conversationId) => request(`/api/chat/conversations/${conversationId}/messages`),
   sendMessage: (conversationId, body) => request(`/api/chat/conversations/${conversationId}/messages`, { method: 'POST', body: JSON.stringify(body) }),
   addReaction: (messageId, emoji) => request(`/api/chat/messages/${messageId}/reactions`, { method: 'POST', body: JSON.stringify({ emoji }) }),
+  deleteMessage: (messageId, deleteForEveryone = true) => request(`/api/chat/messages/${messageId}`, { method: 'DELETE', body: JSON.stringify({ deleteForEveryone }) }),
   markRead: (conversationId) => request(`/api/chat/conversations/${conversationId}/read`, { method: 'POST' }),
 
   // File / Voice Upload

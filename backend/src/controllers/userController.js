@@ -1,4 +1,5 @@
 const db = require('../database/db');
+const socketManager = require('../socket/socketManager');
 
 const sanitizeUser = (user) => {
   if (!user) return null;
@@ -118,6 +119,22 @@ exports.sendConnectionRequest = (req, res) => {
       return res.status(400).json({ success: false, message: 'Target user ID is required.' });
     }
     const request = db.sendConnectionRequest(req.user.id, toUserId, note || '');
+
+    // Real-time notification to recipient
+    try {
+      const io = socketManager.getIO();
+      if (io) {
+        const enriched = {
+          ...request,
+          fromUser: sanitizeUser(db.getUserById(req.user.id)),
+          toUser: sanitizeUser(db.getUserById(toUserId))
+        };
+        io.to(`user:${toUserId}`).emit('new_connection_request', enriched);
+      }
+    } catch (sErr) {
+      console.warn('Socket error on sendConnectionRequest:', sErr.message);
+    }
+
     res.status(201).json({ success: true, request });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to send request.' });
@@ -142,6 +159,23 @@ exports.respondConnectionRequest = (req, res) => {
     let conversation = null;
     if (status === 'accepted') {
       conversation = db.getOrCreateDirectConversation(updated.fromUserId, updated.toUserId);
+    }
+
+    // Broadcast socket event to both users
+    try {
+      const io = socketManager.getIO();
+      if (io) {
+        const payload = {
+          requestId: updated.id,
+          status,
+          updated,
+          conversation
+        };
+        io.to(`user:${updated.fromUserId}`).emit('connection_request_status_updated', payload);
+        io.to(`user:${updated.toUserId}`).emit('connection_request_status_updated', payload);
+      }
+    } catch (sErr) {
+      console.warn('Socket error on respondConnectionRequest:', sErr.message);
     }
 
     res.json({ success: true, request: updated, conversation });
