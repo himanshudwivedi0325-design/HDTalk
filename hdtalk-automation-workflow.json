@@ -1,0 +1,253 @@
+{
+  "name": "HDTalk Automation Engine (Onboarding, Missed Calls & AI Bot)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hdtalk",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-1",
+      "name": "HDTalk Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "hdtalk"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "user_registered",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "User Registered"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "missed_call",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Missed Call"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "offline_message",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Offline Message"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "ai_chat_query",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "AI Bot Query"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-switch-1",
+      "name": "Route Event",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"message\": \"Event received and queued by n8n\",\n  \"event\": \"{{ $json.body.event }}\"\n}",
+        "options": {}
+      },
+      "id": "node-respond-ack",
+      "name": "Quick ACK to HDTalk",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [480, 100]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json.body.data;\nconsole.log(`[HDTalk Automation] Sending Welcome Email to: ${data.email} (${data.name})`);\n\nreturn [{\n  json: {\n    action: 'Welcome Email Sent',\n    recipient: data.email,\n    name: data.name,\n    subject: 'Welcome to HDTalk ⚡ by Himanshu Dwivedi!',\n    emailBody: `Hi ${data.name},\\n\\nWelcome to HDTalk! Your account is active. Connect and make HD audio/video calls anytime.`\n  }\n}];"
+      },
+      "id": "node-welcome-email",
+      "name": "Send Welcome Notification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 160]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json.body.data;\nconsole.log(`[HDTalk Alert] Missed call from ${data.caller.name} to ${data.targetUser.name} (${data.targetUser.email})`);\n\nreturn [{\n  json: {\n    action: 'Missed Call Alert',\n    toEmail: data.targetUser.email,\n    toName: data.targetUser.name,\n    alertText: data.alertText,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "node-missed-call",
+      "name": "Send Missed Call Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 280]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json.body.data;\nconsole.log(`[HDTalk Alert] Offline message alert to ${data.targetUser.email}`);\n\nreturn [{\n  json: {\n    action: 'Offline Message Notification',\n    toEmail: data.targetUser.email,\n    toName: data.targetUser.name,\n    senderName: data.sender.name,\n    messageText: data.message.text\n  }\n}];"
+      },
+      "id": "node-offline-msg",
+      "name": "Send Offline Message Notification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const req = $input.first().json.body.data;\nconst query = req.query.toLowerCase();\n\nlet reply = '';\nif (query.includes('hi') || query.includes('hello') || query.includes('hey')) {\n  reply = `Hello ${req.sender.name}! 👋 I am your HDTalk AI Assistant powered by n8n. How can I help you today?`;\n} else if (query.includes('who created you') || query.includes('creator') || query.includes('founder')) {\n  reply = 'HDTalk was designed and created with ❤️ by Himanshu Dwivedi!';\n} else if (query.includes('features') || query.includes('help')) {\n  reply = 'HDTalk features: Instant real-time chat, HD WebRTC Video & Audio calls, Screen Sharing, Synergy Matching, and n8n Workflow Automations!';\n} else {\n  reply = `I heard: \"${req.query}\". I am connected via n8n automation engine and ready to help!`;\n}\n\nreturn [{\n  json: {\n    conversationId: req.conversationId,\n    replyText: reply,\n    replyToId: req.replyToId\n  }\n}];"
+      },
+      "id": "node-ai-reply-generator",
+      "name": "Generate AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 520]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5000/api/chat/bot-reply",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"conversationId\": \"{{ $json.conversationId }}\",\n  \"text\": \"{{ $json.replyText }}\",\n  \"replyToId\": \"{{ $json.replyToId || '' }}\"\n}",
+        "options": {}
+      },
+      "id": "node-post-back-hdtalk",
+      "name": "Post Reply Back to HDTalk",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1020, 520]
+    }
+  ],
+  "connections": {
+    "HDTalk Webhook": {
+      "main": [
+        [
+          {
+            "node": "Route Event",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Quick ACK to HDTalk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Event": {
+      "main": [
+        [
+          {
+            "node": "Send Welcome Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Missed Call Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Offline Message Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate AI Response": {
+      "main": [
+        [
+          {
+            "node": "Post Reply Back to HDTalk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

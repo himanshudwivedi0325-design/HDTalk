@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.pfx
+*.key
+
+# Runtime Data & Logs
+backend/data/.tmp_*
+backend/data/db.corrupted.*
+backend/logs/*.log
+*.log
+
+# Build Outputs
+dist/
+build/
+
+# OS and Editor Artifacts
+.DS_Store
+Thumbs.db
+cloudflared.exe
+__pycache__/
+*.pyc
+

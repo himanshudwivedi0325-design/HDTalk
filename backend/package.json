@@ -1,0 +1,36 @@
+{
+  "name": "hdtalk-backend",
+  "version": "1.0.0",
+  "description": "HDTalk - Real-Time Communication System Backend | Created by Himanshu Dwivedi",
+  "author": "Himanshu Dwivedi",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "db:reset": "node -e \"require('./src/database/db').resetDb();\"",
+    "db:seed": "node -e \"require('./src/database/db').seedDefaultUsers();\"",
+    "db:demo-seed": "node scripts/seed_demo_environment.js",
+    "test:health": "node test_security_and_health.cjs",
+    "test:turn": "node test_turn_config.cjs",
+    "test:sockets": "node socket_load_generator.cjs",
+    "test:rooms": "node room_load_generator.cjs",
+    "test:uploads": "node upload_load_generator.cjs",
+    "test:resilience": "node mixed_workload_resilience.cjs",
+    "test:availability": "node test_availability_audit.cjs",
+    "test:https": "node test_https_wss_audit.cjs",
+    "test:crash": "node test_crash_recovery_audit.cjs",
+    "test:realworld": "node test_realworld_compatibility_audit.cjs",
+    "test:soak": "node soak_test_runner.cjs",
+    "test:all": "node test_security_and_health.cjs && node test_turn_config.cjs && node mixed_workload_resilience.cjs"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "socket.io": "^4.7.5",
+    "uuid": "^9.0.1"
+  }
+}

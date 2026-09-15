@@ -1,0 +1,181 @@
+const fs = require('fs');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const config = require('../config/config');
+const db = require('../database/db');
+const n8nService = require('../services/n8nService');
+
+const signToken = (id) => {
+  return jwt.sign({ id }, config.JWT_SECRET, { expiresIn: config.JWT_EXPIRES_IN });
+};
+
+const sanitizeUser = (user) => {
+  if (!user) return null;
+  const { password, ...safe } = user;
+  return safe;
+};
+
+exports.register = (req, res) => {
+  try {
+    const { name, email, password, profession, bio, interests } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, message: 'Name, email and password are required.' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanName = name.trim();
+
+    if (cleanName.length < 2) {
+      return res.status(400).json({ success: false, message: 'Name must be at least 2 characters.' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters.' });
+    }
+
+    const existing = db.getUserByEmail(cleanEmail);
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'This email is already registered. Please Sign In.' });
+    }
+
+    const hashedPassword = bcrypt.hashSync(password, 10);
+    let avatar = (req.body.avatar && req.body.avatar.trim()) || '';
+
+    if (avatar && avatar.startsWith('data:image/')) {
+      try {
+        const matches = avatar.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
+        if (matches) {
+          const rawSubtype = matches[1].toLowerCase();
+          const ext = rawSubtype === 'jpeg' ? '.jpg' : `.${rawSubtype}`;
+          const safeExt = ['.jpg', '.png', '.webp', '.gif'].includes(ext) ? ext : '.png';
+          const filename = `avatar-${Date.now()}-${uuidv4().slice(0, 8)}${safeExt}`;
+          const filePath = path.join(config.UPLOAD_DIR, filename);
+          const buffer = Buffer.from(matches[2], 'base64');
+          fs.writeFileSync(filePath, buffer);
+          avatar = `/uploads/${filename}`;
+        }
+      } catch (saveErr) {
+        console.warn('Could not persist base64 avatar to disk:', saveErr.message);
+      }
+    }
+
+    const newUser = db.createUser({
+      name: cleanName,
+      email: cleanEmail,
+      password: hashedPassword,
+      avatar,
+      profession: (profession && profession.trim()) || 'Professional',
+      bio: (bio && bio.trim()) || 'Excited to connect and collaborate on HDTalk!',
+      interests: Array.isArray(interests) ? interests : (interests ? interests.split(',').map(s => s.trim()) : ['Tech', 'Networking'])
+    });
+
+    // Notify n8n for welcome onboarding automation
+    n8nService.notifyUserRegistered(newUser);
+
+    const token = signToken(newUser.id);
+    res.status(201).json({
+      success: true,
+      token,
+      user: sanitizeUser(newUser)
+    });
+  } catch (err) {
+    console.error('Register error:', err);
+    res.status(500).json({ success: false, message: 'Server error during registration.' });
+  }
+};
+
+exports.login = (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Email and password are required.' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const user = db.getUserByEmail(cleanEmail);
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+    }
+
+    const isMatch = bcrypt.compareSync(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+    }
+
+    // Update status to online
+    db.updateUser(user.id, { status: 'online', lastSeen: new Date().toISOString() });
+
+    const token = signToken(user.id);
+    res.json({
+      success: true,
+      token,
+      user: sanitizeUser(user)
+    });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ success: false, message: 'Server error during login.' });
+  }
+};
+
+exports.getMe = (req, res) => {
+  res.json({
+    success: true,
+    user: sanitizeUser(req.user)
+  });
+};
+
+// Quick switch login for instant test in multiple browser windows / tabs
+exports.quickLogin = (req, res) => {
+  try {
+    if (process.env.NODE_ENV === 'production' && !config.ALLOW_QUICK_LOGIN) {
+      return res.status(403).json({ success: false, message: 'Quick login is disabled in production environments.' });
+    }
+    const { userId } = req.body;
+    const user = db.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Demo user not found.' });
+    }
+
+    db.updateUser(user.id, { status: 'online', lastSeen: new Date().toISOString() });
+    const token = signToken(user.id);
+
+    res.json({
+      success: true,
+      token,
+      user: sanitizeUser(user)
+    });
+  } catch (err) {
+    console.error('Quick login error:', err);
+    res.status(500).json({ success: false, message: 'Server error during quick login.' });
+  }
+};
+
+exports.getDemoUsers = (req, res) => {
+  const users = db.getUsers().map(sanitizeUser);
+  res.json({
+    success: true,
+    users
+  });
+};
+
+exports.uploadRegistrationAvatar = (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No image file uploaded.' });
+    }
+    const avatarUrl = `/uploads/${req.file.filename}`;
+    res.json({
+      success: true,
+      avatarUrl,
+      fileUrl: avatarUrl
+    });
+  } catch (err) {
+    console.error('Registration avatar upload error:', err);
+    res.status(500).json({ success: false, message: 'Failed to upload avatar.' });
+  }
+};
+

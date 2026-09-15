@@ -1,0 +1,321 @@
+{
+  "users": [
+    {
+      "id": "usr_demo_alice",
+      "createdAt": "2026-09-14T01:52:49.888Z",
+      "status": "offline",
+      "lastSeen": "2026-09-15T01:50:49.888Z",
+      "name": "Alice Sterling",
+      "email": "alice.sterling@demo.hdtalk.local",
+      "password": "$2a$10$Yex0qICiAMiBKlffUD0Di.9mHkAJQqmBUzKo6j4P8L2AOfiP1vopK",
+      "profession": "Senior Frontend Architect",
+      "bio": "Specializing in real-time WebRTC media rendering, accessible UI systems, and client performance.",
+      "interests": [
+        "WebRTC",
+        "React",
+        "Design Systems",
+        "Accessibility"
+      ],
+      "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150"
+    },
+    {
+      "id": "usr_demo_bob",
+      "createdAt": "2026-09-14T01:52:49.888Z",
+      "status": "offline",
+      "lastSeen": "2026-09-15T01:51:49.888Z",
+      "name": "Bob Vance",
+      "email": "bob.vance@demo.hdtalk.local",
+      "password": "$2a$10$Yex0qICiAMiBKlffUD0Di.9mHkAJQqmBUzKo6j4P8L2AOfiP1vopK",
+      "profession": "Cloud Infrastructure Specialist",
+      "bio": "Passionate about high-throughput Socket.io networks, media server tuning, and STUN/TURN relays.",
+      "interests": [
+        "DevOps",
+        "Coturn",
+        "Docker",
+        "NodeJS"
+      ],
+      "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
+    },
+    {
+      "id": "usr_demo_clara",
+      "createdAt": "2026-09-14T01:52:49.888Z",
+      "status": "offline",
+      "lastSeen": "2026-09-15T01:47:49.888Z",
+      "name": "Clara Oswald",
+      "email": "clara.oswald@demo.hdtalk.local",
+      "password": "$2a$10$Yex0qICiAMiBKlffUD0Di.9mHkAJQqmBUzKo6j4P8L2AOfiP1vopK",
+      "profession": "Full Stack Engineer",
+      "bio": "Building next-generation collaborative workflows and distributed messaging architectures.",
+      "interests": [
+        "FullStack",
+        "WebSocket",
+        "GraphQL",
+        "TypeScript"
+      ],
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"
+    },
+    {
+      "id": "usr_7e9078f9",
+      "createdAt": "2026-09-15T02:04:29.369Z",
+      "status": "offline",
+      "lastSeen": "2026-09-15T02:25:57.511Z",
+      "name": "aawesh tiwari",
+      "email": "aawesh@gmail.com",
+      "password": "$2a$10$5wqO74JeiE4UydIA8F58Tu4BLnrqLmb09WyZtgO4R8GkT4Ir9Xl82",
+      "avatar": "/uploads/avatar-1789437856529-9a7c902b.png",
+      "profession": "developer",
+      "bio": "Excited to connect and collaborate on HDTalk!",
+      "interests": [
+        "Tech",
+        "Networking"
+      ]
+    },
+    {
+      "id": "usr_de06d1f0",
+      "createdAt": "2026-09-15T02:05:05.547Z",
+      "status": "offline",
+      "lastSeen": "2026-09-15T02:25:53.135Z",
+      "name": "shikhar",
+      "email": "shikhar@gmail.com",
+      "password": "$2a$10$SQtZ5av0SnzRupRbCAUJy.DGhdhry77xihLX.I.FZ89umDn3ONObW",
+      "avatar": "/uploads/avatar-1789437895687-34c86af2.png",
+      "profession": "dev",
+      "bio": "Excited to connect and collaborate on HDTalk!",
+      "interests": [
+        "Tech",
+        "Networking"
+      ]
+    }
+  ],
+  "conversations": [
+    {
+      "id": "conv_850a0d15",
+      "type": "direct",
+      "participants": [
+        "usr_demo_alice",
+        "usr_demo_bob"
+      ],
+      "createdAt": "2026-09-15T01:52:49.892Z",
+      "updatedAt": "2026-09-15T01:51:49.888Z",
+      "lastMessage": {
+        "id": "msg_2dc3a81f",
+        "timestamp": "2026-09-15T01:51:49.888Z",
+        "reactions": {},
+        "readBy": [
+          "usr_demo_bob"
+        ],
+        "conversationId": "conv_850a0d15",
+        "senderId": "usr_demo_bob",
+        "text": "Received and reviewed. The peer-to-peer signaling fallback works seamlessly!",
+        "type": "text",
+        "mediaUrl": null,
+        "replyToId": null
+      }
+    },
+    {
+      "id": "conv_cf417452",
+      "type": "direct",
+      "participants": [
+        "usr_7e9078f9",
+        "usr_de06d1f0"
+      ],
+      "createdAt": "2026-09-15T02:07:10.606Z",
+      "updatedAt": "2026-09-15T02:25:29.158Z",
+      "lastMessage": {
+        "text": "kya kah rhe ho bhai?",
+        "senderId": "usr_de06d1f0",
+        "timestamp": "2026-09-15T02:25:29.158Z"
+      }
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg_c7b501b0",
+      "timestamp": "2026-09-15T01:32:49.888Z",
+      "reactions": {
+        "👍": [
+          "usr_demo_bob"
+        ]
+      },
+      "readBy": [
+        "usr_demo_alice",
+        "usr_demo_bob"
+      ],
+      "conversationId": "conv_850a0d15",
+      "senderId": "usr_demo_alice",
+      "text": "Hi Bob! The WebRTC audio and video mesh streams are looking remarkably clear in HDTalk.",
+      "type": "text",
+      "mediaUrl": null,
+      "replyToId": null
+    },
+    {
+      "id": "msg_3aa41815",
+      "timestamp": "2026-09-15T01:37:49.888Z",
+      "reactions": {
+        "🚀": [
+          "usr_demo_alice"
+        ]
+      },
+      "readBy": [
+        "usr_demo_alice",
+        "usr_demo_bob"
+      ],
+      "conversationId": "conv_850a0d15",
+      "senderId": "usr_demo_bob",
+      "text": "Hey Alice! Just finished configuring the media relay pipeline. Real-time latency is under 30ms!",
+      "type": "text",
+      "mediaUrl": null,
+      "replyToId": null
+    },
+    {
+      "id": "msg_3b2c061c",
+      "timestamp": "2026-09-15T01:42:49.888Z",
+      "reactions": {},
+      "readBy": [
+        "usr_demo_alice",
+        "usr_demo_bob"
+      ],
+      "conversationId": "conv_850a0d15",
+      "senderId": "usr_demo_alice",
+      "text": "That is fantastic. Let me send over the updated architecture specs for review.",
+      "type": "text",
+      "mediaUrl": null,
+      "replyToId": null
+    },
+    {
+      "id": "msg_ab0bbd61",
+      "timestamp": "2026-09-15T01:47:49.888Z",
+      "reactions": {
+        "✨": [
+          "usr_demo_bob"
+        ]
+      },
+      "readBy": [
+        "usr_demo_alice",
+        "usr_demo_bob"
+      ],
+      "conversationId": "conv_850a0d15",
+      "senderId": "usr_demo_alice",
+      "text": "hdtalk-architecture-preview.png",
+      "type": "image",
+      "mediaUrl": "/uploads/hdtalk-architecture-preview.png",
+      "replyToId": null
+    },
+    {
+      "id": "msg_2dc3a81f",
+      "timestamp": "2026-09-15T01:51:49.888Z",
+      "reactions": {},
+      "readBy": [
+        "usr_demo_bob"
+      ],
+      "conversationId": "conv_850a0d15",
+      "senderId": "usr_demo_bob",
+      "text": "Received and reviewed. The peer-to-peer signaling fallback works seamlessly!",
+      "type": "text",
+      "mediaUrl": null,
+      "replyToId": null
+    },
+    {
+      "id": "msg_470896e5",
+      "timestamp": "2026-09-15T02:05:50.855Z",
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_7e9078f9"
+      ],
+      "conversationId": "conv_cf417452",
+      "senderId": "usr_de06d1f0",
+      "text": "hello aawesh",
+      "type": "text",
+      "mediaUrl": null,
+      "replyToId": null
+    },
+    {
+      "id": "msg_4d9472f9",
+      "timestamp": "2026-09-15T02:05:54.730Z",
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_7e9078f9"
+      ],
+      "conversationId": "conv_cf417452",
+      "senderId": "usr_de06d1f0",
+      "text": "aaj college aaoge",
+      "type": "text",
+      "mediaUrl": null,
+      "replyToId": null
+    },
+    {
+      "id": "msg_42dce484",
+      "timestamp": "2026-09-15T02:23:40.231Z",
+      "reactions": {},
+      "readBy": [
+        "usr_7e9078f9",
+        "usr_de06d1f0"
+      ],
+      "conversationId": "conv_cf417452",
+      "senderId": "usr_7e9078f9",
+      "text": "Haan bhai, 10 baje college aunga!",
+      "type": "text",
+      "mediaUrl": null,
+      "replyToId": null
+    },
+    {
+      "id": "msg_6b3128cf",
+      "timestamp": "2026-09-15T02:25:06.582Z",
+      "reactions": {},
+      "readBy": [
+        "usr_7e9078f9",
+        "usr_de06d1f0"
+      ],
+      "conversationId": "conv_cf417452",
+      "senderId": "usr_7e9078f9",
+      "text": "aur btao yaar padhayi kaise chal rhi hai",
+      "type": "text",
+      "mediaUrl": null,
+      "replyToId": null
+    },
+    {
+      "id": "msg_c747effa",
+      "timestamp": "2026-09-15T02:25:29.158Z",
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_7e9078f9"
+      ],
+      "conversationId": "conv_cf417452",
+      "senderId": "usr_de06d1f0",
+      "text": "kya kah rhe ho bhai?",
+      "type": "text",
+      "mediaUrl": null,
+      "replyToId": null
+    }
+  ],
+  "connectionRequests": [
+    {
+      "id": "req_097d167f",
+      "fromUserId": "usr_demo_alice",
+      "toUserId": "usr_demo_bob",
+      "note": "Let us collaborate on HDTalk WebRTC mesh architecture.",
+      "status": "accepted",
+      "createdAt": "2026-09-15T01:52:49.891Z",
+      "updatedAt": "2026-09-15T01:52:49.892Z"
+    },
+    {
+      "id": "req_146db3db",
+      "fromUserId": "usr_demo_clara",
+      "toUserId": "usr_demo_alice",
+      "note": "Hi Alice, would love to collaborate on the frontend WebRTC interface!",
+      "status": "pending",
+      "createdAt": "2026-09-15T01:52:49.892Z"
+    },
+    {
+      "id": "req_89a2d505",
+      "fromUserId": "usr_de06d1f0",
+      "toUserId": "usr_1fda4c73",
+      "note": "Hey, let's connect on HDTalk!",
+      "status": "pending",
+      "createdAt": "2026-09-15T02:05:43.263Z"
+    }
+  ]
+}

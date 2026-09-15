@@ -1,0 +1,90 @@
+﻿<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    
+    <!-- Primary SEO Meta Tags -->
+    <title>HDTalk ⚡ - Professional Real-Time Chat & HD WebRTC Video Calling | By Himanshu Dwivedi</title>
+    <meta name="title" content="HDTalk ⚡ - Professional Real-Time Chat & HD WebRTC Video Calling | By Himanshu Dwivedi" />
+    <meta name="description" content="HDTalk is an ultra-modern, self-hosted real-time messaging, professional synergy matchmaking, and high-definition WebRTC video/audio calling platform created with ❤️ by Himanshu Dwivedi." />
+    <meta name="keywords" content="HDTalk, Himanshu Dwivedi, real-time chat, WebRTC video calling, audio call, messaging app, self-hosted, Socket.io, React, professional networking, synergy matchmaking, screen sharing" />
+    <meta name="author" content="Himanshu Dwivedi" />
+    <meta name="creator" content="Himanshu Dwivedi" />
+    <meta name="publisher" content="Himanshu Dwivedi" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="theme-color" content="#0066FF" />
+    <meta name="color-scheme" content="dark light" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://hdtalk.internal/" />
+    <meta property="og:title" content="HDTalk ⚡ - Real-Time Communication & HD Calling System | By Himanshu Dwivedi" />
+    <meta property="og:description" content="Self-hosted real-time messaging, professional synergy matchmaking, and HD WebRTC calling created by Himanshu Dwivedi." />
+    <meta property="og:site_name" content="HDTalk" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="HDTalk ⚡ - Real-Time Communication & Calling System" />
+    <meta name="twitter:description" content="Self-hosted real-time messaging and HD WebRTC calling created by Himanshu Dwivedi." />
+
+    <!-- Mobile Web App Capability -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="HDTalk" />
+    <meta name="application-name" content="HDTalk" />
+
+    <!-- Favicon & Touch Icon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 90'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%230066FF'/><stop offset='100%25' stop-color='%2300C6FF'/></linearGradient></defs><path d='M28 6C12 6 2 16 2 32c0 16 10 26 26 26h37l17 18V54c10-6 16-14 16-22 0-16-10-26-26-26H28z' fill='url(%23g)'/><text x='48' y='42' fill='%23FFF' font-size='34' font-weight='900' font-family='system-ui, -apple-system, sans-serif' text-anchor='middle' letter-spacing='-1'>HD</text></svg>" />
+
+    <!-- Prevent Flash of Unstyled Theme (FOUC) -->
+    <script>
+      (function() {
+        try {
+          var mode = localStorage.getItem('hdtalk_mode') || 'dark';
+          var isDark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.style.colorScheme = 'dark';
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.style.colorScheme = 'light';
+          }
+        } catch (e) {}
+      })();
+    </script>
+
+    <!-- Google Fonts: Inter, Plus Jakarta Sans, Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Structured Data (JSON-LD) for Search Engines -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "HDTalk",
+        "url": "https://hdtalk.internal/",
+        "applicationCategory": "CommunicationApplication",
+        "operatingSystem": "All",
+        "creator": {
+          "@type": "Person",
+          "name": "Himanshu Dwivedi",
+          "email": "himanshudwivedi0325@gmail.com"
+        },
+        "description": "High-Definition Real-Time Communication & WebRTC Calling System with professional synergy matchmaking.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+  </head>
+  <body class="font-sans bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 antialiased overflow-hidden select-none transition-colors duration-200">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

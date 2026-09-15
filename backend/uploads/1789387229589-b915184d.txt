@@ -1,0 +1,1 @@
+Real-world test file content for HDTalk production verification

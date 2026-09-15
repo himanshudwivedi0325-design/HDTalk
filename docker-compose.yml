@@ -1,0 +1,23 @@
+﻿version: '3.8'
+
+services:
+  hdtalk-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hdtalk-ultra
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+      - CLIENT_URL=http://localhost:5000
+      - JWT_SECRET=hdtalk_super_secure_production_secret_key_2026
+    volumes:
+      - hdtalk-data:/app/backend/data
+      - hdtalk-uploads:/app/backend/uploads
+
+volumes:
+  hdtalk-data:
+  hdtalk-uploads:
