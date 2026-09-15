@@ -57,7 +57,7 @@ export function ConversationList({ onNewChatClick, onCollapse, onSelectChat }) {
             {onCollapse && (
               <button
                 onClick={onCollapse}
-                className="p-1.5 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition"
+                className="hidden md:flex p-1.5 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition"
                 title="Hide messages sidebar"
               >
                 <PanelLeftClose className="w-4 h-4" />

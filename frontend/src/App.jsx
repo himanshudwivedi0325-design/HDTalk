@@ -17,15 +17,18 @@ import { CallModal } from './components/call/CallModal';
 import { AuthModal } from './components/auth/AuthModal';
 
 import { HDTalkLogo } from './components/ui/HDTalkLogo';
+import { MobileBottomNav } from './components/layout/MobileBottomNav';
 
 function MainLayout() {
-  const { isAuthenticated, isLoading } = useAuth();
-  const { activeConversation } = useChat();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const { activeConversation, conversations } = useChat();
   const [activeTab, setActiveTab] = useState('chats'); // 'chats' | 'discover'
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState(false);
   const [isConversationListVisible, setIsConversationListVisible] = useState(true);
+
+  const totalUnread = (conversations || []).reduce((acc, c) => acc + (c.unreadCount || 0), 0);
 
   if (isLoading) {
     return (
@@ -48,20 +51,22 @@ function MainLayout() {
     return <AuthModal />;
   }
 
+  const isChatOpenOnMobile = activeTab === 'chats' && !isConversationListVisible;
+
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 transition-colors duration-200">
-      {/* Top Navbar */}
-      <GlassNavbar
-        onOpenThemeModal={() => setShowThemeModal(true)}
-        onOpenProfileModal={() => setShowProfileModal(true)}
-      />
+      {/* Top Navbar: On desktop always shown; on mobile hidden during active chat */}
+      <div className={isChatOpenOnMobile ? 'hidden md:block' : 'block'}>
+        <GlassNavbar
+          onOpenThemeModal={() => setShowThemeModal(true)}
+          onOpenProfileModal={() => setShowProfileModal(true)}
+        />
+      </div>
 
-      {/* Main Apphitect 3-Panel Layout */}
+      {/* Main Apphitect Layout */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Leftmost Activity Rail: Always visible on desktop, hides on mobile during active chat to maximize screen */}
-        <div className={`transition-all duration-300 ${
-          activeTab === 'chats' && !isConversationListVisible ? 'hidden md:flex' : 'flex'
-        }`}>
+        {/* Leftmost Activity Rail: Desktop only (hidden on mobile) */}
+        <div className="hidden md:flex flex-shrink-0">
           <ApphitectSidebar
             activeTab={activeTab}
             onTabChange={(tab) => {
@@ -125,6 +130,21 @@ function MainLayout() {
           </div>
         )}
       </div>
+
+      {/* Mobile Native Bottom Navigation Bar (Hidden when inside active chat on mobile) */}
+      {!isChatOpenOnMobile && (
+        <MobileBottomNav
+          activeTab={activeTab}
+          onTabChange={(tab) => {
+            setActiveTab(tab);
+            if (tab === 'chats') setIsConversationListVisible(true);
+          }}
+          onOpenThemeModal={() => setShowThemeModal(true)}
+          onOpenProfileModal={() => setShowProfileModal(true)}
+          unreadCount={totalUnread}
+          user={user}
+        />
+      )}
 
       {/* Fullscreen Video Calling Stage & Modals */}
       <CallModal />

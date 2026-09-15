@@ -69,8 +69,8 @@ export function MessageBubble({ message }) {
   return (
     <div className={`relative group flex flex-col mb-2.5 select-text ${isMe ? 'items-end' : 'items-start'}`}>
       <div className="relative max-w-[85%] sm:max-w-[70%]">
-        {/* Quick Reaction Floating Bar on Hover */}
-        <div className={`absolute -top-7 ${isMe ? 'right-0' : 'left-0'} hidden group-hover:flex items-center gap-1 px-2 py-1 rounded-full bg-white dark:bg-[#162035] border border-slate-200 dark:border-white/15 shadow-lg dark:shadow-xl z-20 transition-all`}>
+        {/* Quick Reaction Floating Bar on Hover/Tap */}
+        <div className={`absolute -top-7 ${isMe ? 'right-0' : 'left-0'} hidden group-hover:flex group-focus-within:flex active:flex items-center gap-1 px-2 py-1 rounded-full bg-white dark:bg-[#162035] border border-slate-200 dark:border-white/15 shadow-lg dark:shadow-xl z-20 transition-all`}>
           {EMOJI_OPTIONS.map(emoji => (
             <button
               key={emoji}
@@ -213,16 +213,6 @@ export function MessageBubble({ message }) {
 
           {/* Timestamp and Read Status */}
           <div className={`flex items-center justify-end gap-1.5 mt-1 text-[10px] ${isMe ? 'text-blue-100/90' : 'text-slate-500 dark:text-slate-400'}`}>
-            {!isMe && message.type === 'text' && !translatedText && (
-              <button
-                onClick={handleTranslate}
-                className="opacity-70 hover:opacity-100 text-[10px] text-blue-600 dark:text-cyan-300 flex items-center gap-0.5 hover:underline mr-1 font-medium"
-                title="Translate to Hindi"
-              >
-                <Languages className="w-3 h-3" />
-                <span>Translate</span>
-              </button>
-            )}
             <span>{formatTime(message.timestamp)}</span>
             {isMe && (
               <span>
