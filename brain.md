@@ -177,3 +177,41 @@
   - `prebuild`: installs frontend & backend dependencies.
   - `build`: executes Vite build (`npm --prefix frontend run build`).
 - **Production Server Command**: `node backend/src/server.js`.
+
+---
+
+## 6. Comprehensive Product Roadmap & Planned Upgrades
+
+### Tier 1: Critical Infrastructure & Stability Hardening
+1. **Cloud Media Storage (Cloudinary / AWS S3)**:
+   - *Problem*: Render free-tier dynos have ephemeral disk storage. User uploads in `/uploads` are lost on app restart/redeploy.
+   - *Solution*: Stream uploaded photos, voice notes, and docs to free-tier Cloudinary or AWS S3 buckets.
+2. **Web Push Notifications (Service Worker + Web Push API)**:
+   - Ring and alert users on phone/desktop even when the browser tab is in background or device is locked.
+3. **TURN Server Relay (Coturn / Metered.ca)**:
+   - Ensure 100% video/audio call connectivity across restrictive 4G/5G mobile carrier firewalls (symmetric NAT).
+4. **Database Migration to Hosted Engine**:
+   - Migrate from `db.json` to PostgreSQL (Supabase / Neon) or MongoDB Atlas to support 10,000+ concurrent connections.
+
+### Tier 2: Elite Chat Experience (WhatsApp & Telegram Parity)
+1. **Voice Note Audio Waveform**:
+   - Interactive dynamic soundwave scrubber with playback speed (1x, 1.5x, 2x) matching Telegram.
+2. **Fullscreen Media Lightbox**:
+   - Pinch-to-zoom, download, and gallery browsing for images and videos.
+3. **In-Chat Message Search & Pinning**:
+   - Pin important messages to chat header; full-text search within active conversation.
+4. **Forward & 1-Click Copy**:
+   - Quick copy button and forward modal to share messages across multiple contacts.
+5. **Real-Time Read Receipts Protocol**:
+   - Single tick (Sent to server) -> Double tick (Delivered to socket) -> Blue double tick (Read).
+
+### Tier 3: Next-Gen Viral Capabilities
+1. **24-Hour Stories / Status Updates**:
+   - Share temporary status cards with text, photos, and voice notes.
+2. **Drop-in Audio Spaces / Practice Rooms**:
+   - Discord/Clubhouse style voice lounges for language practice and casual hangouts.
+3. **AI Smart Tools (Gemini / n8n)**:
+   - Voice note transcription (speech-to-text), 1-click chat summarization, and smart reply suggestions.
+4. **Google One-Tap OAuth**:
+   - Instant 1-click registration and login with Google accounts.
+
