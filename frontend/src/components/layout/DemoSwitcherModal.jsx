@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
+import { Avatar } from '../ui/Avatar';
 import { X, UserCheck, Sparkles, Check, ArrowRight, ExternalLink } from 'lucide-react';
 
 export function DemoSwitcherModal({ isOpen, onClose }) {
@@ -57,16 +58,13 @@ export function DemoSwitcherModal({ isOpen, onClose }) {
                   onClick={() => !isCurrent && handleSwitch(u.id)}
                   className={`flex items-center gap-3 flex-1 cursor-pointer ${isCurrent ? 'pointer-events-none' : ''}`}
                 >
-                  <div className="relative">
-                    <img
-                      src={u.avatar}
-                      alt={u.name}
-                      className="w-10 h-10 rounded-xl object-cover ring-1 ring-slate-200 dark:ring-white/20"
-                    />
-                    {online && (
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 dark:bg-emerald-400 ring-2 ring-white dark:ring-[#0f172a] absolute -bottom-0.5 -right-0.5 animate-pulse"></span>
-                    )}
-                  </div>
+                  <Avatar
+                    src={u.avatar}
+                    name={u.name}
+                    size="md"
+                    isOnline={online}
+                    shape="squircle"
+                  />
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-xs text-slate-900 dark:text-white">{u.name}</span>

@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useChat } from '../../context/ChatContext';
 import { Check, CheckCheck, Play, Pause, Paperclip, Download, Languages, Trash2, Ban, Reply } from 'lucide-react';
 import { translateText } from '../../services/translationService';
+import { optimizeChatMediaUrl } from '../../utils/imageOptimizer';
 
 const EMOJI_OPTIONS = ['❤️', '🔥', '👍', '😂', '🚀', '🎉'];
 
@@ -340,11 +341,18 @@ export function MessageBubble({ message }) {
               {/* IMAGE ATTACHMENT */}
               {message.type === 'image' && message.mediaUrl && (
                 <div className="space-y-1.5 my-1">
-                  <a href={message.mediaUrl} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={message.mediaUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block relative rounded-xl overflow-hidden max-h-64 bg-slate-200/50 dark:bg-white/5 ring-1 ring-slate-200 dark:ring-white/10 group"
+                  >
                     <img
-                      src={message.mediaUrl}
+                      src={optimizeChatMediaUrl(message.mediaUrl, 800)}
                       alt="Attachment"
-                      className="rounded-xl max-h-64 object-cover hover:opacity-95 transition ring-1 ring-slate-200 dark:ring-white/10"
+                      loading="lazy"
+                      decoding="async"
+                      className="rounded-xl max-h-64 w-auto object-cover group-hover:opacity-95 transition-all duration-200"
                     />
                   </a>
                   {message.text && message.text !== message.fileName && (

@@ -98,8 +98,12 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static uploaded media files
-app.use('/uploads', express.static(config.UPLOAD_DIR));
+// Serve static uploaded media files with caching
+app.use('/uploads', express.static(config.UPLOAD_DIR, {
+  maxAge: '7d',
+  etag: true,
+  lastModified: true
+}));
 
 // API Routes
 app.use('/api/auth', authLimiter, authRoutes);
