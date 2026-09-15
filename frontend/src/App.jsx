@@ -19,6 +19,9 @@ import { AuthModal } from './components/auth/AuthModal';
 import { HDTalkLogo } from './components/ui/HDTalkLogo';
 import { FriendRequestsModal } from './components/modals/FriendRequestsModal';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
+import { NotificationManagerModal } from './components/notifications/NotificationManagerModal';
+import { NotificationBanner } from './components/notifications/NotificationBanner';
+import { registerServiceWorker } from './services/pushService';
 
 function MainLayout() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -27,8 +30,15 @@ function MainLayout() {
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showRequestsModal, setShowRequestsModal] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState(false);
   const [isConversationListVisible, setIsConversationListVisible] = useState(true);
+
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      registerServiceWorker();
+    }
+  }, [isAuthenticated]);
 
   const totalUnread = (conversations || []).reduce((acc, c) => acc + (c.unreadCount || 0), 0);
 
@@ -57,12 +67,16 @@ function MainLayout() {
 
   return (
     <div className="fixed inset-0 w-full h-full flex flex-col overflow-hidden bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 transition-colors duration-200">
+      {/* Background Push Notification Reminder Banner */}
+      <NotificationBanner onOpenModal={() => setShowNotificationModal(true)} />
+
       {/* Top Navbar: On desktop always shown; on mobile hidden during active chat */}
       <div className={`flex-shrink-0 ${isChatOpenOnMobile ? 'hidden md:block' : 'block'}`}>
         <GlassNavbar
           onOpenThemeModal={() => setShowThemeModal(true)}
           onOpenProfileModal={() => setShowProfileModal(true)}
           onOpenRequestsModal={() => setShowRequestsModal(true)}
+          onOpenNotificationModal={() => setShowNotificationModal(true)}
         />
       </div>
 
@@ -165,6 +179,10 @@ function MainLayout() {
           setIsConversationListVisible(false);
           selectConversation(conv);
         }}
+      />
+      <NotificationManagerModal 
+        isOpen={showNotificationModal} 
+        onClose={() => setShowNotificationModal(false)} 
       />
     </div>
   );

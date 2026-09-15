@@ -16,7 +16,8 @@ const defaultSchema = {
   users: [],
   conversations: [],
   messages: [],
-  connectionRequests: []
+  connectionRequests: [],
+  pushSubscriptions: []
 };
 
 function isValidSchema(data) {
@@ -35,7 +36,8 @@ function normalizeSchema(data) {
     users: Array.isArray(data.users) ? data.users : [],
     conversations: Array.isArray(data.conversations) ? data.conversations : [],
     messages: Array.isArray(data.messages) ? data.messages : [],
-    connectionRequests: Array.isArray(data.connectionRequests) ? data.connectionRequests : []
+    connectionRequests: Array.isArray(data.connectionRequests) ? data.connectionRequests : [],
+    pushSubscriptions: Array.isArray(data.pushSubscriptions) ? data.pushSubscriptions : []
   };
 }
 
@@ -516,6 +518,51 @@ const db = {
     return req;
   },
 
+  // Push Notification Subscriptions
+  savePushSubscription: (userId, subscription, userAgent = '') => {
+    if (!memoryState.pushSubscriptions) {
+      memoryState.pushSubscriptions = [];
+    }
+    if (!subscription || !subscription.endpoint) return null;
+
+    const existingIndex = memoryState.pushSubscriptions.findIndex(
+      s => s.subscription?.endpoint === subscription.endpoint
+    );
+    const record = {
+      id: 'sub_' + uuidv4().slice(0, 8),
+      userId,
+      subscription,
+      userAgent: (userAgent || '').slice(0, 200),
+      updatedAt: new Date().toISOString()
+    };
+
+    if (existingIndex >= 0) {
+      memoryState.pushSubscriptions[existingIndex] = record;
+    } else {
+      memoryState.pushSubscriptions.push(record);
+    }
+    scheduleFlush();
+    return record;
+  },
+
+  removePushSubscription: (endpoint) => {
+    if (!memoryState.pushSubscriptions) return false;
+    const initialLen = memoryState.pushSubscriptions.length;
+    memoryState.pushSubscriptions = memoryState.pushSubscriptions.filter(
+      s => s.subscription?.endpoint !== endpoint
+    );
+    if (memoryState.pushSubscriptions.length !== initialLen) {
+      scheduleFlush();
+      return true;
+    }
+    return false;
+  },
+
+  getPushSubscriptionsForUser: (userId) => {
+    if (!memoryState.pushSubscriptions) return [];
+    return memoryState.pushSubscriptions.filter(s => s.userId === userId);
+  },
+
   // Reliability & Persistence Lifecycle Utilities
   flushSync,
   getDb: () => memoryState,
@@ -524,6 +571,7 @@ const db = {
     conversationsCount: (memoryState.conversations || []).length,
     messagesCount: (memoryState.messages || []).length,
     connectionRequestsCount: (memoryState.connectionRequests || []).length,
+    pushSubscriptionsCount: (memoryState.pushSubscriptions || []).length,
     isDirty
   }),
   reloadFromDisk: () => {

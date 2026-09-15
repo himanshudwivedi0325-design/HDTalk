@@ -16,6 +16,7 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const webrtcRoutes = require('./routes/webrtcRoutes');
+const pushRoutes = require('./routes/pushRoutes');
 
 const app = express();
 
@@ -105,6 +106,7 @@ app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/webrtc', webrtcRoutes);
+app.use('/api/push', pushRoutes);
 
 // Global API & Multer error handler
 const multer = require('multer');

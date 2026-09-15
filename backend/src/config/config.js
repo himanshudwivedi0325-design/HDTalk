@@ -46,5 +46,8 @@ module.exports = {
   SSL_KEY_PATH: process.env.SSL_KEY_PATH || null,
   SSL_CERT_PATH: process.env.SSL_CERT_PATH || null,
   SSL_PFX_PATH: process.env.SSL_PFX_PATH || null,
-  SSL_PASSPHRASE: process.env.SSL_PASSPHRASE || null
+  SSL_PASSPHRASE: process.env.SSL_PASSPHRASE || null,
+  VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || 'BJ6_MpjdnYd2kS9DwgOXmTpiYMsrigU32AXo8vL6Bi-xxZKMEpA2qTNvGneshh-DBp8cIOXo3bV0BeGAkkcFPzA',
+  VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY || 'jFoClphDQQTzFz5WRhzgajXfA5sAevoRcWNrEtnRPmk',
+  VAPID_EMAIL: process.env.VAPID_EMAIL || 'mailto:himanshudwivedi0325@gmail.com'
 };

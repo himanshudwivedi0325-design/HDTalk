@@ -1,6 +1,7 @@
 const path = require('path');
 const db = require('../database/db');
 const socketManager = require('../socket/socketManager');
+const pushService = require('../services/pushNotificationService');
 
 const sanitizeUser = (user) => {
   if (!user) return null;
@@ -135,6 +136,24 @@ exports.sendMessage = (req, res) => {
       }
     } catch (socketBroadcastErr) {
       console.warn('Socket broadcast error in REST sendMessage:', socketBroadcastErr.message);
+    }
+
+    // Trigger background Web Push notification to all other participants
+    try {
+      const sender = db.getUserById(req.user.id);
+      const otherParticipants = (conv.participants || []).filter(pId => pId !== req.user.id);
+      otherParticipants.forEach(recipientId => {
+        pushService.notifyNewMessage({
+          recipientId,
+          senderName: sender?.name || 'HDTalk User',
+          senderAvatar: sender?.avatar,
+          text: newMsg.text,
+          type: newMsg.type,
+          conversationId
+        }).catch(pushErr => console.warn('[Push] Background message push error:', pushErr.message));
+      });
+    } catch (pushDispatchErr) {
+      console.warn('[Push] Error dispatching message push:', pushDispatchErr.message);
     }
 
     res.status(201).json({

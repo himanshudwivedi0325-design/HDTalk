@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 const db = require('../database/db');
 const n8nService = require('../services/n8nService');
+const pushService = require('../services/pushNotificationService');
 
 // Map of userId -> Set of socketIds
 const userSocketMap = new Map();
@@ -365,6 +366,16 @@ function initSocket(io) {
         callType: callType || 'video',
         signalData
       });
+
+      // Background Web Push to alert user if screen is off or tab is in background
+      try {
+        pushService.notifyIncomingCall({
+          targetUserId,
+          callerName: caller ? caller.name : 'Unknown User',
+          callType: callType || 'video',
+          callerAvatar: caller ? caller.avatar : ''
+        }).catch(pErr => console.warn('[Push] Incoming call push notice error:', pErr.message));
+      } catch (_) {}
 
       // Acknowledge to caller that callee device is ringing
       socket.emit('call_ringing', { targetUserId });

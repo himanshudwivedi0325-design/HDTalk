@@ -1,5 +1,6 @@
 const db = require('../database/db');
 const socketManager = require('../socket/socketManager');
+const pushService = require('../services/pushNotificationService');
 
 const sanitizeUser = (user) => {
   if (!user) return null;
@@ -133,6 +134,18 @@ exports.sendConnectionRequest = (req, res) => {
       }
     } catch (sErr) {
       console.warn('Socket error on sendConnectionRequest:', sErr.message);
+    }
+
+    // Trigger background Web Push alert
+    try {
+      const sender = db.getUserById(req.user.id);
+      pushService.notifyFriendRequest({
+        recipientId: toUserId,
+        senderName: sender?.name || 'HDTalk User',
+        senderAvatar: sender?.avatar
+      }).catch(pErr => console.warn('[Push] Friend request push error:', pErr.message));
+    } catch (pushErr) {
+      console.warn('[Push] Error dispatching request push:', pushErr.message);
     }
 
     res.status(201).json({ success: true, request });

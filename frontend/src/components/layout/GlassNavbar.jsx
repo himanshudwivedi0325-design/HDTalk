@@ -12,12 +12,13 @@ import {
   ChevronDown,
   Sun,
   Moon,
-  Monitor
+  Monitor,
+  Bell
 } from 'lucide-react';
 import { HDTalkLogo, CreatorBadge } from '../ui/HDTalkLogo';
 import { Avatar } from '../ui/Avatar';
 
-export function GlassNavbar({ onOpenThemeModal, onOpenProfileModal, onOpenRequestsModal }) {
+export function GlassNavbar({ onOpenThemeModal, onOpenProfileModal, onOpenRequestsModal, onOpenNotificationModal }) {
   const { user, logout } = useAuth();
   const { isConnected } = useSocket();
   const { currentThemeObj, isDark, toggleMode } = useTheme();
@@ -81,6 +82,21 @@ export function GlassNavbar({ onOpenThemeModal, onOpenProfileModal, onOpenReques
             <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-extrabold shadow animate-pulse">
               {pendingRequestsCount}
             </span>
+          )}
+        </button>
+
+        {/* Web Push Background Notifications Bell */}
+        <button
+          onClick={onOpenNotificationModal}
+          className="relative p-2 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-cyan-400 transition hover:scale-105 active:scale-95 group"
+          title="Background Call & Message Notifications (Web Push)"
+          aria-label="Notification Settings"
+        >
+          <Bell className="w-4 h-4" />
+          {typeof Notification !== 'undefined' && Notification.permission === 'granted' ? (
+            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#070c18]"></span>
+          ) : (
+            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-500 animate-pulse ring-2 ring-white dark:ring-[#070c18]"></span>
           )}
         </button>
 

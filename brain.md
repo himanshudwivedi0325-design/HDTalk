@@ -188,8 +188,12 @@
    - High-gain melodic trill ringtone via Web Audio API + vibration loop (`navigator.vibrate([600, 250, 600, 250, 1000])`).
    - Dynamic tab title flashing (`📞 INCOMING CALL - [Caller]...`) for desktop background tab awareness.
    - Keyboard accessibility (`Enter` to accept, `Escape` to decline).
-2. **Web Push Notifications (Service Worker + Web Push API)**:
-   - Ring and alert users on phone/desktop even when the browser tab is in background or device is locked.
+2. **Web Push Notifications (Service Worker + Web Push API) (COMPLETED ✅)**:
+   - Built background Web Push notification pipeline using `web-push` and VAPID RFC-8292.
+   - Service Worker (`public/sw.js`) handles background `push` and `notificationclick` events to focus or open HDTalk with custom vibration chimes (`[600, 250, 600, 250, 1000]`).
+   - Integrated push triggers on incoming calls, new chat messages, and connection requests so users get WhatsApp-style notifications when screen is locked.
+   - User notification management modal (`NotificationManagerModal.jsx`) and reminder banner (`NotificationBanner.jsx`) with 1-click test alert dispatcher.
+   - PWA web app manifest (`public/manifest.json`) enabling installable app capability on Android & iOS.
 3. **Cloud Media Storage (Cloudinary / AWS S3)**:
    - *Problem*: Render free-tier dynos have ephemeral disk storage. User uploads in `/uploads` are lost on app restart/redeploy.
    - *Solution*: Stream uploaded photos, voice notes, and docs to free-tier Cloudinary or AWS S3 buckets.

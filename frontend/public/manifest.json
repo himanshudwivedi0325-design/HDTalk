@@ -1,0 +1,23 @@
+{
+  "name": "HDTalk - Real-Time Communication & Calling",
+  "short_name": "HDTalk",
+  "description": "High-Definition Real-Time Communication, WebRTC Calling & Professional Networking by Himanshu Dwivedi",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070b14",
+  "theme_color": "#0066FF",
+  "icons": [
+    {
+      "src": "/hdtalk-logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/hdtalk-logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
