@@ -18,7 +18,38 @@ const callRooms = new Map();
 // Map of socketId -> Set<roomId>
 const socketCallRooms = new Map();
 
+// ─── Per-Socket Event Rate Limiter (Token Bucket) ──────────────────────────────
+// Prevents socket event spam without requiring external Redis.
+// socketEventBuckets: socketId -> { eventName -> timestamp[] }
+const socketEventBuckets = new Map();
+
+/**
+ * Returns true if the event should be throttled (rate limit exceeded).
+ * @param {string} socketId
+ * @param {string} eventName
+ * @param {number} maxEvents  - Max events allowed in the window
+ * @param {number} windowMs   - Window duration in ms
+ */
+function isSocketEventThrottled(socketId, eventName, maxEvents, windowMs) {
+  const now = Date.now();
+  if (!socketEventBuckets.has(socketId)) {
+    socketEventBuckets.set(socketId, {});
+  }
+  const bucket = socketEventBuckets.get(socketId);
+  if (!bucket[eventName]) bucket[eventName] = [];
+
+  // Slide the window
+  bucket[eventName] = bucket[eventName].filter(t => now - t < windowMs);
+
+  if (bucket[eventName].length >= maxEvents) {
+    return true; // throttled
+  }
+  bucket[eventName].push(now);
+  return false;
+}
+
 let ioInstance = null;
+
 
 function initSocket(io) {
   ioInstance = io;
@@ -128,6 +159,11 @@ function initSocket(io) {
     // CHAT & MESSAGING EVENTS
     // ----------------------------------------------------
     socket.on('send_message', (data, ackCallback) => {
+      // Rate limit: max 20 messages per 5 seconds per socket
+      if (isSocketEventThrottled(socket.id, 'send_message', 20, 5000)) {
+        if (typeof ackCallback === 'function') ackCallback({ success: false, message: 'Slow down! You are sending messages too fast.' });
+        return;
+      }
       const { conversationId, text, type, mediaUrl, replyToId, tempId } = data || {};
       if (!conversationId) return;
 
@@ -240,15 +276,16 @@ function initSocket(io) {
     });
 
     socket.on('typing_start', ({ conversationId, targetUserId }) => {
+      // Rate limit: max 10 typing events per 3 seconds (prevents typing indicator spam)
+      if (isSocketEventThrottled(socket.id, 'typing_start', 10, 3000)) return;
       const senderId = socketUserMap.get(socket.id);
       if (!senderId) return;
 
       const payload = { conversationId, userId: senderId };
+      // Emit only to participant personal rooms (avoids duplicates from conv room overlap)
       if (targetUserId) {
         io.to(`user:${targetUserId}`).emit('user_typing', payload);
-      }
-      if (conversationId) {
-        socket.to(`conv:${conversationId}`).emit('user_typing', payload);
+      } else if (conversationId) {
         const conv = db.getConversationById(conversationId);
         if (conv && conv.participants) {
           conv.participants.forEach(pId => {
@@ -265,11 +302,10 @@ function initSocket(io) {
       if (!senderId) return;
 
       const payload = { conversationId, userId: senderId };
+      // Emit only to participant personal rooms (avoids duplicates)
       if (targetUserId) {
         io.to(`user:${targetUserId}`).emit('user_stop_typing', payload);
-      }
-      if (conversationId) {
-        socket.to(`conv:${conversationId}`).emit('user_stop_typing', payload);
+      } else if (conversationId) {
         const conv = db.getConversationById(conversationId);
         if (conv && conv.participants) {
           conv.participants.forEach(pId => {
@@ -282,6 +318,8 @@ function initSocket(io) {
     });
 
     socket.on('add_reaction', ({ messageId, conversationId, emoji }) => {
+      // Rate limit: max 15 reactions per 5 seconds
+      if (isSocketEventThrottled(socket.id, 'add_reaction', 15, 5000)) return;
       const userId = socketUserMap.get(socket.id);
       if (!userId) return;
 
@@ -621,6 +659,20 @@ function initSocket(io) {
       const senderId = socketUserMap.get(socket.id);
       if (!senderId) return;
 
+      // Security: verify sender is in an active call session with the target user
+      const session = userActiveCallMap.get(senderId);
+      const activeCall = activeCallsMap.get(socket.id);
+      const targetSession = toUserId ? userActiveCallMap.get(toUserId) : null;
+
+      const isAuthorized = (session && session.peerUserId === toUserId) ||
+                           (activeCall && activeCall.targetUserId === toUserId) ||
+                           (targetSession && targetSession.peerUserId === senderId);
+
+      if (!isAuthorized) {
+        console.warn(`[Call Security] Dropped screen_share_status from ${senderId} to unauthorized target ${toUserId}`);
+        return;
+      }
+
       io.to(`user:${toUserId}`).emit('screen_share_status', {
         fromUserId: senderId,
         isSharing
@@ -800,6 +852,9 @@ function initSocket(io) {
     socket.on('disconnect', () => {
       const userId = socketUserMap.get(socket.id);
 
+      // Clean up rate limit bucket for this socket
+      socketEventBuckets.delete(socket.id);
+
       // Clean up 1:1 call session
       if (userId && userActiveCallMap.has(userId)) {
         const session = userActiveCallMap.get(userId);
@@ -813,6 +868,7 @@ function initSocket(io) {
         userActiveCallMap.delete(userId);
       }
       activeCallsMap.delete(socket.id);
+
 
       // Clean up all group mesh rooms this socket was in
       if (socketCallRooms.has(socket.id)) {

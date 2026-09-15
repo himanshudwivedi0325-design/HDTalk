@@ -5,6 +5,51 @@ import { SocketProvider } from './context/SocketContext';
 import { CallProvider } from './context/CallContext';
 import { ChatProvider, useChat } from './context/ChatContext';
 
+// ─── Error Boundary ───────────────────────────────────────────────────────────
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, info) {
+    console.error('[ErrorBoundary] Uncaught error:', error, info.componentStack);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="h-screen w-screen flex items-center justify-center bg-slate-50 dark:bg-[#070c18] p-6">
+          <div className="max-w-md w-full text-center space-y-4">
+            <div className="text-5xl">⚠️</div>
+            <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">Something went wrong</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              HDTalk encountered an unexpected error. Your messages are safe.
+            </p>
+            {this.state.error && (
+              <p className="text-xs text-red-500 bg-red-50 dark:bg-red-950/30 rounded-lg p-3 font-mono text-left break-all">
+                {this.state.error.message}
+              </p>
+            )}
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors"
+            >
+              Reload App
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+
 import { GlassNavbar } from './components/layout/GlassNavbar';
 import { ApphitectSidebar } from './components/layout/ApphitectSidebar';
 import { ThemeSelector } from './components/layout/ThemeSelector';
@@ -277,18 +322,20 @@ function MainLayout() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <SocketProvider>
-          <CallProvider>
-            <ChatProvider>
-              <PwaProvider>
-                <MainLayout />
-              </PwaProvider>
-            </ChatProvider>
-          </CallProvider>
-        </SocketProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <SocketProvider>
+            <CallProvider>
+              <ChatProvider>
+                <PwaProvider>
+                  <MainLayout />
+                </PwaProvider>
+              </ChatProvider>
+            </CallProvider>
+          </SocketProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }

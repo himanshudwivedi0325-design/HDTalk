@@ -18,7 +18,7 @@ const sanitizeUser = (user) => {
   return safe;
 };
 
-exports.register = (req, res) => {
+exports.register = async (req, res) => {
   try {
     const { name, email, password, profession, bio, interests } = req.body;
 
@@ -55,7 +55,8 @@ exports.register = (req, res) => {
           const filename = `avatar-${Date.now()}-${uuidv4().slice(0, 8)}${safeExt}`;
           const filePath = path.join(config.UPLOAD_DIR, filename);
           const buffer = Buffer.from(matches[2], 'base64');
-          fs.writeFileSync(filePath, buffer);
+          // Use async write to avoid blocking the event loop
+          await fs.promises.writeFile(filePath, buffer);
           avatar = `/uploads/${filename}`;
         }
       } catch (saveErr) {
@@ -87,6 +88,7 @@ exports.register = (req, res) => {
     res.status(500).json({ success: false, message: 'Server error during registration.' });
   }
 };
+
 
 exports.login = (req, res) => {
   try {

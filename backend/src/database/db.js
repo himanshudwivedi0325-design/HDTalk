@@ -221,16 +221,9 @@ function flushSync() {
   }
 }
 
-// Process lifecycle hooks for graceful shutdown
-process.on('SIGTERM', () => {
-  try { flushSync(); } catch (_) {}
-});
-process.on('SIGINT', () => {
-  try { flushSync(); } catch (_) {}
-});
-process.on('beforeExit', () => {
-  try { flushSync(); } catch (_) {}
-});
+// Note: Graceful shutdown (flush on SIGTERM/SIGINT) is handled centrally in server.js.
+// server.js calls db.flushSync() before closing the HTTP server, ensuring a safe, ordered shutdown.
+
 
 function seedDefaultUsers() {
   const hash = bcrypt.hashSync('password123', 10);
@@ -299,33 +292,13 @@ const db = {
   getUsers: () => [...(memoryState.users || [])],
 
   getUserById: (id) => {
-    let u = (memoryState.users || []).find(x => x.id === id);
-    if (!u) {
-      try {
-        const diskData = JSON.parse(fs.readFileSync(dbFile, 'utf8'));
-        if (Array.isArray(diskData.users)) {
-          u = diskData.users.find(x => x.id === id);
-          if (u) memoryState.users.push(u);
-        }
-      } catch (_) {}
-    }
-    return u;
+    return (memoryState.users || []).find(x => x.id === id) || null;
   },
 
   getUserByEmail: (email) => {
     if (!email) return null;
     const clean = email.trim().toLowerCase();
-    let u = (memoryState.users || []).find(x => x.email && x.email.trim().toLowerCase() === clean);
-    if (!u) {
-      try {
-        const diskData = JSON.parse(fs.readFileSync(dbFile, 'utf8'));
-        if (Array.isArray(diskData.users)) {
-          u = diskData.users.find(x => x.email && x.email.trim().toLowerCase() === clean);
-          if (u) memoryState.users.push(u);
-        }
-      } catch (_) {}
-    }
-    return u;
+    return (memoryState.users || []).find(x => x.email && x.email.trim().toLowerCase() === clean) || null;
   },
 
   createUser: (userData) => {

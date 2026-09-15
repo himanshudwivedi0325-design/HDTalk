@@ -1,15 +1,73 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
+/**
+ * Require a critical secret environment variable.
+ * In production, exits with a fatal error if not set.
+ * In development, falls back to a dev default with a warning.
+ */
+function requireSecret(key, devDefault, description) {
+  const value = process.env[key];
+  if (value) return value;
+
+  if (process.env.NODE_ENV === 'production') {
+    console.error(`[Config] FATAL: Required secret "${key}" (${description}) is not set. Add it in Render Dashboard → Environment.`);
+    process.exit(1);
+  }
+
+  console.warn(`[Config] WARNING: "${key}" not set. Using insecure dev default. DO NOT use in production.`);
+  return devDefault;
+}
+
+/**
+ * Optional secret — warns in production but does NOT crash the process.
+ * Use for non-critical features (e.g., Web Push, external services).
+ */
+function optionalSecret(key, devDefault, description) {
+  const value = process.env[key];
+  if (value) return value;
+
+  if (process.env.NODE_ENV === 'production') {
+    console.warn(`[Config] WARNING: Optional secret "${key}" (${description}) is not set. Related features will be disabled.`);
+    return '';
+  }
+
+  return devDefault;
+}
+
 module.exports = {
   PORT: process.env.PORT || 5000,
+  NODE_ENV: process.env.NODE_ENV || 'development',
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
-  JWT_SECRET: process.env.JWT_SECRET || 'chatz_ultra_jwt_super_secret_key_2026',
-  JWT_EXPIRES_IN: '7d',
+
+  // ─── Security Secrets (require env vars in production) ───────────────────────
+  JWT_SECRET: requireSecret(
+    'JWT_SECRET',
+    'hdtalk_dev_jwt_secret_DO_NOT_USE_IN_PRODUCTION',
+    'JWT signing secret'
+  ),
+  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
+
+  VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || '',
+  VAPID_PRIVATE_KEY: requireSecret(
+    'VAPID_PRIVATE_KEY',
+    '',
+    'Web Push VAPID private key'
+  ),
+  VAPID_EMAIL: process.env.VAPID_EMAIL || 'mailto:admin@hdtalk.app',
+
+  // ─── Database ─────────────────────────────────────────────────────────────────
+  MONGODB_URI: process.env.MONGODB_URI || '',
+
+  // ─── Storage Paths ────────────────────────────────────────────────────────────
   UPLOAD_DIR: process.env.UPLOAD_DIR || path.join(__dirname, '../../uploads'),
   DATA_DIR: process.env.DATA_DIR || path.join(__dirname, '../../data'),
+
+  // ─── n8n Automation ───────────────────────────────────────────────────────────
   N8N_WEBHOOK_URL: process.env.N8N_WEBHOOK_URL || 'http://localhost:5678/webhook/hdtalk',
   N8N_ENABLED: process.env.N8N_ENABLED !== 'false',
+
+  // ─── WebRTC ICE Configuration ─────────────────────────────────────────────────
   STUN_SERVERS: process.env.STUN_SERVERS
     ? process.env.STUN_SERVERS.split(',').map(s => s.trim())
     : [
@@ -17,6 +75,7 @@ module.exports = {
         'stun:stun1.l.google.com:19302',
         'stun:stun2.l.google.com:19302'
       ],
+
   TURN_SERVERS: process.env.TURN_SERVERS
     ? (() => {
         try {
@@ -32,23 +91,20 @@ module.exports = {
         if (process.env.TURN_URL_UDP && !urls.includes(process.env.TURN_URL_UDP)) urls.push(process.env.TURN_URL_UDP);
         if (process.env.TURN_URL_TCP && !urls.includes(process.env.TURN_URL_TCP)) urls.push(process.env.TURN_URL_TCP);
         if (process.env.TURN_URL_TLS && !urls.includes(process.env.TURN_URL_TLS)) urls.push(process.env.TURN_URL_TLS);
-
         if (urls.length > 0) {
-          return [{
-            urls,
-            username: process.env.TURN_USERNAME || '',
-            credential: process.env.TURN_CREDENTIAL || ''
-          }];
+          return [{ urls, username: process.env.TURN_USERNAME || '', credential: process.env.TURN_CREDENTIAL || '' }];
         }
         return [];
       })(),
-  MAX_MESH_PARTICIPANTS: 6,
+
+  MAX_MESH_PARTICIPANTS: parseInt(process.env.MAX_MESH_PARTICIPANTS, 10) || 6,
+
+  // ─── SSL / TLS ─────────────────────────────────────────────────────────────────
   SSL_KEY_PATH: process.env.SSL_KEY_PATH || null,
   SSL_CERT_PATH: process.env.SSL_CERT_PATH || null,
   SSL_PFX_PATH: process.env.SSL_PFX_PATH || null,
   SSL_PASSPHRASE: process.env.SSL_PASSPHRASE || null,
-  VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || 'BJ6_MpjdnYd2kS9DwgOXmTpiYMsrigU32AXo8vL6Bi-xxZKMEpA2qTNvGneshh-DBp8cIOXo3bV0BeGAkkcFPzA',
-  VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY || 'jFoClphDQQTzFz5WRhzgajXfA5sAevoRcWNrEtnRPmk',
-  VAPID_EMAIL: process.env.VAPID_EMAIL || 'mailto:himanshudwivedi0325@gmail.com',
-  MONGODB_URI: process.env.MONGODB_URI || 'mongodb+srv://himanshudwivedi0325_db_user:vj7tDfH57rdwU308@hdtalk-cluster.w65tsyc.mongodb.net/hdtalk?retryWrites=true&w=majority'
+
+  // ─── Feature Flags ─────────────────────────────────────────────────────────────
+  ALLOW_QUICK_LOGIN: process.env.ALLOW_QUICK_LOGIN === 'true',
 };

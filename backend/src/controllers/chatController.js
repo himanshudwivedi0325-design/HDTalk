@@ -87,17 +87,35 @@ exports.getMessages = (req, res) => {
     }
 
     db.markAsRead(conversationId, req.user.id);
-    const messages = db.getMessages(conversationId, req.user.id);
+
+    // ── Cursor-based Pagination ──────────────────────────────────────────────
+    // ?limit=50        — number of messages to return (default 50, max 200)
+    // ?before=<ISO>    — cursor: return messages older than this timestamp
+    const limit = Math.min(parseInt(req.query.limit, 10) || 50, 200);
+    const before = req.query.before ? new Date(req.query.before) : null;
+
+    let allMessages = db.getMessages(conversationId, req.user.id);
+
+    if (before && !isNaN(before.getTime())) {
+      allMessages = allMessages.filter(m => new Date(m.timestamp) < before);
+    }
+
+    // getMessages already sorts ASC by timestamp; take the last `limit` for newest-first paging
+    const totalFiltered = allMessages.length;
+    const paged = allMessages.slice(Math.max(0, totalFiltered - limit));
 
     res.json({
       success: true,
-      messages
+      messages: paged,
+      hasMore: totalFiltered > limit,
+      total: totalFiltered
     });
   } catch (err) {
     console.error('Get messages error:', err);
     res.status(500).json({ success: false, message: 'Failed to fetch messages.' });
   }
 };
+
 
 exports.sendMessage = (req, res) => {
   try {

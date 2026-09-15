@@ -9,7 +9,7 @@ const config = require('./config/config');
 const { initSocket, getMetrics } = require('./socket/socketManager');
 
 const db = require('./database/db');
-const { authLimiter } = require('./middleware/rateLimiter');
+const { authLimiter, apiLimiter, uploadLimiter } = require('./middleware/rateLimiter');
 
 // Route handlers
 const authRoutes = require('./routes/authRoutes');
@@ -89,6 +89,20 @@ app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      "connect-src 'self' wss: ws: https:",
+      "img-src 'self' data: blob: https:",
+      "media-src 'self' blob:",
+      "script-src 'self' 'unsafe-inline'",  // unsafe-inline needed for Vite dev HMR
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      "worker-src 'self' blob:"
+    ].join('; ')
+  );
   if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   }
@@ -107,10 +121,10 @@ app.use('/uploads', express.static(config.UPLOAD_DIR, {
 
 // API Routes
 app.use('/api/auth', authLimiter, authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/chat', chatRoutes);
-app.use('/api/webrtc', webrtcRoutes);
-app.use('/api/push', pushRoutes);
+app.use('/api/users', apiLimiter, userRoutes);
+app.use('/api/chat', apiLimiter, chatRoutes);
+app.use('/api/webrtc', apiLimiter, webrtcRoutes);
+app.use('/api/push', apiLimiter, pushRoutes);
 
 // Global API & Multer error handler
 const multer = require('multer');
@@ -245,7 +259,9 @@ const io = new Server(server, {
   },
   pingTimeout: 20000,
   pingInterval: 25000,
-  maxHttpBufferSize: 1e8 // 100MB for media & signaling packets
+  // Keep buffer small — file uploads go through /api/chat/upload REST endpoint,
+  // not through Socket.IO. Signaling messages (SDP, ICE) are tiny.
+  maxHttpBufferSize: 2e6 // 2MB — sufficient for all WebRTC signaling payloads
 });
 
 initSocket(io);

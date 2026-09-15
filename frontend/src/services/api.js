@@ -14,25 +14,50 @@ const getHeaders = (isFormData = false) => {
   return headers;
 };
 
-async function request(url, options = {}) {
+async function request(url, options = {}, retries = 2) {
   const isFormData = options.body instanceof FormData;
-  const config = {
-    ...options,
-    headers: {
-      ...getHeaders(isFormData),
-      ...options.headers
+  const isUpload = isFormData; // Don't retry uploads — they aren't idempotent
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000); // 12s timeout
+
+  try {
+    const config = {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        ...getHeaders(isFormData),
+        ...options.headers
+      }
+    };
+
+    const response = await fetch(url, config);
+    clearTimeout(timeoutId);
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.message || `Request failed with status ${response.status}`);
     }
-  };
 
-  const response = await fetch(url, config);
-  const data = await response.json().catch(() => ({}));
+    return data;
+  } catch (err) {
+    clearTimeout(timeoutId);
 
-  if (!response.ok) {
-    throw new Error(data.message || `Request failed with status ${response.status}`);
+    // Retry on network errors (not on AbortError / client errors)
+    if (!isUpload && retries > 0 && err.name !== 'AbortError') {
+      console.warn(`[API] Retrying ${url} (${retries} retries left)...`);
+      await new Promise(r => setTimeout(r, 800)); // brief back-off
+      return request(url, options, retries - 1);
+    }
+
+    if (err.name === 'AbortError') {
+      throw new Error('Request timed out. Please check your connection and try again.');
+    }
+    throw err;
   }
-
-  return data;
 }
+
 
 export const api = {
   // Auth

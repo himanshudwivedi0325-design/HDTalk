@@ -26,7 +26,8 @@ import {
   Reply,
   Pencil,
   Share2,
-  X
+  X,
+  CornerDownLeft
 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { formatLastActive } from '../../utils/timeAgo';
@@ -68,14 +69,45 @@ export function ChatArea({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [isRespondingConnection, setIsRespondingConnection] = useState(false);
+  const [enterIsNewline, setEnterIsNewline] = useState(() => {
+    try {
+      return localStorage.getItem('hdtalk_enter_newline') === 'true';
+    } catch {
+      return false;
+    }
+  });
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const inputRef = useRef(null);
 
+  const toggleEnterMode = () => {
+    setEnterIsNewline(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('hdtalk_enter_newline', String(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  const adjustTextareaHeight = () => {
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto';
+      inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 120)}px`;
+    }
+  };
+
+  const resetTextareaHeight = () => {
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto';
+    }
+  };
+
   useEffect(() => {
     if (editingMessage) {
       setText(editingMessage.text || '');
+      setTimeout(adjustTextareaHeight, 0);
       inputRef.current?.focus();
     } else if (replyingToMessage) {
       inputRef.current?.focus();
@@ -155,6 +187,7 @@ export function ChatArea({
       editMessage(editingMessage.id, text.trim());
       setEditingMessage(null);
       setText('');
+      resetTextareaHeight();
       stopTyping();
       return;
     }
@@ -166,20 +199,48 @@ export function ChatArea({
       replyTo: replyingToMessage || null
     });
     setText('');
+    resetTextareaHeight();
     stopTyping();
     setShowEmojiPicker(false);
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    } else if (e.key === 'Escape') {
+    if (e.key === 'Escape') {
       if (editingMessage) {
         setEditingMessage(null);
         setText('');
+        resetTextareaHeight();
       } else if (replyingToMessage) {
         setReplyingToMessage(null);
+      }
+      return;
+    }
+
+    // Ctrl + Enter or Cmd + Enter always sends immediately
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      handleSend();
+      return;
+    }
+
+    // Shift + Enter always creates a new line
+    if (e.key === 'Enter' && e.shiftKey) {
+      setTimeout(adjustTextareaHeight, 0);
+      return;
+    }
+
+    // Enter pressed without modifier keys
+    if (e.key === 'Enter' && !e.shiftKey) {
+      const isMobile = typeof window !== 'undefined' && (window.innerWidth < 768 || 'ontouchstart' in window);
+
+      if (enterIsNewline || isMobile) {
+        // Natural newline inserted in textarea
+        setTimeout(adjustTextareaHeight, 0);
+        return;
+      } else {
+        // Desktop default: Enter sends message
+        e.preventDefault();
+        handleSend();
       }
     }
   };
@@ -187,6 +248,7 @@ export function ChatArea({
   const handleTextChange = (e) => {
     const val = e.target.value;
     setText(val);
+    adjustTextareaHeight();
     if (val.trim()) {
       notifyTyping();
     } else {
@@ -583,7 +645,7 @@ export function ChatArea({
               </div>
             )}
 
-            <form onSubmit={handleSend} className="flex items-center gap-1.5 sm:gap-2">
+            <form onSubmit={handleSend} className="flex items-end gap-1.5 sm:gap-2">
               <input
                 type="file"
                 ref={fileInputRef}
@@ -595,7 +657,7 @@ export function ChatArea({
               <button
                 type="button"
                 onClick={() => setShowAttachMenu(prev => !prev)}
-                className="p-2 sm:p-2.5 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition flex-shrink-0"
+                className="p-2 sm:p-2.5 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition flex-shrink-0 mb-0.5"
                 title="Attach File"
               >
                 <Paperclip className="w-4 h-4" />
@@ -605,43 +667,66 @@ export function ChatArea({
               <button
                 type="button"
                 onClick={() => setShowEmojiPicker(prev => !prev)}
-                className="p-2 sm:p-2.5 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-300 transition flex-shrink-0"
+                className="p-2 sm:p-2.5 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-400 hover:text-amber-500 dark:hover:text-amber-300 transition flex-shrink-0 mb-0.5"
                 title="Emojis"
               >
                 <Smile className="w-4 h-4" />
               </button>
 
-              {/* Main Input Field */}
-              <input
-                ref={inputRef}
-                type="text"
-                placeholder={replyingToMessage ? "Reply to message..." : "Write a message..."}
-                value={text}
-                onChange={handleTextChange}
-                onKeyDown={handleKeyDown}
-                className="flex-1 min-w-0 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full apphitect-input text-xs sm:text-[13.5px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none"
-              />
+              {/* Main Multi-line Auto-Expanding Textarea with Next Line Support */}
+              <div className="flex-1 min-w-0 relative flex items-center">
+                <textarea
+                  ref={inputRef}
+                  rows={1}
+                  placeholder={
+                    replyingToMessage 
+                      ? "Reply to message..." 
+                      : (enterIsNewline 
+                          ? "Write a message... (Enter for new line)" 
+                          : "Write a message... (Shift + Enter for new line)")
+                  }
+                  value={text}
+                  onChange={handleTextChange}
+                  onKeyDown={handleKeyDown}
+                  className="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 pr-16 sm:pr-20 rounded-2xl apphitect-input text-xs sm:text-[13.5px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none resize-none max-h-32 overflow-y-auto leading-relaxed transition-all shadow-inner"
+                />
 
-            {/* Dynamic Mic or Send Action Button (WhatsApp/Telegram style) */}
-            {text.trim() ? (
-              <button
-                type="submit"
-                className="p-2 sm:p-2.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-600/30 hover:scale-105 active:scale-95 transition flex-shrink-0"
-                title="Send Message"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowVoiceRecorder(true)}
-                className="p-2 sm:p-2.5 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-rose-50 dark:hover:bg-rose-500/20 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition flex-shrink-0"
-                title="Record Voice Note"
-              >
-                <Mic className="w-4 h-4" />
-              </button>
-            )}
-          </form>
+                {/* Desktop Enter Mode Toggle (WhatsApp Web style: Enter sends vs Enter creates new line) */}
+                <button
+                  type="button"
+                  onClick={toggleEnterMode}
+                  className={`hidden sm:flex items-center gap-1 absolute right-2.5 bottom-2.5 px-2 py-0.5 rounded-md text-[10px] font-semibold transition select-none ${
+                    enterIsNewline
+                      ? 'bg-blue-500/15 text-blue-600 dark:text-cyan-300 border border-blue-400/30'
+                      : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 opacity-70 hover:opacity-100'
+                  }`}
+                  title={enterIsNewline ? "Mode: Enter goes to Next Line. Click to switch to Enter sends." : "Mode: Enter sends message (Shift+Enter for Next Line). Click to switch to Enter goes to Next Line."}
+                >
+                  <CornerDownLeft className="w-2.5 h-2.5" />
+                  <span>{enterIsNewline ? '↵ Next line' : '↵ Send'}</span>
+                </button>
+              </div>
+
+              {/* Dynamic Mic or Send Action Button (WhatsApp/Telegram style) */}
+              {text.trim() ? (
+                <button
+                  type="submit"
+                  className="p-2 sm:p-2.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-600/30 hover:scale-105 active:scale-95 transition flex-shrink-0 mb-0.5"
+                  title={enterIsNewline ? "Send Message (Ctrl + Enter)" : "Send Message"}
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowVoiceRecorder(true)}
+                  className="p-2 sm:p-2.5 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-rose-50 dark:hover:bg-rose-500/20 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition flex-shrink-0 mb-0.5"
+                  title="Record Voice Note"
+                >
+                  <Mic className="w-4 h-4" />
+                </button>
+              )}
+            </form>
         </>
         )}
       </div>

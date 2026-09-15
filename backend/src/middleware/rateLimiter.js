@@ -67,6 +67,23 @@ function createRateLimiter(options = {}) {
 
 module.exports = {
   createRateLimiter,
-  authLimiter: createRateLimiter({ windowMs: 60 * 1000, max: 50, message: 'Too many authentication attempts. Please try again after 1 minute.' }),
-  uploadLimiter: createRateLimiter({ windowMs: 60 * 1000, max: 100, message: 'Too many upload attempts. Please slow down.' })
+  // Strict limiter for authentication endpoints (brute-force protection)
+  authLimiter: createRateLimiter({
+    windowMs: 60 * 1000,
+    max: 50,
+    message: 'Too many authentication attempts. Please try again after 1 minute.'
+  }),
+  // General API limiter for all other routes
+  apiLimiter: createRateLimiter({
+    windowMs: 60 * 1000,
+    max: 300,
+    message: 'Too many requests. Please slow down.'
+  }),
+  // Strict limiter for file upload endpoints
+  uploadLimiter: createRateLimiter({
+    windowMs: 60 * 1000,
+    max: 30,
+    message: 'Too many upload attempts. Please slow down.'
+  })
 };
+
