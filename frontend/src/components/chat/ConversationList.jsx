@@ -149,8 +149,8 @@ export function ConversationList({ onNewChatClick, onCollapse, onSelectChat }) {
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-display font-bold text-[14.5px] text-slate-900 dark:text-white truncate max-w-[140px] tracking-tight">
+                  <div className="flex items-center justify-between mb-1 gap-2">
+                    <span className="font-display font-bold text-[14.5px] text-slate-900 dark:text-white truncate flex-1 tracking-tight">
                       {other?.name}
                     </span>
                     <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex-shrink-0">
@@ -158,7 +158,7 @@ export function ConversationList({ onNewChatClick, onCollapse, onSelectChat }) {
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     {isTyping ? (
                       <span className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-semibold italic text-xs animate-pulse">
                         <span className="flex gap-0.5 items-center">
@@ -169,7 +169,7 @@ export function ConversationList({ onNewChatClick, onCollapse, onSelectChat }) {
                         typing...
                       </span>
                     ) : (
-                      <p className={`text-xs truncate max-w-[160px] ${
+                      <p className={`text-xs truncate flex-1 min-w-0 ${
                         isSelected ? 'text-slate-800 dark:text-slate-200 font-medium' : 'text-slate-600 dark:text-slate-400'
                       }`}>
                         {c.lastMessage?.text || 'No messages yet'}

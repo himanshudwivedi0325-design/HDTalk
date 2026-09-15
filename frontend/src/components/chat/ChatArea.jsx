@@ -121,17 +121,18 @@ export function ChatArea({
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-100/60 dark:bg-[#090d18] relative overflow-hidden transition-colors duration-200">
       {/* Apphitect Top Bar Header */}
-      <div className="h-14 sm:h-16 px-2.5 sm:px-4 md:px-6 border-b border-slate-200/80 dark:border-white/10 flex items-center justify-between z-10 bg-white/95 dark:bg-[#0d1322]/95 backdrop-blur-md select-none transition-colors duration-200">
+      <div className="h-14 sm:h-16 px-2 sm:px-4 md:px-6 border-b border-slate-200/80 dark:border-white/10 flex items-center justify-between z-10 bg-white/95 dark:bg-[#0d1322]/95 backdrop-blur-md select-none transition-colors duration-200">
         {/* Recipient Profile Info */}
-        <div className="flex items-center gap-2 min-w-0 flex-1 mr-1 sm:mr-3">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 flex-1 mr-1 sm:mr-3">
           {/* Mobile Back to Conversations Button */}
           {onToggleConversationList && (
             <button
               onClick={() => onToggleConversationList(true)}
-              className="md:hidden p-1.5 -ml-1 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 transition flex-shrink-0"
+              className="md:hidden p-1 -ml-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 transition flex-shrink-0"
               title="Back to Conversations"
+              aria-label="Back to conversations"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-6 h-6" />
             </button>
           )}
 
@@ -154,47 +155,52 @@ export function ChatArea({
             </button>
           )}
 
-          <div className="flex-shrink-0">
+          <div
+            onClick={onToggleInfoDrawer}
+            className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer select-none group"
+            title="View contact info"
+          >
             <Avatar
               src={otherUser?.avatar}
               name={otherUser?.name}
               size="md"
               isOnline={isOnline}
+              className="transition-transform group-hover:scale-105"
             />
-          </div>
 
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 overflow-hidden">
-              <span className="font-display font-bold text-sm sm:text-[15.5px] text-slate-900 dark:text-white tracking-tight truncate">
-                {otherUser?.name}
-              </span>
-              {otherUser && (
-                <span className="hidden sm:inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-600/15 text-blue-700 dark:text-cyan-300 border border-blue-200/80 dark:border-blue-500/30 whitespace-nowrap flex-shrink-0">
-                  💼 {otherUser.profession || 'Professional'}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <span className="font-display font-bold text-[14px] sm:text-[15.5px] text-slate-900 dark:text-white tracking-tight truncate leading-tight">
+                  {otherUser?.name}
                 </span>
-              )}
-            </div>
-            <p className="text-[10.5px] sm:text-[11.5px] font-medium text-slate-600 dark:text-slate-400 flex items-center gap-1.5 truncate">
-              {isOtherTyping ? (
-                <span className="text-blue-600 dark:text-blue-400 font-semibold italic flex items-center gap-1.5">
-                  <span className="flex gap-0.5 items-center">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"></span>
+                {otherUser && (
+                  <span className="hidden sm:inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-600/15 text-blue-700 dark:text-cyan-300 border border-blue-200/80 dark:border-blue-500/30 whitespace-nowrap flex-shrink-0">
+                    💼 {otherUser.profession || 'Professional'}
                   </span>
-                  Typing...
-                </span>
-              ) : isOnline ? (
-                <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Active now
-                </span>
-              ) : (
-                <span className="text-slate-500 dark:text-slate-400">
-                  {formatLastActive(lastSeenIso, false)}
-                </span>
-              )}
-            </p>
+                )}
+              </div>
+              <p className="text-[10px] sm:text-[11.5px] font-medium text-slate-600 dark:text-slate-400 flex items-center gap-1.5 truncate mt-0.5">
+                {isOtherTyping ? (
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold italic flex items-center gap-1.5">
+                    <span className="flex gap-0.5 items-center">
+                      <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                      <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                      <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"></span>
+                    </span>
+                    Typing...
+                  </span>
+                ) : isOnline ? (
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Active now
+                  </span>
+                ) : (
+                  <span className="text-slate-500 dark:text-slate-400">
+                    {formatLastActive(lastSeenIso, false)}
+                  </span>
+                )}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -209,7 +215,7 @@ export function ChatArea({
                 initiateCall(otherUser, 'audio');
               }
             }}
-            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white transition text-xs font-semibold flex items-center gap-1.5"
+            className="w-8 h-8 sm:w-auto sm:px-3 sm:py-2 rounded-full sm:rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white transition text-xs font-semibold flex items-center justify-center gap-1.5"
             title={activeConversation?.isGroup ? "Join Group Voice Call" : "Start Audio Call"}
           >
             <Phone className="w-4 h-4 text-blue-600 dark:text-cyan-400 flex-shrink-0" />
@@ -225,7 +231,7 @@ export function ChatArea({
                 initiateCall(otherUser, 'video');
               }
             }}
-            className="p-2 sm:px-3.5 sm:py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md shadow-blue-600/30 transition hover:scale-105 active:scale-95 flex items-center gap-1.5"
+            className="w-8 h-8 sm:w-auto sm:px-3.5 sm:py-2 rounded-full sm:rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md shadow-blue-600/30 transition hover:scale-105 active:scale-95 flex items-center justify-center gap-1.5"
             title={activeConversation?.isGroup ? "Join Group HD Video Mesh" : "Start HD Video Call"}
           >
             <Video className="w-4 h-4 flex-shrink-0" />
@@ -235,10 +241,10 @@ export function ChatArea({
           {/* Contact Details Drawer Toggle */}
           <button
             onClick={onToggleInfoDrawer}
-            className={`p-2 rounded-xl border transition flex-shrink-0 ${
+            className={`w-8 h-8 sm:w-auto sm:p-2 rounded-full sm:rounded-xl border transition flex items-center justify-center flex-shrink-0 ${
               isInfoDrawerOpen
                 ? 'bg-blue-50 dark:bg-blue-600/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/40'
-                : 'bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border-slate-200 dark:border-white/10'
+                : 'bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border-slate-200/80 dark:border-white/10'
             }`}
             title="Contact Info & Media"
           >
