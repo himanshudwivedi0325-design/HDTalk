@@ -194,9 +194,12 @@
    - Integrated push triggers on incoming calls, new chat messages, and connection requests so users get WhatsApp-style notifications when screen is locked.
    - User notification management modal (`NotificationManagerModal.jsx`) and reminder banner (`NotificationBanner.jsx`) with 1-click test alert dispatcher.
    - PWA web app manifest (`public/manifest.json`) enabling installable app capability on Android & iOS.
-3. **Cloud Media Storage (Cloudinary / AWS S3)**:
-   - *Problem*: Render free-tier dynos have ephemeral disk storage. User uploads in `/uploads` are lost on app restart/redeploy.
-   - *Solution*: Stream uploaded photos, voice notes, and docs to free-tier Cloudinary or AWS S3 buckets.
+3. **Cloud Media Storage (Cloudinary CDN Integration) (COMPLETED ✅)**:
+   - Built hybrid cloud media engine (`services/cloudMediaService.js`) with Cloudinary CDN integration.
+   - Automatically detects `CLOUDINARY_URL` or `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`.
+   - Streams uploaded chat photos, voice notes, attachments, and user avatars directly to Cloudinary global CDN with zero data loss on Render restarts/redeploys.
+   - Built-in graceful fallback to local `/uploads` storage if Cloudinary credentials are not configured.
+   - Real-time media storage engine status exposed in `/api/health/ready`.
 4. **Database Migration to Hosted Engine**:
    - Migrate from `db.json` to PostgreSQL (Supabase / Neon) or MongoDB Atlas to support 10,000+ concurrent connections.
 

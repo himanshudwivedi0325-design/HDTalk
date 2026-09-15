@@ -171,6 +171,7 @@ app.get('/api/health/ready', (req, res) => {
       status: 'ready',
       database: 'connected',
       storage: 'writable',
+      mediaStorage: require('./services/cloudMediaService').getStorageStatus(),
       uptime: process.uptime(),
       memory: {
         rssMB: (mem.rss / 1024 / 1024).toFixed(2),

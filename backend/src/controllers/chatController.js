@@ -2,6 +2,7 @@ const path = require('path');
 const db = require('../database/db');
 const socketManager = require('../socket/socketManager');
 const pushService = require('../services/pushNotificationService');
+const cloudMediaService = require('../services/cloudMediaService');
 
 const sanitizeUser = (user) => {
   if (!user) return null;
@@ -166,19 +167,21 @@ exports.sendMessage = (req, res) => {
   }
 };
 
-exports.uploadFile = (req, res) => {
+exports.uploadFile = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No file uploaded.' });
     }
 
-    const fileUrl = `/uploads/${req.file.filename}`;
+    const uploadResult = await cloudMediaService.uploadMedia(req.file);
+
     res.json({
       success: true,
-      fileUrl,
+      fileUrl: uploadResult.url,
       fileName: req.file.originalname,
       fileType: req.file.mimetype,
-      fileSize: req.file.size
+      fileSize: req.file.size,
+      storage: uploadResult.storage
     });
   } catch (err) {
     console.error('Upload error:', err);

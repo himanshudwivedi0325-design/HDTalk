@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 const db = require('../database/db');
 const n8nService = require('../services/n8nService');
+const cloudMediaService = require('../services/cloudMediaService');
 
 const signToken = (id) => {
   return jwt.sign({ id }, config.JWT_SECRET, { expiresIn: config.JWT_EXPIRES_IN });
@@ -162,16 +163,17 @@ exports.getDemoUsers = (req, res) => {
   });
 };
 
-exports.uploadRegistrationAvatar = (req, res) => {
+exports.uploadRegistrationAvatar = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No image file uploaded.' });
     }
-    const avatarUrl = `/uploads/${req.file.filename}`;
+    const uploadResult = await cloudMediaService.uploadMedia(req.file, 'hdtalk/avatars');
     res.json({
       success: true,
-      avatarUrl,
-      fileUrl: avatarUrl
+      avatarUrl: uploadResult.url,
+      fileUrl: uploadResult.url,
+      storage: uploadResult.storage
     });
   } catch (err) {
     console.error('Registration avatar upload error:', err);

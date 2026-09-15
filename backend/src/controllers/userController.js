@@ -1,6 +1,7 @@
 const db = require('../database/db');
 const socketManager = require('../socket/socketManager');
 const pushService = require('../services/pushNotificationService');
+const cloudMediaService = require('../services/cloudMediaService');
 
 const sanitizeUser = (user) => {
   if (!user) return null;
@@ -197,18 +198,20 @@ exports.respondConnectionRequest = (req, res) => {
   }
 };
 
-exports.uploadAvatar = (req, res) => {
+exports.uploadAvatar = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No image file provided.' });
     }
 
-    const avatarUrl = `/uploads/${req.file.filename}`;
+    const uploadResult = await cloudMediaService.uploadMedia(req.file, 'hdtalk/avatars');
+    const avatarUrl = uploadResult.url;
     const updatedUser = db.updateUser(req.user.id, { avatar: avatarUrl });
 
     res.json({
       success: true,
       avatar: avatarUrl,
+      storage: uploadResult.storage,
       user: sanitizeUser(updatedUser)
     });
   } catch (err) {
