@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 const db = require('../database/db');
 const n8nService = require('../services/n8nService');
+const aiService = require('../services/aiService');
 const pushService = require('../services/pushNotificationService');
 
 // Map of userId -> Set of socketIds
@@ -263,9 +264,9 @@ function initSocket(io) {
         });
       }
 
-      // If message mentions @bot or @ai, trigger n8n AI Agent
-      if (text && /@bot|@ai/i.test(text)) {
-        n8nService.handleAIBotQuery({
+      // If message mentions @bot, @ai, or @claude, trigger Claude via OmniRoute
+      if (text && /@bot|@ai|@claude/i.test(text)) {
+        aiService.handleAIBotQuery({
           conversationId,
           sender: sender || { id: senderId, name: 'User' },
           text,

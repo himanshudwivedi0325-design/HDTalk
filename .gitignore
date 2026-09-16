@@ -27,4 +27,6 @@ Thumbs.db
 cloudflared.exe
 __pycache__/
 *.pyc
+.reticle*
+*.reticle*
 

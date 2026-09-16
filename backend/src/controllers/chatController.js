@@ -316,6 +316,32 @@ exports.postBotReply = (req, res) => {
   }
 };
 
+// Direct Claude AI query endpoint powered by OmniRoute
+exports.askClaude = async (req, res) => {
+  try {
+    const { prompt, messages } = req.body;
+    const aiService = require('../services/aiService');
+
+    let chatMessages = [];
+    if (messages && Array.isArray(messages)) {
+      chatMessages = messages;
+    } else if (prompt) {
+      chatMessages = [{ role: 'user', content: prompt }];
+    } else {
+      return res.status(400).json({ success: false, message: 'prompt or messages required.' });
+    }
+
+    const result = await aiService.queryClaude(chatMessages);
+    res.json({
+      success: true,
+      data: result
+    });
+  } catch (err) {
+    console.error('Error in askClaude endpoint:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 exports.deleteConversation = (req, res) => {
   try {
     const { conversationId } = req.params;

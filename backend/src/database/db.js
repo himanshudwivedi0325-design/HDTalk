@@ -327,18 +327,21 @@ const db = {
     if (!bot) {
       bot = {
         id: 'usr_ai_bot',
-        name: 'HDTalk AI Assistant 🤖',
-        email: 'bot@hdtalk.ai',
-        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=HDTalkBot',
-        profession: 'AI Automation Agent (Powered by n8n)',
-        bio: 'Official HDTalk AI Companion powered by n8n workflow automations.',
-        interests: ['Automation', 'AI', 'Workflow', 'n8n'],
+        name: 'Claude AI Assistant 🤖',
+        email: 'claude@hdtalk.ai',
+        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=ClaudeHDTalk',
+        profession: 'Claude 3.7 AI Assistant (OmniRoute)',
+        bio: 'Official HDTalk AI Companion powered by Claude via OmniRoute AI Gateway.',
+        interests: ['Claude', 'AI', 'Coding', 'Assistance'],
         status: 'online',
         lastSeen: new Date().toISOString(),
         createdAt: new Date().toISOString()
       };
       memoryState.users.push(bot);
       scheduleFlush();
+    } else {
+      bot.name = 'Claude AI Assistant 🤖';
+      bot.profession = 'Claude 3.7 AI Assistant (OmniRoute)';
     }
     return bot;
   },

@@ -48,6 +48,9 @@ router.post('/bot-reply', chatController.postBotReply);
 
 router.use(authMiddleware);
 
+// Claude AI chat endpoint (OmniRoute powered)
+router.post('/claude', chatController.askClaude);
+
 router.get('/conversations', chatController.getConversations);
 router.post('/conversations', chatController.getOrCreateConversation);
 router.get('/conversations/:conversationId/messages', chatController.getMessages);

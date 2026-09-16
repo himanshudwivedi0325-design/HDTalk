@@ -107,4 +107,9 @@ module.exports = {
 
   // ─── Feature Flags ─────────────────────────────────────────────────────────────
   ALLOW_QUICK_LOGIN: process.env.ALLOW_QUICK_LOGIN === 'true',
+
+  // ─── OmniRoute AI Gateway ──────────────────────────────────────────────────────
+  OMNIROUTE_BASE_URL: process.env.OMNIROUTE_BASE_URL || 'http://localhost:20128/v1',
+  OMNIROUTE_API_KEY: process.env.OMNIROUTE_API_KEY || 'sk_omniroute',
+  OMNIROUTE_MODEL: process.env.OMNIROUTE_MODEL || 'auto/claude-sonnet',
 };

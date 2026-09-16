@@ -47,6 +47,39 @@
       "password": "$2a$10$Z8zgQEVj.XoL5670zzWSIeME/.rQFr4coqEDjssA8th8vWI8bTmYG",
       "profession": "Student",
       "status": "online"
+    },
+    {
+      "id": "usr_97d33ffd",
+      "createdAt": "2026-09-16T01:57:26.239Z",
+      "status": "offline",
+      "lastSeen": "2026-09-16T02:07:27.665Z",
+      "name": "Himanshu Tester",
+      "email": "himanshu.test99@gmail.com",
+      "password": "$2a$10$PXliW3Jf26sF6PxQTBw9k.dSwTdf7nuQ2n6/hGeYYhPegKzMYisIq",
+      "avatar": "",
+      "profession": "Full Stack Dev",
+      "bio": "Excited to connect and collaborate on HDTalk!",
+      "interests": [
+        "Tech",
+        "Networking"
+      ]
+    },
+    {
+      "id": "usr_ai_bot",
+      "name": "Claude AI Assistant 🤖",
+      "email": "claude@hdtalk.ai",
+      "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=ClaudeHDTalk",
+      "profession": "Claude 3.7 AI Assistant (OmniRoute)",
+      "bio": "Official HDTalk AI Companion powered by Claude via OmniRoute AI Gateway.",
+      "interests": [
+        "Claude",
+        "AI",
+        "Coding",
+        "Assistance"
+      ],
+      "status": "online",
+      "lastSeen": "2026-09-16T02:10:15.309Z",
+      "createdAt": "2026-09-16T02:10:15.310Z"
     }
   ],
   "conversations": [
