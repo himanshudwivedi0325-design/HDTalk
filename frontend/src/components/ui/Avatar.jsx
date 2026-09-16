@@ -91,7 +91,7 @@ export function Avatar({
           alt={name || 'User'}
           loading={priority ? 'eager' : 'lazy'}
           decoding="async"
-          fetchPriority={priority ? 'high' : 'auto'}
+          fetchpriority={priority ? 'high' : undefined}
           referrerPolicy="no-referrer"
           onLoad={() => {
             avatarLoadedCache.add(optimizedSrc);
