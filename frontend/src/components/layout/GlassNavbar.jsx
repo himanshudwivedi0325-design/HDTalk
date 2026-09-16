@@ -36,18 +36,23 @@ export function GlassNavbar({ onOpenThemeModal, onOpenProfileModal, onOpenReques
   const isAdmin = user?.role === 'admin' || cleanEmail === 'shikhar@gmail.com' || cleanEmail === 'himanshudwivedi0325@gmail.com';
   const isCreator = cleanEmail === 'shikhar@gmail.com' || cleanEmail === 'himanshudwivedi0325@gmail.com';
 
-  // Close dropdown on click outside
+  // Close dropdown on click outside or on page scroll
   useEffect(() => {
     function handleClickOutside(event) {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setIsUserMenuOpen(false);
       }
     }
+    function handleScroll() {
+      setIsUserMenuOpen(false);
+    }
     if (isUserMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
+      window.addEventListener('scroll', handleScroll, true);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', handleScroll, true);
     };
   }, [isUserMenuOpen]);
 
@@ -55,7 +60,7 @@ export function GlassNavbar({ onOpenThemeModal, onOpenProfileModal, onOpenReques
   const firstName = user?.name ? user.name.split(' ')[0] : 'Account';
 
   return (
-    <header className="h-14 sm:h-16 px-3 sm:px-5 md:px-6 flex items-center justify-between bg-white/85 dark:bg-[#070b14]/85 border-b border-slate-200/70 dark:border-white/[0.08] backdrop-blur-2xl z-30 select-none transition-colors duration-200 flex-shrink-0">
+    <header className="h-14 sm:h-16 px-3 sm:px-5 md:px-6 flex items-center justify-between bg-white/85 dark:bg-[#070b14]/85 border-b border-slate-200/70 dark:border-white/[0.08] backdrop-blur-2xl relative z-40 select-none transition-colors duration-200 flex-shrink-0">
       {/* Left: Brand & Creator Identity */}
       <div className="flex items-center gap-3 flex-shrink-0">
         <HDTalkLogo size="md" showText={true} />
@@ -196,7 +201,12 @@ export function GlassNavbar({ onOpenThemeModal, onOpenProfileModal, onOpenReques
 
             {/* Luxury Floating Glass Menu */}
             {isUserMenuOpen && (
-              <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white/95 dark:bg-[#0d1424]/95 border border-slate-200/80 dark:border-white/10 shadow-2xl backdrop-blur-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150 select-none">
+              <>
+                <div 
+                  className="fixed inset-0 z-[90] bg-transparent" 
+                  onClick={() => setIsUserMenuOpen(false)} 
+                />
+                <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl bg-white/95 dark:bg-[#0d1424]/98 border border-slate-200/80 dark:border-white/10 shadow-2xl backdrop-blur-2xl p-2 z-[100] animate-in fade-in zoom-in-95 duration-150 select-none">
                 {/* User Identity Header */}
                 <div className="p-2.5 rounded-xl bg-slate-100/70 dark:bg-white/5 border border-slate-200/50 dark:border-white/5 mb-1.5 flex items-center gap-3">
                   <Avatar
@@ -285,8 +295,9 @@ export function GlassNavbar({ onOpenThemeModal, onOpenProfileModal, onOpenReques
                   <span>Sign Out of HDTalk</span>
                 </button>
               </div>
-            )}
-          </div>
+            </>
+          )}
+        </div>
         )}
       </div>
     </header>

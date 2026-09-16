@@ -84,39 +84,34 @@ export function PartnerDiscovery({ onNavigateToChat }) {
   });
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-y-auto p-4 md:p-8 space-y-6 select-none transition-colors duration-200 font-sans">
-      {/* Hero Header */}
-      <div className="vision-glass p-6 md:p-8 rounded-3xl relative overflow-hidden border border-slate-200/90 dark:border-white/10 shadow-lg dark:shadow-2xl transition-colors duration-200">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-blue-500/15 via-cyan-500/10 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-
-        <div className="relative z-10 max-w-2xl">
-          <div className="flex items-center gap-2 mb-2.5">
-            <span className="p-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-sm">
+    <div className="flex-1 flex flex-col h-full overflow-y-auto p-4 md:p-6 space-y-5 select-none transition-colors duration-200 font-sans">
+      {/* Streamlined Discovery Header Bar */}
+      <div className="vision-glass p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-md backdrop-blur-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="p-1 rounded-lg bg-blue-600/15 text-blue-600 dark:text-cyan-400">
               <Sparkles className="w-3.5 h-3.5" />
             </span>
-            <span className="text-[11px] uppercase font-bold tracking-wider text-blue-600 dark:text-cyan-300">
-              HDTalk Professional Synergy Engine
+            <span className="text-[10.5px] uppercase font-bold tracking-wider text-blue-600 dark:text-cyan-300">
+              Synergy Matchmaking
             </span>
           </div>
-          <h1 className="font-display font-black text-2xl md:text-3xl text-slate-900 dark:text-white tracking-tight">
+          <h1 className="font-display font-black text-lg sm:text-xl text-slate-900 dark:text-white tracking-tight">
             Discover Professionals & Peers
           </h1>
-          <p className="text-xs md:text-sm text-slate-700 dark:text-slate-300 mt-2 leading-relaxed font-normal">
-            Connect and collaborate in real-time. Match scores are algorithmically computed based on professional synergy, technical skills, and complementary passions.
-          </p>
         </div>
 
         {/* Filter Controls Bar */}
-        <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-white/10 flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           {/* Search */}
-          <div className="relative flex-1 min-w-[220px]">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <div className="relative min-w-[190px] sm:min-w-[220px]">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search by name, profession, skills..."
+              placeholder="Search by name, skills..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl text-xs font-medium text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 vision-glass-input focus:outline-none"
+              className="w-full pl-8 pr-3 py-2 rounded-xl text-xs font-medium text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 vision-glass-input focus:outline-none"
             />
           </div>
 
@@ -124,7 +119,7 @@ export function PartnerDiscovery({ onNavigateToChat }) {
           <select
             value={professionFilter}
             onChange={(e) => setProfessionFilter(e.target.value)}
-            className="px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-white dark:bg-[#121626] border border-slate-200 dark:border-white/15 text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer shadow-sm hover:border-blue-500/40 transition"
+            className="px-3 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-[#121626] border border-slate-200 dark:border-white/15 text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer shadow-sm hover:border-blue-500/40 transition"
           >
             <option value="all">💼 All Professions</option>
             {allProfessions.map(p => (
@@ -135,14 +130,14 @@ export function PartnerDiscovery({ onNavigateToChat }) {
           {/* Online toggle */}
           <button
             onClick={() => setOnlineOnly(prev => !prev)}
-            className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold border transition shadow-sm ${
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition shadow-sm ${
               onlineOnly
                 ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/40'
                 : 'bg-white dark:bg-white/5 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10'
             }`}
           >
             <span className={`w-2 h-2 rounded-full ${onlineOnly ? 'bg-emerald-500 animate-ping' : 'bg-slate-400 dark:bg-slate-500'}`}></span>
-            <span>Online Only</span>
+            <span>Online</span>
           </button>
         </div>
       </div>

@@ -193,7 +193,7 @@ function MainLayout() {
       <NotificationBanner onOpenModal={() => setShowNotificationModal(true)} />
 
       {/* Top Navbar: On desktop always shown; on mobile hidden during active chat */}
-      <div className={`flex-shrink-0 ${isChatOpenOnMobile ? 'hidden md:block' : 'block'}`}>
+      <div className={`relative z-40 flex-shrink-0 ${isChatOpenOnMobile ? 'hidden md:block' : 'block'}`}>
         <GlassNavbar
           onOpenThemeModal={() => setShowThemeModal(true)}
           onOpenProfileModal={() => setShowProfileModal(true)}
