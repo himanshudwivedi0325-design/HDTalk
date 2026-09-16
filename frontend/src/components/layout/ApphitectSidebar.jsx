@@ -6,7 +6,6 @@ import {
   Users, 
   Palette, 
   Settings, 
-  Sparkles,
   LogOut,
   Download
 } from 'lucide-react';
@@ -34,7 +33,6 @@ export function ApphitectSidebar({
   const navItems = [
     { id: 'chats', label: 'All Chats', icon: MessageSquare, badge: totalUnread },
     { id: 'discover', label: 'Matchmaking', icon: Compass },
-    { id: 'ai', label: 'AI Assistant', icon: Sparkles },
     { id: 'requests', label: 'Friend Requests', icon: Users, badge: pendingRequestsCount, action: onOpenRequestsModal },
     { id: 'theme', label: 'Themes', icon: Palette, action: onOpenThemeModal },
     ...(!isInstalled ? [{ id: 'download', label: 'Download App (PWA)', icon: Download, action: installApp }] : [])

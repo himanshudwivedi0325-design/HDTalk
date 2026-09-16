@@ -43,13 +43,7 @@ const upload = multer({
   }
 });
 
-// Webhook callback route for n8n AI Bot (unauthenticated or pre-shared webhook callback)
-router.post('/bot-reply', chatController.postBotReply);
-
 router.use(authMiddleware);
-
-// Claude AI chat endpoint (OmniRoute powered)
-router.post('/claude', chatController.askClaude);
 
 router.get('/conversations', chatController.getConversations);
 router.post('/conversations', chatController.getOrCreateConversation);

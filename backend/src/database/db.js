@@ -324,31 +324,6 @@ const db = {
     return memoryState.users[index];
   },
 
-  getOrCreateBotUser: () => {
-    let bot = (memoryState.users || []).find(u => u.id === 'usr_ai_bot');
-    if (!bot) {
-      bot = {
-        id: 'usr_ai_bot',
-        name: 'Claude AI Assistant 🤖',
-        email: 'claude@hdtalk.ai',
-        avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=ClaudeHDTalk',
-        profession: 'Claude 3.7 AI Assistant (OmniRoute)',
-        bio: 'Official HDTalk AI Companion powered by Claude via OmniRoute AI Gateway.',
-        interests: ['Claude', 'AI', 'Coding', 'Assistance'],
-        status: 'online',
-        lastSeen: new Date().toISOString(),
-        createdAt: new Date().toISOString()
-      };
-      memoryState.users.push(bot);
-      mongoAdapter.persistUpsert('users', bot);
-      scheduleFlush();
-    } else {
-      bot.name = 'Claude AI Assistant 🤖';
-      bot.profession = 'Claude 3.7 AI Assistant (OmniRoute)';
-    }
-    return bot;
-  },
-
   getConversationsForUser: (userId) => {
     return (memoryState.conversations || []).filter(c => c.participants && c.participants.includes(userId));
   },

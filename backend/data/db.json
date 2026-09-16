@@ -63,23 +63,6 @@
         "Tech",
         "Networking"
       ]
-    },
-    {
-      "id": "usr_ai_bot",
-      "name": "Claude AI Assistant 🤖",
-      "email": "claude@hdtalk.ai",
-      "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=ClaudeHDTalk",
-      "profession": "Claude 3.7 AI Assistant (OmniRoute)",
-      "bio": "Official HDTalk AI Companion powered by Claude via OmniRoute AI Gateway.",
-      "interests": [
-        "Claude",
-        "AI",
-        "Coding",
-        "Assistance"
-      ],
-      "status": "online",
-      "lastSeen": "2026-09-16T02:10:15.309Z",
-      "createdAt": "2026-09-16T02:10:15.310Z"
     }
   ],
   "conversations": [
@@ -405,21 +388,6 @@
       "text": "Okkk",
       "timestamp": "2026-09-15T07:49:30.647Z",
       "type": "text"
-    },
-    {
-      "id": "msg_e401bba0",
-      "timestamp": "2026-09-16T02:33:32.400Z",
-      "reactions": {},
-      "readBy": [
-        "usr_ai_bot"
-      ],
-      "deliveredTo": [],
-      "status": "sent",
-      "conversationId": "conv_test",
-      "senderId": "usr_ai_bot",
-      "text": "Hello Claude",
-      "type": "text",
-      "replyToId": null
     }
   ],
   "connectionRequests": [

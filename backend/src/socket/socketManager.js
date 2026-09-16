@@ -2,7 +2,6 @@ const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 const db = require('../database/db');
 const n8nService = require('../services/n8nService');
-const aiService = require('../services/aiService');
 const pushService = require('../services/pushNotificationService');
 
 // Map of userId -> Set of socketIds
@@ -251,7 +250,7 @@ function initSocket(io) {
           // If participant is offline, notify n8n for offline alert
           if (pId !== senderId && (!userSocketMap.has(pId) || userSocketMap.get(pId).size === 0)) {
             const targetUser = db.getUserById(pId);
-            if (targetUser && targetUser.id !== 'usr_ai_bot') {
+            if (targetUser) {
               n8nService.notifyOfflineMessage({
                 sender: sender || { id: senderId, name: 'User' },
                 targetUser,
@@ -261,20 +260,6 @@ function initSocket(io) {
               });
             }
           }
-        });
-      }
-
-      // Trigger Claude AI Assistant if mentioned or in direct 1-on-1 conversation with AI Bot
-      const isBotConversation = conv && conv.participants && conv.participants.includes('usr_ai_bot');
-      const isBotMentioned = text && /@bot|@ai|@claude/i.test(text);
-
-      if (senderId !== 'usr_ai_bot' && (isBotMentioned || isBotConversation)) {
-        aiService.handleAIBotQuery({
-          conversationId,
-          sender: sender || { id: senderId, name: 'User' },
-          text,
-          replyToId,
-          socketManager: { getIO: () => ioInstance }
         });
       }
     });
