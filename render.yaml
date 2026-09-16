@@ -4,6 +4,8 @@ services:
     runtime: node
     plan: free
     region: singapore
+    branch: main
+    autoDeploy: true
     buildCommand: npm run install:all && npm run build
     startCommand: npm start
     # Health check endpoint — Render will restart if this stops responding
@@ -60,11 +62,3 @@ services:
         value: false
       - key: MAX_MESH_PARTICIPANTS
         value: 6
-
-      # ── OmniRoute AI Gateway (Claude) ─────────────────────────────────────
-      - key: OMNIROUTE_BASE_URL
-        value: 'http://localhost:20128/v1'
-      - key: OMNIROUTE_API_KEY
-        value: 'sk_omniroute'
-      - key: OMNIROUTE_MODEL
-        value: 'auto/claude-sonnet'
