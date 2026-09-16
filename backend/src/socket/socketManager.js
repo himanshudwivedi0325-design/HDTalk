@@ -264,8 +264,11 @@ function initSocket(io) {
         });
       }
 
-      // If message mentions @bot, @ai, or @claude, trigger Claude via OmniRoute
-      if (text && /@bot|@ai|@claude/i.test(text)) {
+      // Trigger Claude AI Assistant if mentioned or in direct 1-on-1 conversation with AI Bot
+      const isBotConversation = conv && conv.participants && conv.participants.includes('usr_ai_bot');
+      const isBotMentioned = text && /@bot|@ai|@claude/i.test(text);
+
+      if (senderId !== 'usr_ai_bot' && (isBotMentioned || isBotConversation)) {
         aiService.handleAIBotQuery({
           conversationId,
           sender: sender || { id: senderId, name: 'User' },

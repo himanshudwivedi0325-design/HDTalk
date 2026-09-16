@@ -401,6 +401,11 @@ const db = {
       .map(m => enrichMessage(m));
   },
 
+  getMessageById: (id) => {
+    const found = (memoryState.messages || []).find(m => m.id === id);
+    return found ? enrichMessage(found) : null;
+  },
+
   createMessage: (messageData) => {
     const newMsg = {
       id: 'msg_' + uuidv4().slice(0, 8),
