@@ -176,7 +176,7 @@ exports.toggleUserBan = (req, res) => {
 exports.updateUser = (req, res) => {
   try {
     const { userId } = req.params;
-    const { name, profession, bio, interests, email } = req.body;
+    const { name, profession, bio, interests, email, role, password } = req.body;
 
     const targetUser = db.getUserById(userId);
     if (!targetUser) {
@@ -184,24 +184,64 @@ exports.updateUser = (req, res) => {
     }
 
     const updates = {};
-    if (name && name.trim()) updates.name = name.trim();
-    if (profession !== undefined) updates.profession = profession;
-    if (bio !== undefined) updates.bio = bio;
-    if (Array.isArray(interests)) updates.interests = interests;
+    if (typeof name === 'string' && name.trim()) updates.name = name.trim();
+    if (profession !== undefined) updates.profession = String(profession).trim();
+    if (bio !== undefined) updates.bio = String(bio).trim();
 
-    if (email && email.trim().toLowerCase() !== targetUser.email.toLowerCase()) {
-      const existing = db.getUserByEmail(email.trim().toLowerCase());
-      if (existing) {
+    if (Array.isArray(interests)) {
+      updates.interests = interests;
+    } else if (typeof interests === 'string') {
+      updates.interests = interests.split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    if (email && typeof email === 'string' && email.trim().toLowerCase() !== (targetUser.email || '').toLowerCase()) {
+      const cleanEmail = email.trim().toLowerCase();
+      const existing = db.getUserByEmail(cleanEmail);
+      if (existing && existing.id !== userId) {
         return res.status(400).json({ success: false, message: 'Email is already in use by another account.' });
       }
-      updates.email = email.trim().toLowerCase();
+      updates.email = cleanEmail;
+    }
+
+    // Role update with platform creator protection
+    if (role && ['admin', 'user'].includes(role)) {
+      const cleanEmail = (targetUser.email || '').toLowerCase().trim();
+      if ((cleanEmail === 'shikhar@gmail.com' || cleanEmail === 'himanshudwivedi0325@gmail.com') && role !== 'admin') {
+        return res.status(403).json({ success: false, message: 'Platform creator cannot be demoted from admin.' });
+      }
+      updates.role = role;
+    }
+
+    // Password reset if provided
+    if (password && typeof password === 'string' && password.trim().length > 0) {
+      if (password.trim().length < 6) {
+        return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long.' });
+      }
+      updates.password = bcrypt.hashSync(password.trim(), 10);
     }
 
     const updated = db.updateUser(userId, updates);
+    const sanitized = sanitizeUser(updated);
+
+    // Real-time broadcast
+    try {
+      const socketManager = require('../socket/socketManager');
+      const io = socketManager.getIO ? socketManager.getIO() : null;
+      if (io) {
+        io.to(`user:${userId}`).emit('profile_updated', {
+          user: sanitized,
+          message: 'Your profile has been updated by an administrator.'
+        });
+        io.emit('user_updated', {
+          user: sanitized
+        });
+      }
+    } catch (_) {}
+
     res.json({
       success: true,
       message: 'User updated successfully.',
-      user: sanitizeUser(updated)
+      user: sanitized
     });
   } catch (err) {
     console.error('[Admin] updateUser error:', err);
@@ -235,7 +275,7 @@ exports.deleteUser = (req, res) => {
       return res.status(500).json({ success: false, message: 'Failed to delete user.' });
     }
 
-    // Notify sockets to disconnect deleted user
+    // Notify sockets to disconnect deleted user and broadcast removal
     try {
       const socketManager = require('../socket/socketManager');
       const io = socketManager.getIO ? socketManager.getIO() : null;
@@ -243,6 +283,7 @@ exports.deleteUser = (req, res) => {
         io.to(`user:${userId}`).emit('account_deleted', {
           message: 'Your account has been deleted by an administrator.'
         });
+        io.emit('user_deleted', { userId });
       }
     } catch (_) {}
 

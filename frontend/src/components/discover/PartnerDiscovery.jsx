@@ -38,6 +38,14 @@ export function PartnerDiscovery({ onNavigateToChat }) {
 
   useEffect(() => {
     loadUsers();
+
+    const handleSync = () => loadUsers();
+    window.addEventListener('hdtalk:user-updated', handleSync);
+    window.addEventListener('hdtalk:user-deleted', handleSync);
+    return () => {
+      window.removeEventListener('hdtalk:user-updated', handleSync);
+      window.removeEventListener('hdtalk:user-deleted', handleSync);
+    };
   }, []);
 
   const loadUsers = async () => {

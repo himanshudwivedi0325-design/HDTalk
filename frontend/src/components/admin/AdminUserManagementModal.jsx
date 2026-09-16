@@ -27,7 +27,7 @@ import { Avatar } from '../ui/Avatar';
 import { formatChatTimestamp, formatLastActive } from '../../utils/timeAgo';
 
 export function AdminUserManagementModal({ isOpen, onClose }) {
-  const { user: currentAdmin } = useAuth();
+  const { user: currentAdmin, updateProfile } = useAuth();
 
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
@@ -43,7 +43,7 @@ export function AdminUserManagementModal({ isOpen, onClose }) {
   const [actionFeedback, setActionFeedback] = useState(null); // { type: 'success' | 'error', text: '' }
 
   // Forms
-  const [editFormData, setEditFormData] = useState({ name: '', email: '', profession: '', bio: '' });
+  const [editFormData, setEditFormData] = useState({ name: '', email: '', profession: '', bio: '', role: 'user', newPassword: '' });
   const [createFormData, setCreateFormData] = useState({ name: '', email: '', password: '', role: 'user', profession: '', bio: '' });
 
   const showFeedback = (type, text) => {
@@ -127,6 +127,7 @@ export function AdminUserManagementModal({ isOpen, onClose }) {
       const res = await api.adminDeleteUser(user.id);
       if (res.success) {
         showFeedback('success', 'User permanently deleted.');
+        window.dispatchEvent(new CustomEvent('hdtalk:user-deleted', { detail: { userId: user.id } }));
         loadData(true);
       }
     } catch (err) {
@@ -139,9 +140,24 @@ export function AdminUserManagementModal({ isOpen, onClose }) {
     if (!editingUser) return;
 
     try {
-      const res = await api.adminUpdateUser(editingUser.id, editFormData);
+      const payload = {
+        name: editFormData.name,
+        email: editFormData.email,
+        profession: editFormData.profession,
+        bio: editFormData.bio,
+        role: editFormData.role
+      };
+      if (editFormData.newPassword && editFormData.newPassword.trim()) {
+        payload.password = editFormData.newPassword.trim();
+      }
+
+      const res = await api.adminUpdateUser(editingUser.id, payload);
       if (res.success) {
         showFeedback('success', 'User details updated successfully.');
+        if (currentAdmin && currentAdmin.id === editingUser.id && updateProfile) {
+          updateProfile(res.user);
+        }
+        window.dispatchEvent(new CustomEvent('hdtalk:user-updated', { detail: res.user }));
         setEditingUser(null);
         loadData(true);
       }
@@ -449,7 +465,9 @@ export function AdminUserManagementModal({ isOpen, onClose }) {
                           name: u.name || '',
                           email: u.email || '',
                           profession: u.profession || '',
-                          bio: u.bio || ''
+                          bio: u.bio || '',
+                          role: u.role || 'user',
+                          newPassword: ''
                         });
                       }}
                       className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 transition flex items-center gap-1"
@@ -553,6 +571,32 @@ export function AdminUserManagementModal({ isOpen, onClose }) {
                     onChange={(e) => setEditFormData(prev => ({ ...prev, bio: e.target.value }))}
                     className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 resize-none"
                   />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-slate-600 dark:text-slate-400 font-medium mb-1">Role</label>
+                    <select
+                      value={editFormData.role}
+                      disabled={editingUser.email === 'shikhar@gmail.com' || editingUser.email === 'himanshudwivedi0325@gmail.com'}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, role: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <option value="user">User</option>
+                      <option value="admin">Administrator</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-600 dark:text-slate-400 font-medium mb-1">Reset Password</label>
+                    <input
+                      type="password"
+                      placeholder="Blank = keep current"
+                      value={editFormData.newPassword}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, newPassword: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-end gap-2 pt-2">

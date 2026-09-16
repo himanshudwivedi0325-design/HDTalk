@@ -116,11 +116,18 @@ async function initMongo(memoryState) {
 async function persistUpsert(collectionName, document) {
   if (!isConnected || !dbInstance || !document || !document.id) return;
   try {
-    await dbInstance.collection(collectionName).updateOne(
-      { _id: document.id },
-      { $set: { ...document, _id: document.id } },
-      { upsert: true }
+    const docId = document.id;
+    const res = await dbInstance.collection(collectionName).updateOne(
+      { $or: [{ _id: docId }, { id: docId }] },
+      { $set: { ...document, id: docId } }
     );
+    if (res.matchedCount === 0) {
+      await dbInstance.collection(collectionName).insertOne({
+        ...document,
+        _id: docId,
+        id: docId
+      });
+    }
   } catch (err) {
     console.warn(`[MongoDB] Failed to persist update to ${collectionName}:`, err.message);
   }
@@ -132,8 +139,20 @@ async function persistUpsert(collectionName, document) {
 async function persistDelete(collectionName, filter) {
   if (!isConnected || !dbInstance) return;
   try {
-    const mongoFilter = filter.id ? { _id: filter.id } : filter;
-    await dbInstance.collection(collectionName).deleteOne(mongoFilter);
+    let mongoFilter;
+    if (typeof filter === 'string') {
+      mongoFilter = { $or: [{ _id: filter }, { id: filter }] };
+    } else if (filter && typeof filter === 'object') {
+      const targetId = filter.id || filter._id;
+      if (targetId) {
+        mongoFilter = { $or: [{ _id: targetId }, { id: targetId }] };
+      } else {
+        mongoFilter = filter;
+      }
+    } else {
+      return;
+    }
+    await dbInstance.collection(collectionName).deleteMany(mongoFilter);
   } catch (err) {
     console.warn(`[MongoDB] Failed to delete from ${collectionName}:`, err.message);
   }
@@ -159,8 +178,8 @@ async function persistUpsertMany(collectionName, documents) {
   try {
     const ops = documents.filter(doc => doc && doc.id).map(doc => ({
       updateOne: {
-        filter: { _id: doc.id },
-        update: { $set: { ...doc, _id: doc.id } },
+        filter: { $or: [{ _id: doc.id }, { id: doc.id }] },
+        update: { $set: { ...doc, id: doc.id } },
         upsert: true
       }
     }));
@@ -181,13 +200,30 @@ async function fullSyncToMongo(memoryState) {
     const collections = ['users', 'conversations', 'messages', 'connectionRequests', 'pushSubscriptions'];
     for (const coll of collections) {
       const items = memoryState[coll] || [];
+      const currentIds = items.map(x => x.id).filter(Boolean);
+      
+      // 1. Purge remote documents that no longer exist in memory state
+      if (currentIds.length > 0) {
+        await dbInstance.collection(coll).deleteMany({
+          _id: { $nin: currentIds },
+          id: { $nin: currentIds }
+        });
+      }
+
+      // 2. Upsert surviving documents
       for (const item of items) {
         if (item.id) {
-          await dbInstance.collection(coll).updateOne(
-            { _id: item.id },
-            { $set: { ...item, _id: item.id } },
-            { upsert: true }
+          const res = await dbInstance.collection(coll).updateOne(
+            { $or: [{ _id: item.id }, { id: item.id }] },
+            { $set: { ...item, id: item.id } }
           );
+          if (res.matchedCount === 0) {
+            await dbInstance.collection(coll).insertOne({
+              ...item,
+              _id: item.id,
+              id: item.id
+            });
+          }
         }
       }
     }

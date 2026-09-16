@@ -84,6 +84,19 @@ export function ChatProvider({ children }) {
     fetchConnectionRequests();
   }, [fetchConversations, fetchConnectionRequests]);
 
+  useEffect(() => {
+    const handleSync = () => {
+      fetchConversations();
+      fetchConnectionRequests();
+    };
+    window.addEventListener('hdtalk:user-updated', handleSync);
+    window.addEventListener('hdtalk:user-deleted', handleSync);
+    return () => {
+      window.removeEventListener('hdtalk:user-updated', handleSync);
+      window.removeEventListener('hdtalk:user-deleted', handleSync);
+    };
+  }, [fetchConversations, fetchConnectionRequests]);
+
   // Load messages when activeConversation changes
   useEffect(() => {
     if (!activeConversation) {

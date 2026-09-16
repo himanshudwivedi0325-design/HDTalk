@@ -71,40 +71,6 @@
       ],
       "role": "user",
       "isBanned": false
-    },
-    {
-      "id": "usr_ce94e9ce",
-      "createdAt": "2026-09-16T03:26:58.350Z",
-      "status": "online",
-      "lastSeen": "2026-09-16T03:26:58.454Z",
-      "name": "Admin Test User",
-      "email": "admintest_1789529218249@example.com",
-      "password": "$2a$10$7P6xBRPWYIizW51eVhjvbevAIno/xCmwfhrZZ2.8g3hvSDncKlhsC",
-      "profession": "",
-      "bio": "Created via admin test",
-      "role": "user",
-      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Admin%20Test%20User",
-      "interests": [
-        "Networking",
-        "Tech"
-      ]
-    },
-    {
-      "id": "usr_cd514857",
-      "createdAt": "2026-09-16T03:27:26.097Z",
-      "status": "online",
-      "lastSeen": "2026-09-16T03:27:26.196Z",
-      "name": "Admin Test User",
-      "email": "admintest_1789529245978@example.com",
-      "password": "$2a$10$aQutuIQU8exhFGrmK4yTQ.wB2FHe/WYRs7eqE4HiwmrE2fHA1vwSS",
-      "profession": "",
-      "bio": "Created via admin test",
-      "role": "user",
-      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Admin%20Test%20User",
-      "interests": [
-        "Networking",
-        "Tech"
-      ]
     }
   ],
   "conversations": [

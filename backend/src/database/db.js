@@ -311,7 +311,7 @@ const db = {
     };
     memoryState.users.push(newUser);
     mongoAdapter.persistUpsert('users', newUser);
-    scheduleFlush();
+    flushSync();
     return newUser;
   },
 
@@ -320,7 +320,7 @@ const db = {
     if (index === -1) return null;
     memoryState.users[index] = { ...memoryState.users[index], ...updates };
     mongoAdapter.persistUpsert('users', memoryState.users[index]);
-    scheduleFlush();
+    flushSync();
     return memoryState.users[index];
   },
 
@@ -345,14 +345,17 @@ const db = {
     if (affectedConvIds.length > 0) {
       mongoAdapter.persistDeleteMany('messages', { conversationId: { $in: affectedConvIds } });
     }
+    mongoAdapter.persistDeleteMany('messages', { senderId: id });
 
     // 4. Remove connection requests
     memoryState.connectionRequests = (memoryState.connectionRequests || []).filter(r => r.fromUserId !== id && r.toUserId !== id);
+    mongoAdapter.persistDeleteMany('connectionRequests', { $or: [{ fromUserId: id }, { toUserId: id }] });
 
     // 5. Remove push subscriptions
     memoryState.pushSubscriptions = (memoryState.pushSubscriptions || []).filter(s => s.userId !== id);
+    mongoAdapter.persistDeleteMany('pushSubscriptions', { userId: id });
 
-    scheduleFlush();
+    flushSync();
     return true;
   },
 

@@ -72,13 +72,29 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
-  const updateProfile = async (updates) => {
-    const res = await api.updateProfile(updates);
+  const updateProfile = async (updatesOrUser) => {
+    if (updatesOrUser && updatesOrUser.id && updatesOrUser.email) {
+      setUser(prev => ({ ...prev, ...updatesOrUser }));
+      return { success: true, user: updatesOrUser };
+    }
+    const res = await api.updateProfile(updatesOrUser);
     if (res && res.success) {
       setUser(res.user);
     }
     return res;
   };
+
+  // Keep authenticated state synchronized when updated from Admin Console or Sockets
+  useEffect(() => {
+    const handleUserUpdated = (e) => {
+      const updatedUser = e.detail;
+      if (updatedUser && user && updatedUser.id === user.id) {
+        setUser(prev => ({ ...prev, ...updatedUser }));
+      }
+    };
+    window.addEventListener('hdtalk:user-updated', handleUserUpdated);
+    return () => window.removeEventListener('hdtalk:user-updated', handleUserUpdated);
+  }, [user?.id]);
 
   return (
     <AuthContext.Provider value={{

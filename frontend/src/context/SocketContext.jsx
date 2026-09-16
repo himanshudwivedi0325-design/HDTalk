@@ -51,6 +51,39 @@ export function SocketProvider({ children }) {
       }
     });
 
+    // Account Governance Socket Handlers
+    socketInstance.on('account_deleted', ({ message }) => {
+      alert(message || 'Your account has been deleted by an administrator.');
+      sessionStorage.clear();
+      localStorage.removeItem('chatz_token');
+      window.location.reload();
+    });
+
+    socketInstance.on('account_suspended', ({ message, reason }) => {
+      alert(`${message || 'Your account has been suspended.'}\n${reason ? `Reason: ${reason}` : ''}`);
+      sessionStorage.clear();
+      localStorage.removeItem('chatz_token');
+      window.location.reload();
+    });
+
+    socketInstance.on('profile_updated', ({ user: updatedUser }) => {
+      if (updatedUser) {
+        window.dispatchEvent(new CustomEvent('hdtalk:user-updated', { detail: updatedUser }));
+      }
+    });
+
+    socketInstance.on('user_updated', ({ user: updatedUser }) => {
+      if (updatedUser) {
+        window.dispatchEvent(new CustomEvent('hdtalk:user-updated', { detail: updatedUser }));
+      }
+    });
+
+    socketInstance.on('user_deleted', ({ userId }) => {
+      if (userId) {
+        window.dispatchEvent(new CustomEvent('hdtalk:user-deleted', { detail: { userId } }));
+      }
+    });
+
     socketInstance.on('disconnect', () => {
       console.log('[Socket] Disconnected');
       setIsConnected(false);
