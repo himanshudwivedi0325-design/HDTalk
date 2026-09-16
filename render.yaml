@@ -30,9 +30,9 @@ services:
       # ── Web Push / VAPID ──────────────────────────────────────────────────
       # Paste the values from: npx web-push generate-vapid-keys
       - key: VAPID_PUBLIC_KEY
-        sync: false   # Set manually in Render Dashboard → Environment
+        value: BCW8v2MgNBi_hXIEmeuJqhIMYBcIxkLdJ4K3ZzX9CG8wWwr-R9TgObg5VJ9rAfDLt6m8LGxjsj6diEdIUSPLJEo
       - key: VAPID_PRIVATE_KEY
-        sync: false   # Set manually in Render Dashboard → Environment
+        value: 1xicvmnLBdID_WVoDl__wZ1fc4-Npe2lQZ1llYuo7sg
       - key: VAPID_EMAIL
         value: mailto:himanshudwivedi0325@gmail.com
 
