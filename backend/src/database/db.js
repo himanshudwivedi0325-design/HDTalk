@@ -147,8 +147,57 @@ const mongoAdapter = require('./mongoAdapter');
 if (mongoAdapter.isConfigured()) {
   mongoAdapter.initMongo(memoryState).then(hydrated => {
     if (hydrated) {
-      memoryState = hydrated;
-      console.log('[DB] Database synchronized with hosted MongoDB Atlas cluster.');
+      // Clean bidirectional merge to ensure zero in-flight data loss
+      const mergedUsers = [...(hydrated.users || [])];
+      for (const u of (memoryState.users || [])) {
+        if (!mergedUsers.some(m => m.id === u.id || (m.email && u.email && m.email.toLowerCase() === u.email.toLowerCase()))) {
+          mergedUsers.push(u);
+          mongoAdapter.persistUpsert('users', u);
+        }
+      }
+
+      const mergedConversations = [...(hydrated.conversations || [])];
+      for (const c of (memoryState.conversations || [])) {
+        if (!mergedConversations.some(m => m.id === c.id)) {
+          mergedConversations.push(c);
+          mongoAdapter.persistUpsert('conversations', c);
+        }
+      }
+
+      const mergedMessages = [...(hydrated.messages || [])];
+      for (const m of (memoryState.messages || [])) {
+        if (!mergedMessages.some(x => x.id === m.id)) {
+          mergedMessages.push(m);
+          mongoAdapter.persistUpsert('messages', m);
+        }
+      }
+
+      const mergedRequests = [...(hydrated.connectionRequests || [])];
+      for (const r of (memoryState.connectionRequests || [])) {
+        if (!mergedRequests.some(x => x.id === r.id)) {
+          mergedRequests.push(r);
+          mongoAdapter.persistUpsert('connectionRequests', r);
+        }
+      }
+
+      const mergedSubs = [...(hydrated.pushSubscriptions || [])];
+      for (const s of (memoryState.pushSubscriptions || [])) {
+        if (!mergedSubs.some(x => x.id === s.id)) {
+          mergedSubs.push(s);
+          mongoAdapter.persistUpsert('pushSubscriptions', s);
+        }
+      }
+
+      memoryState = {
+        users: mergedUsers,
+        conversations: mergedConversations,
+        messages: mergedMessages,
+        connectionRequests: mergedRequests,
+        pushSubscriptions: mergedSubs
+      };
+
+      flushSync();
+      console.log(`[DB] Database synchronized & merged with hosted MongoDB Atlas cluster (${mergedUsers.length} users).`);
     }
   }).catch(err => {
     console.warn('[DB] MongoDB initialization warning:', err.message);

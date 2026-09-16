@@ -77,6 +77,8 @@ export const api = {
 
   // Chat & Messages
   getConversations: () => request('/api/chat/conversations'),
+  createConversation: (targetUserId) => request('/api/chat/conversations', { method: 'POST', body: JSON.stringify({ targetUserId }) }),
+  getOrCreateConversation: (targetUserId) => request('/api/chat/conversations', { method: 'POST', body: JSON.stringify({ targetUserId }) }),
   getMessages: (conversationId, params = {}) => {
     const query = new URLSearchParams();
     if (params.limit) query.set('limit', params.limit);

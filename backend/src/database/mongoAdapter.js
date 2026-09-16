@@ -202,15 +202,7 @@ async function fullSyncToMongo(memoryState) {
       const items = memoryState[coll] || [];
       const currentIds = items.map(x => x.id).filter(Boolean);
       
-      // 1. Purge remote documents that no longer exist in memory state
-      if (currentIds.length > 0) {
-        await dbInstance.collection(coll).deleteMany({
-          _id: { $nin: currentIds },
-          id: { $nin: currentIds }
-        });
-      }
-
-      // 2. Upsert surviving documents
+      // Upsert current documents safely (Explicit deletions are handled by persistDelete)
       for (const item of items) {
         if (item.id) {
           const res = await dbInstance.collection(coll).updateOne(

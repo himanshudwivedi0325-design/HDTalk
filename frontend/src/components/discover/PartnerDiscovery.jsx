@@ -40,9 +40,11 @@ export function PartnerDiscovery({ onNavigateToChat }) {
     loadUsers();
 
     const handleSync = () => loadUsers();
+    window.addEventListener('hdtalk:user-registered', handleSync);
     window.addEventListener('hdtalk:user-updated', handleSync);
     window.addEventListener('hdtalk:user-deleted', handleSync);
     return () => {
+      window.removeEventListener('hdtalk:user-registered', handleSync);
       window.removeEventListener('hdtalk:user-updated', handleSync);
       window.removeEventListener('hdtalk:user-deleted', handleSync);
     };

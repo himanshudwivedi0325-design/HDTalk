@@ -72,6 +72,13 @@ export function SocketProvider({ children }) {
       }
     });
 
+    socketInstance.on('user_registered', ({ user: newUser }) => {
+      if (newUser) {
+        window.dispatchEvent(new CustomEvent('hdtalk:user-registered', { detail: newUser }));
+        window.dispatchEvent(new CustomEvent('hdtalk:user-updated', { detail: newUser }));
+      }
+    });
+
     socketInstance.on('user_updated', ({ user: updatedUser }) => {
       if (updatedUser) {
         window.dispatchEvent(new CustomEvent('hdtalk:user-updated', { detail: updatedUser }));

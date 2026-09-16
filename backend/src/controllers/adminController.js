@@ -325,10 +325,22 @@ exports.createUser = (req, res) => {
       interests: ['Networking', 'Tech']
     });
 
+    const sanitized = sanitizeUser(newUser);
+
+    // Real-time broadcast to all connected clients & admin dashboards
+    try {
+      const socketManager = require('../socket/socketManager');
+      const io = socketManager.getIO ? socketManager.getIO() : null;
+      if (io) {
+        io.emit('user_registered', { user: sanitized });
+        io.emit('user_updated', { user: sanitized });
+      }
+    } catch (_) {}
+
     res.status(201).json({
       success: true,
       message: 'User created successfully.',
-      user: sanitizeUser(newUser)
+      user: sanitized
     });
   } catch (err) {
     console.error('[Admin] createUser error:', err);

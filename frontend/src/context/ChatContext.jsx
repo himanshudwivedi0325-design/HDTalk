@@ -467,11 +467,21 @@ export function ChatProvider({ children }) {
   };
 
   const startDirectConversationWithUser = async (targetUserId) => {
-    const res = await api.createConversation(targetUserId);
-    if (res.success) {
-      await fetchConversations();
-      setActiveConversation(res.conversation);
-      return res.conversation;
+    try {
+      const res = await api.createConversation(targetUserId);
+      if (res.success && res.conversation) {
+        setConversations(prev => {
+          if (!prev.some(c => c.id === res.conversation.id)) {
+            return [res.conversation, ...prev];
+          }
+          return prev;
+        });
+        setActiveConversation(res.conversation);
+        return res.conversation;
+      }
+    } catch (err) {
+      console.error('Error starting direct conversation:', err);
+      throw err;
     }
   };
 

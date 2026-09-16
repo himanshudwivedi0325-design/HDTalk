@@ -1,17 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useChat } from '../../context/ChatContext';
 import { useSocket } from '../../context/SocketContext';
 import { useAuth } from '../../context/AuthContext';
-import { Search, Plus, MessageSquare, Check, CheckCheck, Filter, Mic, Image as ImageIcon, PanelLeftClose, UserCheck, Trash2 } from 'lucide-react';
+import { api } from '../../services/api';
+import { Search, Plus, MessageSquare, Check, CheckCheck, Filter, Mic, Image as ImageIcon, PanelLeftClose, UserCheck, Trash2, UserPlus } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { formatChatTimestamp, formatLastActive } from '../../utils/timeAgo';
 
 export function ConversationList({ onNewChatClick, onCollapse, onSelectChat, onOpenRequestsModal }) {
   const { user } = useAuth();
-  const { conversations, activeConversation, selectConversation, typingUsers, pendingRequestsCount, deleteConversation } = useChat();
+  const { conversations, activeConversation, selectConversation, typingUsers, pendingRequestsCount, deleteConversation, startDirectConversationWithUser } = useChat();
   const { isUserOnline, getUserLastSeen } = useSocket();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'unread'
+  const [platformUsers, setPlatformUsers] = useState([]);
+  const [isStartingChat, setIsStartingChat] = useState(false);
+
+  // Load platform users directory
+  const loadPlatformUsers = useCallback(async () => {
+    try {
+      const res = await api.getUsers();
+      if (res.success && Array.isArray(res.users)) {
+        setPlatformUsers(res.users);
+      }
+    } catch (_) {}
+  }, []);
+
+  useEffect(() => {
+    loadPlatformUsers();
+    const handleSync = () => loadPlatformUsers();
+    window.addEventListener('hdtalk:user-registered', handleSync);
+    window.addEventListener('hdtalk:user-updated', handleSync);
+    window.addEventListener('hdtalk:user-deleted', handleSync);
+    return () => {
+      window.removeEventListener('hdtalk:user-registered', handleSync);
+      window.removeEventListener('hdtalk:user-updated', handleSync);
+      window.removeEventListener('hdtalk:user-deleted', handleSync);
+    };
+  }, [loadPlatformUsers]);
 
   const getOther = (c) => {
     return c.otherUser || (c.participants?.find(p => (typeof p === 'object' ? p.id : p) !== user?.id));
@@ -32,6 +58,40 @@ export function ConversationList({ onNewChatClick, onCollapse, onSelectChat, onO
     }
     return matchesSearch;
   });
+
+  // Calculate matching registered users who don't already have a chat in conversations
+  const existingChatUserIds = new Set(
+    conversations.map(c => {
+      const o = getOther(c);
+      return typeof o === 'object' ? o?.id : o;
+    }).filter(Boolean)
+  );
+
+  const matchingNewUsers = searchTerm.trim().length > 0
+    ? platformUsers.filter(u => 
+        u.id !== user?.id &&
+        !existingChatUserIds.has(u.id) &&
+        ((u.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+         (u.profession || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+         (u.email || '').toLowerCase().includes(searchTerm.toLowerCase()))
+      )
+    : [];
+
+  const handleStartChatWith = async (targetUser) => {
+    if (isStartingChat) return;
+    try {
+      setIsStartingChat(true);
+      const conv = await startDirectConversationWithUser(targetUser.id);
+      if (conv) {
+        onSelectChat?.(conv);
+        setSearchTerm('');
+      }
+    } catch (err) {
+      console.error('Could not start direct conversation:', err);
+    } finally {
+      setIsStartingChat(false);
+    }
+  };
 
   return (
     <div className="w-full md:w-80 lg:w-[340px] flex flex-col h-full bg-white/95 dark:bg-[#0e1424]/95 border-r border-slate-200/80 dark:border-white/10 select-none transition-colors duration-200 flex-shrink-0">
@@ -151,13 +211,40 @@ export function ConversationList({ onNewChatClick, onCollapse, onSelectChat, onO
 
       {/* Conversation Cards */}
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
-        {filtered.length === 0 ? (
-          <div className="text-center py-16 px-4">
+        {filtered.length === 0 && matchingNewUsers.length === 0 ? (
+          <div className="text-center py-10 px-4">
             <MessageSquare className="w-10 h-10 text-slate-400 dark:text-slate-600 mx-auto mb-2 opacity-60" />
-            <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold">No conversations</p>
-            <p className="text-[11px] text-slate-500 mt-1">
-              Click "+ New" or explore Matchmaking to start chatting!
+            <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold">No conversations yet</p>
+            <p className="text-[11px] text-slate-500 mt-1 mb-4">
+              Click "+ New" or connect with registered members below!
             </p>
+
+            {platformUsers.length > 0 && (
+              <div className="space-y-1.5 text-left border-t border-slate-200/80 dark:border-white/10 pt-3">
+                <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 px-1 mb-1">
+                  Active Community Members ({platformUsers.length})
+                </div>
+                {platformUsers.filter(u => u.id !== user?.id).slice(0, 6).map(u => (
+                  <div
+                    key={u.id}
+                    onClick={() => handleStartChatWith(u)}
+                    className="p-2 rounded-xl flex items-center justify-between gap-2.5 hover:bg-blue-50 dark:hover:bg-white/5 border border-transparent hover:border-blue-200 dark:hover:border-blue-500/30 transition cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Avatar src={u.avatar} name={u.name} size="sm" isOnline={isUserOnline(u.id)} />
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{u.name}</div>
+                        <div className="text-[10.5px] text-slate-500 truncate">{u.profession || 'Member'}</div>
+                      </div>
+                    </div>
+                    <button className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[10.5px] font-semibold flex items-center gap-1 shadow-xs group-hover:scale-105 transition">
+                      <MessageSquare className="w-3 h-3" />
+                      <span>Chat</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           filtered.map(c => {
@@ -253,6 +340,35 @@ export function ConversationList({ onNewChatClick, onCollapse, onSelectChat, onO
               </div>
             );
           })
+        )}
+
+        {/* Matching Registered Users Directory Results */}
+        {matchingNewUsers.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-slate-200/80 dark:border-white/10 space-y-1.5 pb-3">
+            <div className="px-2 py-1 text-[11px] font-bold text-blue-600 dark:text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>Matching Registered Users ({matchingNewUsers.length})</span>
+            </div>
+            {matchingNewUsers.map(u => (
+              <div
+                key={u.id}
+                onClick={() => handleStartChatWith(u)}
+                className="p-2.5 rounded-2xl flex items-center justify-between gap-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-blue-200/60 dark:border-blue-500/30 transition cursor-pointer group bg-blue-50/40 dark:bg-blue-950/20"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Avatar src={u.avatar} name={u.name} size="md" isOnline={isUserOnline(u.id)} />
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{u.name}</div>
+                    <div className="text-[10.5px] text-slate-500 truncate">{u.profession || u.email || 'Member'}</div>
+                  </div>
+                </div>
+                <button className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1 shadow-xs group-hover:scale-105 transition">
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Chat</span>
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>

@@ -7,6 +7,7 @@ const config = require('../config/config');
 const db = require('../database/db');
 const n8nService = require('../services/n8nService');
 const cloudMediaService = require('../services/cloudMediaService');
+const socketManager = require('../socket/socketManager');
 
 const signToken = (id) => {
   return jwt.sign({ id }, config.JWT_SECRET, { expiresIn: config.JWT_EXPIRES_IN });
@@ -72,6 +73,16 @@ exports.register = async (req, res) => {
 
     // Notify n8n for welcome onboarding automation
     n8nService.notifyUserRegistered(newUser);
+
+    // Real-time broadcast to all active users and admin consoles
+    try {
+      const io = socketManager.getIO();
+      if (io) {
+        io.emit('user_registered', { user: sanitizeUser(newUser) });
+      }
+    } catch (sErr) {
+      console.warn('Could not broadcast user_registered event:', sErr.message);
+    }
 
     const token = signToken(newUser.id);
     res.status(201).json({

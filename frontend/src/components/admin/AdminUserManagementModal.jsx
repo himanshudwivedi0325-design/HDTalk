@@ -79,6 +79,16 @@ export function AdminUserManagementModal({ isOpen, onClose }) {
   useEffect(() => {
     if (isOpen) {
       loadData();
+
+      const handleRealtimeSync = () => loadData(true);
+      window.addEventListener('hdtalk:user-registered', handleRealtimeSync);
+      window.addEventListener('hdtalk:user-updated', handleRealtimeSync);
+      window.addEventListener('hdtalk:user-deleted', handleRealtimeSync);
+      return () => {
+        window.removeEventListener('hdtalk:user-registered', handleRealtimeSync);
+        window.removeEventListener('hdtalk:user-updated', handleRealtimeSync);
+        window.removeEventListener('hdtalk:user-deleted', handleRealtimeSync);
+      };
     }
   }, [isOpen, loadData]);
 

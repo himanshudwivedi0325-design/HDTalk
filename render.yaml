@@ -36,10 +36,9 @@ services:
       - key: VAPID_EMAIL
         value: mailto:himanshudwivedi0325@gmail.com
 
-      # ── MongoDB Atlas (optional write-through cache) ───────────────────────
-      # Set manually in Render Dashboard → Environment
+      # ── MongoDB Atlas (persistent cloud database) ──────────────────────────
       - key: MONGODB_URI
-        sync: false
+        value: mongodb+srv://himanshudwivedi0325_db_user:vj7tDfH57rdwU308@hdtalk-cluster.w65tsyc.mongodb.net/hdtalk?retryWrites=true&w=majority
 
       # ── n8n Automation ────────────────────────────────────────────────────
       - key: N8N_ENABLED

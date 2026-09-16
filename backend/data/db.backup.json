@@ -4,37 +4,33 @@
       "id": "usr_7e9078f9",
       "createdAt": "2026-09-15T02:04:29.369Z",
       "status": "offline",
-      "lastSeen": "2026-09-15T02:25:57.511Z",
+      "lastSeen": "2026-09-16T01:19:26.210Z",
       "name": "aawesh tiwari",
       "email": "aawesh@gmail.com",
       "password": "$2a$10$5wqO74JeiE4UydIA8F58Tu4BLnrqLmb09WyZtgO4R8GkT4Ir9Xl82",
-      "avatar": "/uploads/avatar-1789437856529-9a7c902b.png",
+      "avatar": "",
       "profession": "developer",
       "bio": "Excited to connect and collaborate on HDTalk!",
       "interests": [
         "Tech",
         "Networking"
-      ],
-      "role": "user",
-      "isBanned": false
+      ]
     },
     {
       "id": "usr_de06d1f0",
       "createdAt": "2026-09-15T02:05:05.547Z",
-      "status": "online",
-      "lastSeen": "2026-09-15T07:51:48.460Z",
+      "status": "offline",
+      "lastSeen": "2026-09-16T02:15:07.284Z",
       "name": "Himanshu Dwivedi",
       "email": "shikhar@gmail.com",
       "password": "$2a$10$SQtZ5av0SnzRupRbCAUJy.DGhdhry77xihLX.I.FZ89umDn3ONObW",
-      "avatar": "/uploads/avatar-1789437895687-34c86af2.png",
-      "profession": "dev",
+      "avatar": "/uploads/avatar-1789471536956-5b217322.webp",
+      "profession": "developer ",
       "bio": "Excited to connect and collaborate on HDTalk!",
       "interests": [
         "Tech",
         "Networking"
-      ],
-      "role": "admin",
-      "isBanned": false
+      ]
     },
     {
       "id": "usr_19b1fb3d",
@@ -46,13 +42,47 @@
         "Tech",
         "Networking"
       ],
-      "lastSeen": "2026-09-15T08:09:23.375Z",
-      "name": "Aditya",
+      "lastSeen": "2026-09-15T08:25:09.218Z",
+      "name": "Aditya skdkidgsnaaksodh aosidgsnaks aoxidgsnaksos wocidta a",
       "password": "$2a$10$Z8zgQEVj.XoL5670zzWSIeME/.rQFr4coqEDjssA8th8vWI8bTmYG",
       "profession": "Student",
-      "status": "online",
-      "role": "user",
-      "isBanned": false
+      "status": "offline"
+    },
+    {
+      "id": "usr_demo_alice",
+      "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
+      "bio": "Specializing in real-time WebRTC media rendering, accessible UI systems, and client performance.",
+      "createdAt": "2026-09-14T01:52:49.888Z",
+      "email": "alice.sterling@demo.hdtalk.local",
+      "interests": [
+        "WebRTC",
+        "React",
+        "Design Systems",
+        "Accessibility"
+      ],
+      "lastSeen": "2026-09-15T01:50:49.888Z",
+      "name": "Alice Sterling",
+      "password": "$2a$10$Yex0qICiAMiBKlffUD0Di.9mHkAJQqmBUzKo6j4P8L2AOfiP1vopK",
+      "profession": "Senior Frontend Architect",
+      "status": "offline"
+    },
+    {
+      "id": "usr_demo_bob",
+      "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+      "bio": "Passionate about high-throughput Socket.io networks, media server tuning, and STUN/TURN relays.",
+      "createdAt": "2026-09-14T01:52:49.888Z",
+      "email": "bob.vance@demo.hdtalk.local",
+      "interests": [
+        "DevOps",
+        "Coturn",
+        "Docker",
+        "NodeJS"
+      ],
+      "lastSeen": "2026-09-15T01:51:49.888Z",
+      "name": "Bob Vance",
+      "password": "$2a$10$Yex0qICiAMiBKlffUD0Di.9mHkAJQqmBUzKo6j4P8L2AOfiP1vopK",
+      "profession": "Cloud Infrastructure Specialist",
+      "status": "offline"
     },
     {
       "id": "usr_97d33ffd",
@@ -82,11 +112,11 @@
         "usr_de06d1f0"
       ],
       "createdAt": "2026-09-15T02:07:10.606Z",
-      "updatedAt": "2026-09-15T05:54:38.570Z",
+      "updatedAt": "2026-09-15T16:45:52.114Z",
       "lastMessage": {
-        "text": "Testing reply to first",
+        "text": "aur btao kya kr rha hai",
         "senderId": "usr_de06d1f0",
-        "timestamp": "2026-09-15T05:54:38.570Z"
+        "timestamp": "2026-09-15T16:45:52.114Z"
       }
     },
     {
@@ -94,9 +124,9 @@
       "createdAt": "2026-09-15T07:45:53.455Z",
       "isPending": false,
       "lastMessage": {
-        "text": "Okkk",
+        "text": "Byy sir 💝",
         "senderId": "usr_de06d1f0",
-        "timestamp": "2026-09-15T07:49:30.647Z"
+        "timestamp": "2026-09-15T08:24:20.549Z"
       },
       "participants": [
         "usr_19b1fb3d",
@@ -104,7 +134,7 @@
       ],
       "requestedBy": "usr_19b1fb3d",
       "type": "direct",
-      "updatedAt": "2026-09-15T07:49:30.647Z"
+      "updatedAt": "2026-09-15T08:24:20.549Z"
     },
     {
       "id": "conv_a012ab10",
@@ -134,7 +164,11 @@
       "text": "hello aawesh",
       "type": "text",
       "mediaUrl": null,
-      "replyToId": null
+      "replyToId": null,
+      "deliveredTo": [
+        "usr_7e9078f9"
+      ],
+      "status": "delivered"
     },
     {
       "id": "msg_4d9472f9",
@@ -149,7 +183,11 @@
       "text": "aaj college aaoge",
       "type": "text",
       "mediaUrl": null,
-      "replyToId": null
+      "replyToId": null,
+      "deliveredTo": [
+        "usr_7e9078f9"
+      ],
+      "status": "delivered"
     },
     {
       "id": "msg_42dce484",
@@ -164,7 +202,11 @@
       "text": "Haan bhai, 10 baje college aunga!",
       "type": "text",
       "mediaUrl": null,
-      "replyToId": null
+      "replyToId": null,
+      "deliveredTo": [
+        "usr_de06d1f0"
+      ],
+      "status": "delivered"
     },
     {
       "id": "msg_6b3128cf",
@@ -179,7 +221,11 @@
       "text": "aur btao yaar padhayi kaise chal rhi hai",
       "type": "text",
       "mediaUrl": null,
-      "replyToId": null
+      "replyToId": null,
+      "deliveredTo": [
+        "usr_de06d1f0"
+      ],
+      "status": "delivered"
     },
     {
       "id": "msg_c747effa",
@@ -194,20 +240,29 @@
       "text": "kya kah rhe ho bhai?",
       "type": "text",
       "mediaUrl": null,
-      "replyToId": null
+      "replyToId": null,
+      "deliveredTo": [
+        "usr_7e9078f9"
+      ],
+      "status": "delivered"
     },
     {
       "id": "msg_752e7980",
       "timestamp": "2026-09-15T05:54:38.570Z",
       "reactions": {},
       "readBy": [
-        "usr_de06d1f0"
+        "usr_de06d1f0",
+        "usr_7e9078f9"
       ],
       "conversationId": "conv_cf417452",
       "senderId": "usr_de06d1f0",
       "text": "Testing reply to first",
       "type": "text",
-      "replyToId": "msg_470896e5"
+      "replyToId": "msg_470896e5",
+      "deliveredTo": [
+        "usr_7e9078f9"
+      ],
+      "status": "read"
     },
     {
       "id": "msg_56db6c64",
@@ -222,7 +277,11 @@
       "senderId": "usr_19b1fb3d",
       "text": "Hello",
       "timestamp": "2026-09-15T07:46:01.770Z",
-      "type": "text"
+      "type": "text",
+      "deliveredTo": [
+        "usr_de06d1f0"
+      ],
+      "status": "delivered"
     },
     {
       "id": "msg_c236ab5c",
@@ -267,7 +326,11 @@
       "senderId": "usr_19b1fb3d",
       "text": "vidssave.com After Dark - Fight Club _ REJECT WEAKNESS, EMBRACE MASCULINITY 480p.mp4",
       "timestamp": "2026-09-15T07:47:49.460Z",
-      "type": "file"
+      "type": "file",
+      "deliveredTo": [
+        "usr_de06d1f0"
+      ],
+      "status": "delivered"
     },
     {
       "id": "msg_2a8beff5",
@@ -297,7 +360,11 @@
       "senderId": "usr_19b1fb3d",
       "text": "Thik hu, abhi train me hu awaz nhi aayegi",
       "timestamp": "2026-09-15T07:47:51.345Z",
-      "type": "text"
+      "type": "text",
+      "deliveredTo": [
+        "usr_de06d1f0"
+      ],
+      "status": "delivered"
     },
     {
       "id": "msg_1b649a79",
@@ -312,7 +379,11 @@
       "senderId": "usr_19b1fb3d",
       "text": "Ha",
       "timestamp": "2026-09-15T07:47:55.865Z",
-      "type": "text"
+      "type": "text",
+      "deliveredTo": [
+        "usr_de06d1f0"
+      ],
+      "status": "delivered"
     },
     {
       "id": "msg_b0d3ef4e",
@@ -380,7 +451,11 @@
       "senderId": "usr_19b1fb3d",
       "text": "Bataunga",
       "timestamp": "2026-09-15T07:49:26.023Z",
-      "type": "text"
+      "type": "text",
+      "deliveredTo": [
+        "usr_de06d1f0"
+      ],
+      "status": "delivered"
     },
     {
       "id": "msg_9c59f716",
@@ -395,6 +470,677 @@
       "senderId": "usr_de06d1f0",
       "text": "Okkk",
       "timestamp": "2026-09-15T07:49:30.647Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_9cfad4e5",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_19b1fb3d",
+        "usr_de06d1f0"
+      ],
+      "replyToId": null,
+      "senderId": "usr_19b1fb3d",
+      "text": "Single page application hai isliye url copy nahi kar sakta, personal project ke liye shai hai, scaling me problem aa sakti hai, random chat jaisa hai",
+      "timestamp": "2026-09-15T08:15:34.454Z",
+      "type": "text",
+      "deliveredTo": [
+        "usr_de06d1f0"
+      ],
+      "status": "delivered"
+    },
+    {
+      "id": "msg_8bf4c48b",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_19b1fb3d",
+        "usr_de06d1f0"
+      ],
+      "replyToId": null,
+      "senderId": "usr_19b1fb3d",
+      "text": "Tech stack mern hai ? Item free tokens kaha se mile ? Copilot ?",
+      "timestamp": "2026-09-15T08:16:06.459Z",
+      "type": "text",
+      "deliveredTo": [
+        "usr_de06d1f0"
+      ],
+      "status": "delivered"
+    },
+    {
+      "id": "msg_c687dcd2",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": "msg_8bf4c48b",
+      "senderId": "usr_de06d1f0",
+      "text": "Gemini",
+      "timestamp": "2026-09-15T08:16:41.778Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_db9124e1",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_19b1fb3d",
+        "usr_de06d1f0"
+      ],
+      "replyToId": null,
+      "senderId": "usr_19b1fb3d",
+      "text": "Ispe personally 2-7 din do aur chhote chhote fixes thik Karo",
+      "timestamp": "2026-09-15T08:17:08.078Z",
+      "type": "text",
+      "deliveredTo": [
+        "usr_de06d1f0"
+      ],
+      "status": "delivered"
+    },
+    {
+      "id": "msg_8d5d4208",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": "msg_9cfad4e5",
+      "senderId": "usr_de06d1f0",
+      "text": "Nhi samjha?",
+      "timestamp": "2026-09-15T08:17:13.791Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_68ce142e",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": "msg_db9124e1",
+      "senderId": "usr_de06d1f0",
+      "text": "Ha kr rha hu",
+      "timestamp": "2026-09-15T08:17:21.702Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_dfef3806",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {
+        "👍": [
+          "usr_19b1fb3d"
+        ]
+      },
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Abhi ye jo single tick hai ye fix kr rha hu",
+      "timestamp": "2026-09-15T08:17:38.720Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_83e4f2ed",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Seen ke baad double ho jaye ese hi pura chala ke",
+      "timestamp": "2026-09-15T08:17:52.990Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_ef1ece58",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_19b1fb3d",
+        "usr_de06d1f0"
+      ],
+      "replyToId": null,
+      "senderId": "usr_19b1fb3d",
+      "text": "Jaise mi apne friend ko chat pe link ke through lana chhata hu lekin link hamesha se same hi hai url change hi nahi hota kisi bhi page per",
+      "timestamp": "2026-09-15T08:18:02.171Z",
+      "type": "text",
+      "deliveredTo": [
+        "usr_de06d1f0"
+      ],
+      "status": "delivered"
+    },
+    {
+      "id": "msg_97730214",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Okk ye fix bhi try krunga agar ho jayega toh",
+      "timestamp": "2026-09-15T08:18:31.742Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_155afa6c",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {
+        "❤️": [
+          "usr_de06d1f0"
+        ]
+      },
+      "readBy": [
+        "usr_19b1fb3d",
+        "usr_de06d1f0"
+      ],
+      "replyToId": null,
+      "senderId": "usr_19b1fb3d",
+      "text": "Koi nhi, jitna hai usme sab kuch fix karo responsiveness, mera name dekho kitna bada hai aisi chize thik karo",
+      "timestamp": "2026-09-15T08:19:31.950Z",
+      "type": "text",
+      "deliveredTo": [
+        "usr_de06d1f0"
+      ],
+      "status": "delivered"
+    },
+    {
+      "id": "msg_3ca49e2c",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Haa",
+      "timestamp": "2026-09-15T08:19:42.677Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_9abb863a",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {
+        "😂": [
+          "usr_de06d1f0"
+        ]
+      },
+      "readBy": [
+        "usr_19b1fb3d",
+        "usr_de06d1f0"
+      ],
+      "replyToId": null,
+      "senderId": "usr_19b1fb3d",
+      "text": "Bohot acha project banaye ho bas padh lena context kaise manage kar rahe ho so on...",
+      "timestamp": "2026-09-15T08:20:20.765Z",
+      "type": "text",
+      "deliveredTo": [
+        "usr_de06d1f0"
+      ],
+      "status": "delivered"
+    },
+    {
+      "id": "msg_7a86b492",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Jii sir",
+      "timestamp": "2026-09-15T08:20:34.447Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_3e79a691",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_19b1fb3d",
+        "usr_de06d1f0"
+      ],
+      "replyToId": null,
+      "senderId": "usr_19b1fb3d",
+      "text": "Edit ka option nahi hai 😟",
+      "timestamp": "2026-09-15T08:20:45.090Z",
+      "type": "text",
+      "deliveredTo": [
+        "usr_de06d1f0"
+      ],
+      "status": "delivered"
+    },
+    {
+      "id": "msg_1beae627",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": "msg_9abb863a",
+      "senderId": "usr_de06d1f0",
+      "text": "Thank you 🙏",
+      "timestamp": "2026-09-15T08:20:46.259Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_5a3d2987",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": "msg_3e79a691",
+      "senderId": "usr_de06d1f0",
+      "text": "Ha YHI sab toh fix Krna hai",
+      "timestamp": "2026-09-15T08:20:56.694Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_9f3a3b47",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {
+        "👍": [
+          "usr_19b1fb3d"
+        ]
+      },
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Ese hi batate rhiyega",
+      "timestamp": "2026-09-15T08:21:02.618Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_3711b3dc",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_19b1fb3d",
+        "usr_de06d1f0"
+      ],
+      "replyToId": null,
+      "senderId": "usr_19b1fb3d",
+      "text": "Ide vs code hai ?",
+      "timestamp": "2026-09-15T08:21:26.075Z",
+      "type": "text",
+      "deliveredTo": [
+        "usr_de06d1f0"
+      ],
+      "status": "delivered"
+    },
+    {
+      "id": "msg_46bba1b6",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Antigravity",
+      "timestamp": "2026-09-15T08:21:35.758Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_fabaa663",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Google ki",
+      "timestamp": "2026-09-15T08:21:39.953Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_6af9f858",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_19b1fb3d",
+        "usr_de06d1f0"
+      ],
+      "replyToId": null,
+      "senderId": "usr_19b1fb3d",
+      "text": "Antigravity itna free deta hai ? Limit kitna hai uska ?",
+      "timestamp": "2026-09-15T08:21:55.740Z",
+      "type": "text",
+      "deliveredTo": [
+        "usr_de06d1f0"
+      ],
+      "status": "delivered"
+    },
+    {
+      "id": "msg_00d440c8",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Sir jio ke reacharge par 349 wale",
+      "timestamp": "2026-09-15T08:22:09.233Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_58889b9e",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Free milta hai google ai studio",
+      "timestamp": "2026-09-15T08:22:22.613Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_5c0276c3",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Toh 2 gmail par lia hu",
+      "timestamp": "2026-09-15T08:22:37.148Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_c2039393",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Lagbhag 3 hrs tak aaram se nonstop chalta hai",
+      "timestamp": "2026-09-15T08:22:56.753Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_a2544801",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Aur different models hai",
+      "timestamp": "2026-09-15T08:23:00.453Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_5ee97ed0",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Claude khtm ho jata hai jldi lekin gemini flash axa chalta hai",
+      "timestamp": "2026-09-15T08:23:29.965Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_5bdf967c",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Usi se krta hu",
+      "timestamp": "2026-09-15T08:23:30.943Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_6b62d866",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_19b1fb3d",
+        "usr_de06d1f0"
+      ],
+      "replyToId": null,
+      "senderId": "usr_19b1fb3d",
+      "text": "Acha hai, mai to copilot use karta hu",
+      "timestamp": "2026-09-15T08:23:38.690Z",
+      "type": "text",
+      "deliveredTo": [
+        "usr_de06d1f0"
+      ],
+      "status": "delivered"
+    },
+    {
+      "id": "msg_2890d242",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Ha wo bhi axa hai",
+      "timestamp": "2026-09-15T08:23:46.119Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_775dcd51",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_19b1fb3d",
+        "usr_de06d1f0"
+      ],
+      "replyToId": null,
+      "senderId": "usr_19b1fb3d",
+      "text": "Thik hai bye",
+      "timestamp": "2026-09-15T08:24:10.365Z",
+      "type": "text",
+      "deliveredTo": [
+        "usr_de06d1f0"
+      ],
+      "status": "delivered"
+    },
+    {
+      "id": "msg_e354414a",
+      "conversationId": "conv_e3f20066",
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_19b1fb3d"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "text": "Byy sir 💝",
+      "timestamp": "2026-09-15T08:24:20.549Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_793720cd",
+      "conversationId": "conv_cf417452",
+      "deliveredTo": [
+        "usr_7e9078f9"
+      ],
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_7e9078f9"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "status": "read",
+      "text": "Hii kaise ho",
+      "timestamp": "2026-09-15T09:26:23.180Z",
+      "type": "text",
+      "editedAt": "2026-09-15T10:38:31.860Z",
+      "isEdited": true
+    },
+    {
+      "id": "msg_d7d3f19b",
+      "conversationId": "conv_cf417452",
+      "deliveredTo": [
+        "usr_de06d1f0"
+      ],
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_7e9078f9",
+        "usr_de06d1f0"
+      ],
+      "replyToId": null,
+      "senderId": "usr_7e9078f9",
+      "status": "read",
+      "text": "Behiya",
+      "timestamp": "2026-09-15T10:49:48.737Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_bc623e7b",
+      "conversationId": "conv_cf417452",
+      "deliveredTo": [
+        "usr_de06d1f0"
+      ],
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_7e9078f9",
+        "usr_de06d1f0"
+      ],
+      "replyToId": null,
+      "senderId": "usr_7e9078f9",
+      "status": "read",
+      "text": "Apna btao",
+      "timestamp": "2026-09-15T10:49:53.957Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_9a9fa16f",
+      "conversationId": "conv_cf417452",
+      "deliveredTo": [
+        "usr_de06d1f0"
+      ],
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_7e9078f9",
+        "usr_de06d1f0"
+      ],
+      "replyToId": null,
+      "senderId": "usr_7e9078f9",
+      "status": "read",
+      "text": "Hello",
+      "timestamp": "2026-09-15T12:56:56.142Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_dbcaab7a",
+      "conversationId": "conv_cf417452",
+      "deliveredTo": [
+        "usr_7e9078f9"
+      ],
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_7e9078f9"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "status": "read",
+      "text": "bol bhai kya hai",
+      "timestamp": "2026-09-15T16:45:12.230Z",
+      "type": "text"
+    },
+    {
+      "id": "msg_eea4b59a",
+      "conversationId": "conv_cf417452",
+      "deliveredTo": [
+        "usr_7e9078f9"
+      ],
+      "mediaUrl": null,
+      "reactions": {},
+      "readBy": [
+        "usr_de06d1f0",
+        "usr_7e9078f9"
+      ],
+      "replyToId": null,
+      "senderId": "usr_de06d1f0",
+      "status": "read",
+      "text": "aur btao kya kr rha hai",
+      "timestamp": "2026-09-15T16:45:52.114Z",
       "type": "text"
     }
   ],
@@ -417,5 +1163,34 @@
       "updatedAt": "2026-09-15T07:51:50.920Z"
     }
   ],
-  "pushSubscriptions": []
+  "pushSubscriptions": [
+    {
+      "id": "sub_2ab359a8",
+      "subscription": {
+        "endpoint": "https://fcm.googleapis.com/fcm/send/cisOzEC7Noo:APA91bEpS3W2dI_QsgXS8ddEIFEoZIoxB0Ge-TMtvEfb0l4-23oqGQwRF_ZUHgmyoSEJHdoPTMnAgRDb2B0DXO2reTUHfxQKu2O4GTlI8hA9vUAOGWpIunhdqdIo_t_LzTh3eXVehowR",
+        "expirationTime": null,
+        "keys": {
+          "p256dh": "BLa2G_36Cv99CAT7nTw4ihkpo6LxM9GxLy30UBR7R1ZqRxYEp6EZuef3TQcxah5Rbv9tD_SQGJeW_8co7QBTmQI",
+          "auth": "aaBbNeQq3LUkNopXXaKwsA"
+        }
+      },
+      "updatedAt": "2026-09-15T07:39:03.207Z",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Mobile Safari/537.36",
+      "userId": "usr_de06d1f0"
+    },
+    {
+      "id": "sub_d728c85e",
+      "subscription": {
+        "endpoint": "https://fcm.googleapis.com/fcm/send/cptsP2_Spqo:APA91bE-1Tet-pjmIV0Zt1uskUE-uANg9KzwwycIpNLXdrvPSHzFXr2rLjhC_SbjLORbdO3C0oJuiQZmT-arP98V4HqdWMo6L-MKBmV1V_iYxijW-A-zGZeHg4gNJNauo-MqOpBBOa9p",
+        "expirationTime": null,
+        "keys": {
+          "p256dh": "BK3WMJwgDh020zg2Yhjis3rN3t_TRmko4QBpoyU1NP8-xGw6BP_l_dwWMEiywiNKFT8HWdBbjLOH1HkYsb1l4fY",
+          "auth": "NsGkSb_XS0b6orib0vMjhg"
+        }
+      },
+      "updatedAt": "2026-09-15T07:49:43.346Z",
+      "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36",
+      "userId": "usr_19b1fb3d"
+    }
+  ]
 }
