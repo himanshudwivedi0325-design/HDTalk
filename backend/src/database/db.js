@@ -31,13 +31,40 @@ function isValidSchema(data) {
   );
 }
 
+const TEST_USER_EMAILS = [
+  'alice.sterling@demo.hdtalk.local',
+  'bob.vance@demo.hdtalk.local',
+  'himanshu.test99@gmail.com'
+];
+const TEST_USER_IDS = ['usr_demo_alice', 'usr_demo_bob', 'usr_97d33ffd'];
+
+function isTestUser(u) {
+  if (!u) return false;
+  const email = (u.email || '').toLowerCase().trim();
+  const id = u.id || u._id || '';
+  if (TEST_USER_EMAILS.includes(email)) return true;
+  if (TEST_USER_IDS.includes(id)) return true;
+  if (id.startsWith('usr_demo_')) return true;
+  return false;
+}
+
 function normalizeSchema(data) {
+  const users = (Array.isArray(data.users) ? data.users : []).filter(u => !isTestUser(u));
+  const validUserIds = users.map(u => u.id || u._id);
   return {
-    users: Array.isArray(data.users) ? data.users : [],
-    conversations: Array.isArray(data.conversations) ? data.conversations : [],
-    messages: Array.isArray(data.messages) ? data.messages : [],
-    connectionRequests: Array.isArray(data.connectionRequests) ? data.connectionRequests : [],
-    pushSubscriptions: Array.isArray(data.pushSubscriptions) ? data.pushSubscriptions : []
+    users,
+    conversations: (Array.isArray(data.conversations) ? data.conversations : []).filter(c => 
+      c.participants && c.participants.every(p => validUserIds.includes(p))
+    ),
+    messages: (Array.isArray(data.messages) ? data.messages : []).filter(m => 
+      validUserIds.includes(m.senderId)
+    ),
+    connectionRequests: (Array.isArray(data.connectionRequests) ? data.connectionRequests : []).filter(r => 
+      validUserIds.includes(r.fromUserId) && validUserIds.includes(r.toUserId)
+    ),
+    pushSubscriptions: (Array.isArray(data.pushSubscriptions) ? data.pushSubscriptions : []).filter(s => 
+      validUserIds.includes(s.userId)
+    )
   };
 }
 
@@ -147,10 +174,10 @@ const mongoAdapter = require('./mongoAdapter');
 if (mongoAdapter.isConfigured()) {
   mongoAdapter.initMongo(memoryState).then(hydrated => {
     if (hydrated) {
-      // Clean bidirectional merge to ensure zero in-flight data loss
-      const mergedUsers = [...(hydrated.users || [])];
+      // Clean bidirectional merge to ensure zero in-flight data loss (excluding test users)
+      const mergedUsers = [...(hydrated.users || [])].filter(u => !isTestUser(u));
       for (const u of (memoryState.users || [])) {
-        if (!mergedUsers.some(m => m.id === u.id || (m.email && u.email && m.email.toLowerCase() === u.email.toLowerCase()))) {
+        if (!isTestUser(u) && !mergedUsers.some(m => m.id === u.id || (m.email && u.email && m.email.toLowerCase() === u.email.toLowerCase()))) {
           mergedUsers.push(u);
           mongoAdapter.persistUpsert('users', u);
         }
@@ -338,7 +365,7 @@ const db = {
 
   seedDefaultUsers,
 
-  getUsers: () => [...(memoryState.users || [])],
+  getUsers: () => (memoryState.users || []).filter(u => !isTestUser(u)),
 
   getUserById: (id) => {
     return (memoryState.users || []).find(x => x.id === id) || null;

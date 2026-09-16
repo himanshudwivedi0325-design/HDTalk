@@ -82,10 +82,35 @@ async function initMongo(memoryState) {
       console.log('[MongoDB] Automated zero-data-loss migration completed successfully! 🎉');
       return memoryState;
     } else {
-      // Hydrate local cache from MongoDB Atlas
-      console.log(`[MongoDB] Hydrating local memory cache from MongoDB (Found ${usersCount} users, ${messagesCount} messages)...`);
+      // Hydrate local cache from MongoDB Atlas (filtering out purged test/demo users)
+      const TEST_USER_EMAILS = [
+        'alice.sterling@demo.hdtalk.local',
+        'bob.vance@demo.hdtalk.local',
+        'himanshu.test99@gmail.com'
+      ];
+      const TEST_USER_IDS = ['usr_demo_alice', 'usr_demo_bob', 'usr_97d33ffd'];
+
+      // Actively purge blacklisted test accounts from MongoDB Atlas cluster
+      try {
+        await dbInstance.collection('users').deleteMany({
+          $or: [
+            { email: { $in: TEST_USER_EMAILS } },
+            { id: { $in: TEST_USER_IDS } },
+            { _id: { $in: TEST_USER_IDS } }
+          ]
+        });
+      } catch (_) {}
+
+      const rawUsers = await dbInstance.collection('users').find().toArray();
+      const cleanUsers = rawUsers.filter(u => {
+        const email = (u.email || '').toLowerCase().trim();
+        const id = u.id || u._id || '';
+        return !TEST_USER_EMAILS.includes(email) && !TEST_USER_IDS.includes(id) && !id.startsWith('usr_demo_');
+      });
+
+      console.log(`[MongoDB] Hydrating local memory cache from MongoDB (Found ${cleanUsers.length} authentic users, ${messagesCount} messages)...`);
       const hydratedState = {
-        users: await dbInstance.collection('users').find().toArray(),
+        users: cleanUsers,
         conversations: await dbInstance.collection('conversations').find().toArray(),
         messages: await dbInstance.collection('messages').find().toArray(),
         connectionRequests: await dbInstance.collection('connectionRequests').find().toArray(),
@@ -205,6 +230,14 @@ async function fullSyncToMongo(memoryState) {
       // Upsert current documents safely (Explicit deletions are handled by persistDelete)
       for (const item of items) {
         if (item.id) {
+          if (coll === 'users') {
+            const email = (item.email || '').toLowerCase().trim();
+            if (['alice.sterling@demo.hdtalk.local', 'bob.vance@demo.hdtalk.local', 'himanshu.test99@gmail.com'].includes(email) ||
+                ['usr_demo_alice', 'usr_demo_bob', 'usr_97d33ffd'].includes(item.id) ||
+                item.id.startsWith('usr_demo_')) {
+              continue;
+            }
+          }
           const res = await dbInstance.collection(coll).updateOne(
             { $or: [{ _id: item.id }, { id: item.id }] },
             { $set: { ...item, id: item.id } }
