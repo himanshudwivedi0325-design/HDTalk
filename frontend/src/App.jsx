@@ -70,6 +70,7 @@ import { PwaProvider, usePwa } from './context/PwaContext';
 import { PwaInstallBanner } from './components/pwa/PwaInstallBanner';
 import { PwaInstallModal } from './components/pwa/PwaInstallModal';
 import { registerServiceWorker } from './services/pushService';
+import { AdminUserManagementModal } from './components/admin/AdminUserManagementModal';
 
 function MainLayout() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -80,6 +81,7 @@ function MainLayout() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showRequestsModal, setShowRequestsModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [showAdminModal, setShowAdminModal] = useState(false);
   const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState(false);
   const [isConversationListVisible, setIsConversationListVisible] = useState(true);
 
@@ -197,6 +199,7 @@ function MainLayout() {
           onOpenProfileModal={() => setShowProfileModal(true)}
           onOpenRequestsModal={() => setShowRequestsModal(true)}
           onOpenNotificationModal={() => setShowNotificationModal(true)}
+          onOpenAdminModal={() => setShowAdminModal(true)}
         />
       </div>
 
@@ -213,6 +216,7 @@ function MainLayout() {
             onOpenThemeModal={() => setShowThemeModal(true)}
             onOpenProfileModal={() => setShowProfileModal(true)}
             onOpenRequestsModal={() => setShowRequestsModal(true)}
+            onOpenAdminModal={() => setShowAdminModal(true)}
           />
         </div>
 
@@ -284,6 +288,7 @@ function MainLayout() {
           onOpenThemeModal={() => setShowThemeModal(true)}
           onOpenProfileModal={() => setShowProfileModal(true)}
           onOpenRequestsModal={() => setShowRequestsModal(true)}
+          onOpenAdminModal={() => setShowAdminModal(true)}
           unreadCount={totalUnread}
           pendingRequestsCount={pendingRequestsCount}
           user={user}
@@ -306,6 +311,10 @@ function MainLayout() {
       <NotificationManagerModal 
         isOpen={showNotificationModal} 
         onClose={() => setShowNotificationModal(false)} 
+      />
+      <AdminUserManagementModal
+        isOpen={showAdminModal}
+        onClose={() => setShowAdminModal(false)}
       />
 
       {/* PWA Download Banner (Floating at bottom, dismissible) */}

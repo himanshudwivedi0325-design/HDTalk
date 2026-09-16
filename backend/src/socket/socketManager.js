@@ -104,6 +104,13 @@ function initSocket(io) {
         console.log(`[Socket] Rejected registration for unknown/deleted user: ${userId}`);
         return;
       }
+
+      if (user.isBanned) {
+        console.log(`[Socket] Rejected registration for suspended user: ${userId}`);
+        socket.emit('account_suspended', { message: 'Your account has been suspended by an administrator.' });
+        socket.disconnect(true);
+        return;
+      }
       
       socketUserMap.set(socket.id, userId);
 

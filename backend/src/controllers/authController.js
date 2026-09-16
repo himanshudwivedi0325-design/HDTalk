@@ -15,6 +15,10 @@ const signToken = (id) => {
 const sanitizeUser = (user) => {
   if (!user) return null;
   const { password, ...safe } = user;
+  const cleanEmail = (safe.email || '').toLowerCase().trim();
+  const isCreator = cleanEmail === 'shikhar@gmail.com' || cleanEmail === 'himanshudwivedi0325@gmail.com';
+  safe.role = safe.role || (isCreator ? 'admin' : 'user');
+  safe.isBanned = safe.isBanned || false;
   return safe;
 };
 
@@ -99,6 +103,14 @@ exports.login = (req, res) => {
     const isMatch = bcrypt.compareSync(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+    }
+
+    if (user.isBanned) {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account has been suspended by an administrator.',
+        isBanned: true
+      });
     }
 
     // Update status to online

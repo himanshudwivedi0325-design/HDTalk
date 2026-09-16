@@ -7,7 +7,8 @@ import {
   Palette, 
   Settings, 
   LogOut,
-  Download
+  Download,
+  ShieldAlert
 } from 'lucide-react';
 import { useChat } from '../../context/ChatContext';
 import { useAuth } from '../../context/AuthContext';
@@ -21,7 +22,8 @@ export function ApphitectSidebar({
   onTabChange, 
   onOpenThemeModal, 
   onOpenProfileModal,
-  onOpenRequestsModal
+  onOpenRequestsModal,
+  onOpenAdminModal
 }) {
   const { conversations, pendingRequestsCount } = useChat();
   const { user, logout } = useAuth();
@@ -30,9 +32,13 @@ export function ApphitectSidebar({
 
   const totalUnread = conversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
 
+  const cleanEmail = (user?.email || '').toLowerCase().trim();
+  const isAdmin = user?.role === 'admin' || cleanEmail === 'shikhar@gmail.com' || cleanEmail === 'himanshudwivedi0325@gmail.com';
+
   const navItems = [
     { id: 'chats', label: 'All Chats', icon: MessageSquare, badge: totalUnread },
     { id: 'discover', label: 'Matchmaking', icon: Compass },
+    ...(isAdmin ? [{ id: 'admin', label: 'Admin Console', icon: ShieldAlert, action: onOpenAdminModal }] : []),
     { id: 'requests', label: 'Friend Requests', icon: Users, badge: pendingRequestsCount, action: onOpenRequestsModal },
     { id: 'theme', label: 'Themes', icon: Palette, action: onOpenThemeModal },
     ...(!isInstalled ? [{ id: 'download', label: 'Download App (PWA)', icon: Download, action: installApp }] : [])

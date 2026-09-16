@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare, Compass, Palette, User, UserCheck } from 'lucide-react';
+import { MessageSquare, Compass, Palette, User, UserCheck, ShieldAlert } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 
 export function MobileBottomNav({
@@ -8,10 +8,13 @@ export function MobileBottomNav({
   onOpenThemeModal,
   onOpenProfileModal,
   onOpenRequestsModal,
+  onOpenAdminModal,
   unreadCount = 0,
   pendingRequestsCount = 0,
   user
 }) {
+  const cleanEmail = (user?.email || '').toLowerCase().trim();
+  const isAdmin = user?.role === 'admin' || cleanEmail === 'shikhar@gmail.com' || cleanEmail === 'himanshudwivedi0325@gmail.com';
   return (
     <nav className="md:hidden flex items-center justify-around h-14 bg-white/95 dark:bg-[#070c18]/95 border-t border-slate-200/80 dark:border-white/10 backdrop-blur-xl z-30 select-none flex-shrink-0 px-2">
       {/* Chats Tab */}
@@ -62,6 +65,18 @@ export function MobileBottomNav({
         </div>
         <span className="text-[10px] mt-0.5">Requests</span>
       </button>
+
+      {/* Admin Button (Mobile) */}
+      {isAdmin && (
+        <button
+          onClick={onOpenAdminModal}
+          className="flex flex-col items-center justify-center flex-1 py-1 text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+          title="Admin User Management Console"
+        >
+          <ShieldAlert className="w-5 h-5 text-rose-500" />
+          <span className="text-[10px] mt-0.5 font-bold">Admin</span>
+        </button>
+      )}
 
       {/* Themes Button */}
       <button

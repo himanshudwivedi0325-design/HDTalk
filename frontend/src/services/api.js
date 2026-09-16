@@ -119,5 +119,35 @@ export const api = {
       method: 'POST',
       body: formData
     });
-  }
+  },
+
+  // ─── Admin User Management APIs ─────────────────────────────────────────────
+  adminGetUsers: (params = {}) => {
+    const q = new URLSearchParams();
+    if (params.search) q.append('search', params.search);
+    if (params.filter) q.append('filter', params.filter);
+    if (params.sort) q.append('sort', params.sort);
+    const qStr = q.toString();
+    return request(`/api/admin/users${qStr ? `?${qStr}` : ''}`);
+  },
+  adminGetStats: () => request('/api/admin/stats'),
+  adminUpdateUserRole: (userId, role) => request(`/api/admin/users/${userId}/role`, {
+    method: 'PUT',
+    body: JSON.stringify({ role })
+  }),
+  adminToggleBan: (userId, isBanned, reason) => request(`/api/admin/users/${userId}/ban`, {
+    method: 'PUT',
+    body: JSON.stringify({ isBanned, reason })
+  }),
+  adminUpdateUser: (userId, data) => request(`/api/admin/users/${userId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  }),
+  adminDeleteUser: (userId) => request(`/api/admin/users/${userId}`, {
+    method: 'DELETE'
+  }),
+  adminCreateUser: (data) => request('/api/admin/users', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  })
 };

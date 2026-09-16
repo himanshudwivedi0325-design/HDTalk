@@ -21,6 +21,13 @@ module.exports = (req, res, next) => {
     if (!user) {
       return res.status(401).json({ success: false, message: 'User not found or session expired.' });
     }
+    if (user.isBanned) {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account has been suspended by an administrator.',
+        isBanned: true
+      });
+    }
     req.user = user;
     next();
   } catch (err) {

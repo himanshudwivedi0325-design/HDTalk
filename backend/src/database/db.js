@@ -324,6 +324,57 @@ const db = {
     return memoryState.users[index];
   },
 
+  deleteUser: (id) => {
+    const userIndex = (memoryState.users || []).findIndex(u => u.id === id);
+    if (userIndex === -1) return false;
+
+    // 1. Remove user from users
+    memoryState.users.splice(userIndex, 1);
+    mongoAdapter.persistDelete('users', id);
+
+    // 2. Find all conversations where this user is a participant
+    const affectedConvs = (memoryState.conversations || []).filter(c => c.participants && c.participants.includes(id));
+    const affectedConvIds = affectedConvs.map(c => c.id);
+
+    // Remove these conversations
+    memoryState.conversations = (memoryState.conversations || []).filter(c => !affectedConvIds.includes(c.id));
+    affectedConvIds.forEach(cId => mongoAdapter.persistDelete('conversations', cId));
+
+    // 3. Remove all messages in these conversations or sent by this user
+    memoryState.messages = (memoryState.messages || []).filter(m => !affectedConvIds.includes(m.conversationId) && m.senderId !== id);
+    if (affectedConvIds.length > 0) {
+      mongoAdapter.persistDeleteMany('messages', { conversationId: { $in: affectedConvIds } });
+    }
+
+    // 4. Remove connection requests
+    memoryState.connectionRequests = (memoryState.connectionRequests || []).filter(r => r.fromUserId !== id && r.toUserId !== id);
+
+    // 5. Remove push subscriptions
+    memoryState.pushSubscriptions = (memoryState.pushSubscriptions || []).filter(s => s.userId !== id);
+
+    scheduleFlush();
+    return true;
+  },
+
+  getSystemStats: () => {
+    const totalUsers = (memoryState.users || []).length;
+    const onlineUsers = (memoryState.users || []).filter(u => u.status === 'online').length;
+    const bannedUsers = (memoryState.users || []).filter(u => u.isBanned === true).length;
+    const adminUsers = (memoryState.users || []).filter(u => u.role === 'admin' || u.email === 'shikhar@gmail.com' || u.email === 'himanshudwivedi0325@gmail.com').length;
+    const totalConversations = (memoryState.conversations || []).length;
+    const totalMessages = (memoryState.messages || []).length;
+
+    return {
+      totalUsers,
+      onlineUsers,
+      bannedUsers,
+      adminUsers,
+      totalConversations,
+      totalMessages,
+      serverUptime: process.uptime()
+    };
+  },
+
   getConversationsForUser: (userId) => {
     return (memoryState.conversations || []).filter(c => c.participants && c.participants.includes(userId));
   },

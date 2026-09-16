@@ -15,17 +15,21 @@ import {
   Moon,
   Monitor,
   Bell,
-  Download
+  Download,
+  ShieldAlert
 } from 'lucide-react';
 import { HDTalkLogo, CreatorBadge } from '../ui/HDTalkLogo';
 import { Avatar } from '../ui/Avatar';
 
-export function GlassNavbar({ onOpenThemeModal, onOpenProfileModal, onOpenRequestsModal, onOpenNotificationModal }) {
+export function GlassNavbar({ onOpenThemeModal, onOpenProfileModal, onOpenRequestsModal, onOpenNotificationModal, onOpenAdminModal }) {
   const { user, logout } = useAuth();
   const { isConnected } = useSocket();
   const { currentThemeObj, isDark, toggleMode } = useTheme();
   const { pendingRequestsCount } = useChat();
   const { installApp, isInstalled } = usePwa();
+
+  const cleanEmail = (user?.email || '').toLowerCase().trim();
+  const isAdmin = user?.role === 'admin' || cleanEmail === 'shikhar@gmail.com' || cleanEmail === 'himanshudwivedi0325@gmail.com';
 
   return (
     <header className="h-14 sm:h-16 px-4 md:px-6 flex items-center justify-between bg-white/80 dark:bg-[#070c18]/90 border-b border-slate-200/80 dark:border-white/10 backdrop-blur-xl z-20 select-none transition-colors duration-200 flex-shrink-0">
@@ -83,6 +87,19 @@ export function GlassNavbar({ onOpenThemeModal, onOpenProfileModal, onOpenReques
             <Download className="w-3.5 h-3.5 group-hover:-translate-y-0.5 transition-transform" />
             <span className="hidden sm:inline">Download App</span>
             <span className="sm:hidden">App</span>
+          </button>
+        )}
+
+        {/* Admin Console Pill Button */}
+        {isAdmin && (
+          <button
+            onClick={onOpenAdminModal}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-500/15 via-purple-500/15 to-indigo-500/15 hover:from-rose-500/25 hover:to-indigo-500/25 border border-rose-300/60 dark:border-rose-500/40 text-rose-700 dark:text-rose-300 font-bold text-xs transition hover:scale-105 active:scale-95 shadow-xs"
+            title="Open Admin User Management Console"
+            aria-label="Open Admin Console"
+          >
+            <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+            <span className="hidden md:inline">Admin Console</span>
           </button>
         )}
 
