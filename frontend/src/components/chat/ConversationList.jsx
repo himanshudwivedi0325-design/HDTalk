@@ -21,7 +21,12 @@ export function ConversationList({ onNewChatClick, onCollapse, onSelectChat, onO
     try {
       const res = await api.getUsers();
       if (res.success && Array.isArray(res.users)) {
-        setPlatformUsers(res.users);
+        const clean = res.users.filter(u => {
+          const email = (u.email || '').toLowerCase().trim();
+          const id = u.id || '';
+          return !email.includes('demo.hdtalk.local') && email !== 'himanshu.test99@gmail.com' && !id.startsWith('usr_demo_') && id !== 'usr_97d33ffd';
+        });
+        setPlatformUsers(clean);
       }
     } catch (_) {}
   }, []);

@@ -17,7 +17,13 @@ const sanitizeUser = (user) => {
 exports.getUsers = (req, res) => {
   try {
     const { search = '', filter = 'all', sort = 'newest' } = req.query;
-    let users = db.getUsers().map(sanitizeUser);
+    let users = db.getUsers().filter(u => {
+      const email = (u.email || '').toLowerCase().trim();
+      const id = u.id || '';
+      return !['alice.sterling@demo.hdtalk.local', 'bob.vance@demo.hdtalk.local', 'himanshu.test99@gmail.com'].includes(email) &&
+             !['usr_demo_alice', 'usr_demo_bob', 'usr_97d33ffd'].includes(id) &&
+             !id.startsWith('usr_demo_');
+    }).map(sanitizeUser);
 
     // Search by name, email, or profession
     if (search && search.trim()) {

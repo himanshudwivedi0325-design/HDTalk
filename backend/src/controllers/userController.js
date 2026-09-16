@@ -40,10 +40,22 @@ const calculateMatchScore = (userA, userB) => {
   return Math.min(score, 98);
 };
 
+const TEST_USER_EMAILS = [
+  'alice.sterling@demo.hdtalk.local',
+  'bob.vance@demo.hdtalk.local',
+  'himanshu.test99@gmail.com'
+];
+const TEST_USER_IDS = ['usr_demo_alice', 'usr_demo_bob', 'usr_97d33ffd'];
+
 exports.getAllUsers = (req, res) => {
   try {
     const currentUserId = req.user.id;
-    const allUsers = db.getUsers().filter(u => u.id !== currentUserId);
+    const allUsers = db.getUsers().filter(u => 
+      u.id !== currentUserId &&
+      !TEST_USER_EMAILS.includes((u.email || '').toLowerCase().trim()) &&
+      !TEST_USER_IDS.includes(u.id) &&
+      !u.id.startsWith('usr_demo_')
+    );
 
     const usersWithMatch = allUsers.map(u => {
       const safe = sanitizeUser(u);

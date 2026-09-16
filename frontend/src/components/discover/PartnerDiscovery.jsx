@@ -82,6 +82,11 @@ export function PartnerDiscovery({ onNavigateToChat }) {
   const allProfessions = Array.from(new Set(users.map(u => u.profession).filter(Boolean)));
 
   const filteredUsers = users.filter(u => {
+    const email = (u.email || '').toLowerCase().trim();
+    const id = u.id || '';
+    if (email.includes('demo.hdtalk.local') || email === 'himanshu.test99@gmail.com' || id.startsWith('usr_demo_') || id === 'usr_97d33ffd') {
+      return false;
+    }
     const matchesSearch = u.name.toLowerCase().includes(search.toLowerCase()) ||
                           (u.profession && u.profession.toLowerCase().includes(search.toLowerCase())) ||
                           (u.bio && u.bio.toLowerCase().includes(search.toLowerCase())) ||
