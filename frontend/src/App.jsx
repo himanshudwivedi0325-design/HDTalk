@@ -58,6 +58,7 @@ import { ConversationList } from './components/chat/ConversationList';
 import { ChatArea } from './components/chat/ChatArea';
 import { ContactDetailsDrawer } from './components/chat/ContactDetailsDrawer';
 import { PartnerDiscovery } from './components/discover/PartnerDiscovery';
+import { AIAssistantWorkspace } from './components/ai/AIAssistantWorkspace';
 import { CallModal } from './components/call/CallModal';
 import { AuthModal } from './components/auth/AuthModal';
 
@@ -75,7 +76,7 @@ function MainLayout() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { activeConversation, conversations, pendingRequestsCount, selectConversation, startDirectConversationWithUser } = useChat();
   const { showInstallModal, setShowInstallModal } = usePwa();
-  const [activeTab, setActiveTab] = useState('chats'); // 'chats' | 'discover'
+  const [activeTab, setActiveTab] = useState('chats'); // 'chats' | 'discover' | 'ai'
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showRequestsModal, setShowRequestsModal] = useState(false);
@@ -109,6 +110,9 @@ function MainLayout() {
 
     if (targetTab === 'discover') {
       setActiveTab('discover');
+      handledInitialUrlRef.current = true;
+    } else if (targetTab === 'ai') {
+      setActiveTab('ai');
       handledInitialUrlRef.current = true;
     } else if (targetChat && conversations.length > 0) {
       const found = conversations.find(c => c.id === targetChat);
@@ -145,6 +149,8 @@ function MainLayout() {
     let search = '';
     if (activeTab === 'discover') {
       search = '?tab=discover';
+    } else if (activeTab === 'ai') {
+      search = '?tab=ai';
     } else if (activeTab === 'chats') {
       if (activeConversation?.id) {
         search = `?chat=${activeConversation.id}`;
@@ -227,6 +233,7 @@ function MainLayout() {
             }`}>
               <ConversationList 
                 onNewChatClick={() => setActiveTab('discover')} 
+                onOpenAIAssistant={() => setActiveTab('ai')}
                 onCollapse={() => setIsConversationListVisible(false)}
                 onOpenRequestsModal={() => setShowRequestsModal(true)}
                 onSelectChat={() => {
@@ -266,9 +273,13 @@ function MainLayout() {
               </div>
             )}
           </div>
-        ) : (
+        ) : activeTab === 'discover' ? (
           <div className="flex-1 flex overflow-hidden">
             <PartnerDiscovery onNavigateToChat={() => setActiveTab('chats')} />
+          </div>
+        ) : (
+          <div className="flex-1 flex overflow-hidden">
+            <AIAssistantWorkspace onNavigateToChat={() => setActiveTab('chats')} />
           </div>
         )}
       </div>

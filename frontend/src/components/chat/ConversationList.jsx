@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { useChat } from '../../context/ChatContext';
 import { useSocket } from '../../context/SocketContext';
 import { useAuth } from '../../context/AuthContext';
-import { Search, Plus, MessageSquare, Check, CheckCheck, Filter, Mic, Image as ImageIcon, PanelLeftClose, UserCheck, Trash2 } from 'lucide-react';
+import { Search, Plus, MessageSquare, Check, CheckCheck, Filter, Mic, Image as ImageIcon, PanelLeftClose, UserCheck, Trash2, Sparkles } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { formatChatTimestamp, formatLastActive } from '../../utils/timeAgo';
 
-export function ConversationList({ onNewChatClick, onCollapse, onSelectChat, onOpenRequestsModal }) {
+export function ConversationList({ onNewChatClick, onCollapse, onSelectChat, onOpenRequestsModal, onOpenAIAssistant }) {
   const { user } = useAuth();
   const { conversations, activeConversation, selectConversation, typingUsers, pendingRequestsCount, deleteConversation } = useChat();
   const { isUserOnline, getUserLastSeen } = useSocket();
@@ -20,6 +20,9 @@ export function ConversationList({ onNewChatClick, onCollapse, onSelectChat, onO
   const filtered = conversations.filter(c => {
     const other = getOther(c);
     if (!other) return false;
+    // Separate human conversations from AI: AI has its own dedicated workspace
+    if (other.id === 'usr_ai_bot' || other.email === 'claude@hdtalk.ai') return false;
+
     const name = (other.name || '').toLowerCase();
     const lastMsg = c.lastMessage?.text?.toLowerCase() || '';
     const matchesSearch = name.includes(searchTerm.toLowerCase()) || lastMsg.includes(searchTerm.toLowerCase());
@@ -142,6 +145,30 @@ export function ConversationList({ onNewChatClick, onCollapse, onSelectChat, onO
             <span className="px-2 py-0.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[10.5px] font-bold shadow-xs flex-shrink-0">
               Review
             </span>
+          </div>
+        </div>
+      )}
+
+      {/* Quick AI Assistant Entry */}
+      {onOpenAIAssistant && (
+        <div className="px-3 pt-2">
+          <div
+            onClick={onOpenAIAssistant}
+            className="p-2.5 rounded-xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-blue-500/10 dark:from-purple-500/15 dark:to-cyan-500/15 border border-indigo-200/70 dark:border-white/10 flex items-center justify-between cursor-pointer hover:border-indigo-400 dark:hover:border-purple-400/50 hover:shadow-xs transition group"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform">
+                <Sparkles className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <span>Claude AI Assistant</span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 font-extrabold uppercase tracking-wide">AI</span>
+                </h4>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400">Ask coding, draft messages, or brainstorm</p>
+              </div>
+            </div>
+            <span className="text-xs font-bold text-indigo-600 dark:text-cyan-400 group-hover:translate-x-0.5 transition-transform">→</span>
           </div>
         </div>
       )}

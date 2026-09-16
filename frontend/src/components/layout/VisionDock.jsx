@@ -5,7 +5,8 @@ import {
   Video, 
   User, 
   Palette,
-  PhoneCall
+  PhoneCall,
+  Sparkles
 } from 'lucide-react';
 import { useChat } from '../../context/ChatContext';
 
@@ -18,6 +19,7 @@ export function VisionDock({ activeTab, onTabChange, onOpenThemeModal, onOpenPro
   const tabs = [
     { id: 'chats', label: 'Messages', icon: MessageSquare, badge: totalUnread },
     { id: 'discover', label: 'Matchmaking', icon: Compass },
+    { id: 'ai', label: 'Claude AI', icon: Sparkles },
     { id: 'profile', label: 'Profile', icon: User, action: onOpenProfileModal },
     { id: 'theme', label: 'Themes', icon: Palette, action: onOpenThemeModal }
   ];

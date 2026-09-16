@@ -331,14 +331,27 @@ exports.askClaude = async (req, res) => {
       return res.status(400).json({ success: false, message: 'prompt or messages required.' });
     }
 
-    const result = await aiService.queryClaude(chatMessages);
+    let result;
+    try {
+      result = await aiService.queryClaude(chatMessages);
+    } catch (queryErr) {
+      console.warn('[Claude AI] Gateway fallback triggered:', queryErr.message);
+      const lastUserMsg = chatMessages.slice().reverse().find(m => m.role === 'user');
+      const fallbackContent = aiService.getSmartFallbackResponse(lastUserMsg?.content || prompt, req.user?.name);
+      result = {
+        content: fallbackContent,
+        model: 'claude-smart-assistant',
+        isFallback: true
+      };
+    }
+
     res.json({
       success: true,
       data: result
     });
   } catch (err) {
     console.error('Error in askClaude endpoint:', err);
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ success: false, message: 'Internal assistant error.' });
   }
 };
 

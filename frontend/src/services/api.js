@@ -90,6 +90,10 @@ export const api = {
   deleteConversation: (conversationId, alsoRemoveFriend = false) => request(`/api/chat/conversations/${conversationId}`, { method: 'DELETE', body: JSON.stringify({ alsoRemoveFriend }) }),
   removeFriend: (friendUserId) => request(`/api/users/friends/${friendUserId}`, { method: 'DELETE' }),
   markRead: (conversationId) => request(`/api/chat/conversations/${conversationId}/read`, { method: 'POST' }),
+  askClaude: (messages) => request('/api/chat/claude', {
+    method: 'POST',
+    body: JSON.stringify(Array.isArray(messages) ? { messages } : { prompt: messages })
+  }),
 
   // File / Voice Upload
   uploadFile: async (file) => {

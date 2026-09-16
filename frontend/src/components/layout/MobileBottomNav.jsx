@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare, Compass, Palette, User, UserCheck } from 'lucide-react';
+import { MessageSquare, Compass, Palette, User, UserCheck, Sparkles } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 
 export function MobileBottomNav({
@@ -45,6 +45,19 @@ export function MobileBottomNav({
       >
         <Compass className="w-5 h-5" />
         <span className="text-[10px] mt-0.5">Discover</span>
+      </button>
+
+      {/* AI Assistant Tab */}
+      <button
+        onClick={() => onTabChange('ai')}
+        className={`flex flex-col items-center justify-center flex-1 py-1 relative transition-colors ${
+          activeTab === 'ai'
+            ? 'text-purple-600 dark:text-purple-400 font-semibold'
+            : 'text-slate-500 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-300'
+        }`}
+      >
+        <Sparkles className="w-5 h-5" />
+        <span className="text-[10px] mt-0.5">AI</span>
       </button>
 
       {/* Friend Requests Button */}

@@ -405,6 +405,21 @@
       "text": "Okkk",
       "timestamp": "2026-09-15T07:49:30.647Z",
       "type": "text"
+    },
+    {
+      "id": "msg_e401bba0",
+      "timestamp": "2026-09-16T02:33:32.400Z",
+      "reactions": {},
+      "readBy": [
+        "usr_ai_bot"
+      ],
+      "deliveredTo": [],
+      "status": "sent",
+      "conversationId": "conv_test",
+      "senderId": "usr_ai_bot",
+      "text": "Hello Claude",
+      "type": "text",
+      "replyToId": null
     }
   ],
   "connectionRequests": [
