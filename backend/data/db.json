@@ -19,8 +19,8 @@
     {
       "id": "usr_de06d1f0",
       "createdAt": "2026-09-15T02:05:05.547Z",
-      "status": "offline",
-      "lastSeen": "2026-09-16T02:15:07.284Z",
+      "status": "online",
+      "lastSeen": "2026-09-16T14:39:08.290Z",
       "name": "Himanshu Dwivedi",
       "email": "shikhar@gmail.com",
       "password": "$2a$10$SQtZ5av0SnzRupRbCAUJy.DGhdhry77xihLX.I.FZ89umDn3ONObW",
@@ -47,60 +47,6 @@
       "password": "$2a$10$Z8zgQEVj.XoL5670zzWSIeME/.rQFr4coqEDjssA8th8vWI8bTmYG",
       "profession": "Student",
       "status": "offline"
-    },
-    {
-      "id": "usr_demo_alice",
-      "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
-      "bio": "Specializing in real-time WebRTC media rendering, accessible UI systems, and client performance.",
-      "createdAt": "2026-09-14T01:52:49.888Z",
-      "email": "alice.sterling@demo.hdtalk.local",
-      "interests": [
-        "WebRTC",
-        "React",
-        "Design Systems",
-        "Accessibility"
-      ],
-      "lastSeen": "2026-09-15T01:50:49.888Z",
-      "name": "Alice Sterling",
-      "password": "$2a$10$Yex0qICiAMiBKlffUD0Di.9mHkAJQqmBUzKo6j4P8L2AOfiP1vopK",
-      "profession": "Senior Frontend Architect",
-      "status": "offline"
-    },
-    {
-      "id": "usr_demo_bob",
-      "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-      "bio": "Passionate about high-throughput Socket.io networks, media server tuning, and STUN/TURN relays.",
-      "createdAt": "2026-09-14T01:52:49.888Z",
-      "email": "bob.vance@demo.hdtalk.local",
-      "interests": [
-        "DevOps",
-        "Coturn",
-        "Docker",
-        "NodeJS"
-      ],
-      "lastSeen": "2026-09-15T01:51:49.888Z",
-      "name": "Bob Vance",
-      "password": "$2a$10$Yex0qICiAMiBKlffUD0Di.9mHkAJQqmBUzKo6j4P8L2AOfiP1vopK",
-      "profession": "Cloud Infrastructure Specialist",
-      "status": "offline"
-    },
-    {
-      "id": "usr_97d33ffd",
-      "createdAt": "2026-09-16T01:57:26.239Z",
-      "status": "offline",
-      "lastSeen": "2026-09-16T02:07:27.665Z",
-      "name": "Himanshu Tester",
-      "email": "himanshu.test99@gmail.com",
-      "password": "$2a$10$PXliW3Jf26sF6PxQTBw9k.dSwTdf7nuQ2n6/hGeYYhPegKzMYisIq",
-      "avatar": "",
-      "profession": "Full Stack Dev",
-      "bio": "Excited to connect and collaborate on HDTalk!",
-      "interests": [
-        "Tech",
-        "Networking"
-      ],
-      "role": "user",
-      "isBanned": false
     }
   ],
   "conversations": [
