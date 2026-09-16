@@ -27,8 +27,7 @@ import {
   Pencil,
   Share2,
   X,
-  CornerDownLeft,
-  Sparkles
+  CornerDownLeft
 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { formatLastActive } from '../../utils/timeAgo';
@@ -728,25 +727,6 @@ export function ChatArea({
                 title="Emojis"
               >
                 <Smile className="w-4 h-4" />
-              </button>
-
-              {/* Ask Claude AI Button (OmniRoute) */}
-              <button
-                type="button"
-                onClick={() => {
-                  setText(prev => {
-                    if (prev.startsWith('@claude ')) return prev;
-                    if (prev.startsWith('@ai ') || prev.startsWith('@bot ')) {
-                      return prev.replace(/^@(ai|bot)\s*/, '@claude ');
-                    }
-                    return prev.trim() ? `@claude ${prev.trim()}` : '@claude ';
-                  });
-                  inputRef.current?.focus();
-                }}
-                className="p-2 sm:p-2.5 rounded-full bg-purple-50 dark:bg-purple-950/30 hover:bg-purple-100 dark:hover:bg-purple-900/40 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 border border-purple-200/50 dark:border-purple-800/40 transition flex-shrink-0 mb-0.5 group"
-                title="Ask Claude AI (OmniRoute)"
-              >
-                <Sparkles className="w-4 h-4 group-hover:rotate-12 transition-transform" />
               </button>
 
               {/* Main Multi-line Auto-Expanding Textarea with Next Line Support */}
