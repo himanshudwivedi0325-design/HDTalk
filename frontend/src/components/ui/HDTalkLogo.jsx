@@ -78,10 +78,10 @@ export function HDTalkLogo({
 
 export function CreatorBadge({ className = '' }) {
   return (
-    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 dark:bg-blue-600/15 border border-blue-500/25 dark:border-blue-500/30 text-blue-600 dark:text-blue-300 text-[11px] font-medium shadow-sm dark:shadow-lg backdrop-blur-md ${className}`}>
-      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-cyan-400 animate-pulse"></span>
-      <span>Created by</span>
-      <span className="font-bold text-slate-900 dark:text-white tracking-wide">Himanshu Dwivedi</span>
+    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100/80 dark:bg-white/5 border border-slate-200/70 dark:border-white/10 text-slate-600 dark:text-slate-300 text-[11px] font-medium backdrop-blur-md whitespace-nowrap flex-shrink-0 select-none hover:border-blue-500/30 transition-all shadow-xs ${className}`}>
+      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-cyan-400"></span>
+      <span className="text-slate-400 dark:text-slate-400">by</span>
+      <span className="font-semibold text-slate-800 dark:text-slate-100 tracking-tight">Himanshu Dwivedi</span>
     </div>
   );
 }

@@ -70,10 +70,10 @@ export function MobileBottomNav({
       {isAdmin && (
         <button
           onClick={onOpenAdminModal}
-          className="flex flex-col items-center justify-center flex-1 py-1 text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+          className="flex flex-col items-center justify-center flex-1 py-1 text-amber-600 dark:text-amber-400 hover:text-amber-700 transition-colors"
           title="Admin User Management Console"
         >
-          <ShieldAlert className="w-5 h-5 text-rose-500" />
+          <ShieldAlert className="w-5 h-5 text-amber-500" />
           <span className="text-[10px] mt-0.5 font-bold">Admin</span>
         </button>
       )}
