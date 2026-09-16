@@ -14,6 +14,8 @@ export function ChatProvider({ children }) {
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [isLoadingOlderMessages, setIsLoadingOlderMessages] = useState(false);
   const [typingUsers, setTypingUsers] = useState({}); // { [userId]: boolean }
   const [connectionRequests, setConnectionRequests] = useState([]);
   const [isLoadingRequests, setIsLoadingRequests] = useState(false);
@@ -30,6 +32,8 @@ export function ChatProvider({ children }) {
       setConversations([]);
       setActiveConversation(null);
       setMessages([]);
+      setHasMoreMessages(false);
+      setIsLoadingOlderMessages(false);
       setTypingUsers({});
       setConnectionRequests([]);
       setReplyingToMessage(null);
@@ -84,18 +88,21 @@ export function ChatProvider({ children }) {
   useEffect(() => {
     if (!activeConversation) {
       setMessages([]);
+      setHasMoreMessages(false);
       return;
     }
 
     setIsLoadingMessages(true);
+    setHasMoreMessages(false);
     if (socket) {
       socket.emit('join_conversation', activeConversation.id);
     }
 
-    api.getMessages(activeConversation.id)
+    api.getMessages(activeConversation.id, { limit: 50 })
       .then(res => {
         if (res.success) {
-          setMessages(res.messages);
+          setMessages(res.messages || []);
+          setHasMoreMessages(Boolean(res.hasMore));
           if (socket) {
             socket.emit('mark_read', { conversationId: activeConversation.id });
           }
@@ -110,6 +117,37 @@ export function ChatProvider({ children }) {
       }
     };
   }, [activeConversation?.id, socket]);
+
+  // Load earlier/older messages (pagination cursor)
+  const loadOlderMessages = useCallback(async () => {
+    if (!activeConversation || isLoadingOlderMessages || !hasMoreMessages) return false;
+    if (messages.length === 0) return false;
+
+    const oldestMsg = messages[0];
+    if (!oldestMsg?.timestamp) return false;
+
+    setIsLoadingOlderMessages(true);
+    try {
+      const res = await api.getMessages(activeConversation.id, {
+        limit: 50,
+        before: oldestMsg.timestamp
+      });
+      if (res.success && Array.isArray(res.messages)) {
+        setMessages(prev => {
+          const existingIds = new Set(prev.map(m => m.id));
+          const olderOnly = res.messages.filter(m => !existingIds.has(m.id));
+          return [...olderOnly, ...prev];
+        });
+        setHasMoreMessages(Boolean(res.hasMore));
+        return true;
+      }
+    } catch (err) {
+      console.warn('Error loading older messages:', err);
+    } finally {
+      setIsLoadingOlderMessages(false);
+    }
+    return false;
+  }, [activeConversation?.id, isLoadingOlderMessages, hasMoreMessages, messages]);
 
   // Socket Real-time listeners
   useEffect(() => {
@@ -772,6 +810,9 @@ export function ChatProvider({ children }) {
       activeConversation,
       messages,
       isLoadingMessages,
+      hasMoreMessages,
+      isLoadingOlderMessages,
+      loadOlderMessages,
       typingUsers,
       connectionRequests,
       pendingIncomingRequests,

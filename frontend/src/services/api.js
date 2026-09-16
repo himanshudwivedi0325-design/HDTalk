@@ -77,9 +77,13 @@ export const api = {
 
   // Chat & Messages
   getConversations: () => request('/api/chat/conversations'),
-  createConversation: (targetUserId) => request('/api/chat/conversations', { method: 'POST', body: JSON.stringify({ targetUserId }) }),
-  getMessages: (conversationId) => request(`/api/chat/conversations/${conversationId}/messages`),
-  sendMessage: (conversationId, body) => request(`/api/chat/conversations/${conversationId}/messages`, { method: 'POST', body: JSON.stringify(body) }),
+  getMessages: (conversationId, params = {}) => {
+    const query = new URLSearchParams();
+    if (params.limit) query.set('limit', params.limit);
+    if (params.before) query.set('before', params.before);
+    const qStr = query.toString();
+    return request(`/api/chat/conversations/${conversationId}/messages${qStr ? `?${qStr}` : ''}`);
+  },
   addReaction: (messageId, emoji) => request(`/api/chat/messages/${messageId}/reactions`, { method: 'POST', body: JSON.stringify({ emoji }) }),
   editMessage: (messageId, text) => request(`/api/chat/messages/${messageId}`, { method: 'PUT', body: JSON.stringify({ text }) }),
   deleteMessage: (messageId, deleteForEveryone = true) => request(`/api/chat/messages/${messageId}`, { method: 'DELETE', body: JSON.stringify({ deleteForEveryone }) }),

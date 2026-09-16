@@ -165,10 +165,11 @@ function scheduleFlush() {
   isDirty = true;
   if (flushTimer) return;
 
+  // Debounced non-blocking flush to prevent disk I/O thrashing
   flushTimer = setTimeout(() => {
     flushTimer = null;
     executeFlushAsync();
-  }, 25);
+  }, 500);
 }
 
 function executeFlushAsync() {
@@ -188,9 +189,8 @@ function executeFlushAsync() {
     try {
       atomicWriteFile(dbFile, snapshot);
       atomicWriteFile(backupFile, snapshot);
-      if (mongoAdapter.isConnected()) {
-        mongoAdapter.fullSyncToMongo(memoryState).catch(() => {});
-      }
+      // Note: Fine-grained atomic writes (persistUpsert/persistDelete) are executed directly
+      // on each database operation, eliminating O(N) fullSyncToMongo network bottlenecks.
     } catch (err) {
       console.error('[DB] Error during async flush:', err);
       isDirty = true;
@@ -310,6 +310,7 @@ const db = {
       ...userData
     };
     memoryState.users.push(newUser);
+    mongoAdapter.persistUpsert('users', newUser);
     scheduleFlush();
     return newUser;
   },
@@ -318,6 +319,7 @@ const db = {
     const index = memoryState.users.findIndex(u => u.id === id);
     if (index === -1) return null;
     memoryState.users[index] = { ...memoryState.users[index], ...updates };
+    mongoAdapter.persistUpsert('users', memoryState.users[index]);
     scheduleFlush();
     return memoryState.users[index];
   },
@@ -338,6 +340,7 @@ const db = {
         createdAt: new Date().toISOString()
       };
       memoryState.users.push(bot);
+      mongoAdapter.persistUpsert('users', bot);
       scheduleFlush();
     } else {
       bot.name = 'Claude AI Assistant 🤖';
@@ -382,6 +385,7 @@ const db = {
         requestedBy
       };
       memoryState.conversations.push(conv);
+      mongoAdapter.persistUpsert('conversations', conv);
       scheduleFlush();
     } else {
       conv.isPending = isPending;
@@ -470,19 +474,22 @@ const db = {
           if (m.status !== 'read') {
             m.status = 'delivered';
           }
-          mongoAdapter.persistUpsert('messages', m);
           updatedMessages.push(m);
         }
       }
     });
 
-    if (updatedMessages.length > 0) scheduleFlush();
+    if (updatedMessages.length > 0) {
+      mongoAdapter.persistUpsertMany('messages', updatedMessages);
+      scheduleFlush();
+    }
     return updatedMessages;
   },
 
   markAsRead: (conversationId, userId) => {
     let updated = false;
     const readMessageIds = [];
+    const updatedMessages = [];
     memoryState.messages.forEach(m => {
       if (m.conversationId === conversationId && (!m.readBy || !m.readBy.includes(userId))) {
         if (!m.readBy) m.readBy = [];
@@ -491,11 +498,14 @@ const db = {
         if (!m.deliveredTo.includes(userId)) m.deliveredTo.push(userId);
         m.status = 'read';
         readMessageIds.push(m.id);
-        mongoAdapter.persistUpsert('messages', m);
+        updatedMessages.push(m);
         updated = true;
       }
     });
-    if (updated) scheduleFlush();
+    if (updated) {
+      mongoAdapter.persistUpsertMany('messages', updatedMessages);
+      scheduleFlush();
+    }
     return readMessageIds;
   },
 
@@ -511,14 +521,9 @@ const db = {
     memoryState.conversations.splice(convIndex, 1);
     mongoAdapter.persistDelete('conversations', { id: conversationId });
 
-    // 2. Delete all messages of this conversation
-    memoryState.messages = (memoryState.messages || []).filter(m => {
-      if (m.conversationId === conversationId) {
-        mongoAdapter.persistDelete('messages', { id: m.id });
-        return false;
-      }
-      return true;
-    });
+    // 2. Delete all messages of this conversation atomically
+    memoryState.messages = (memoryState.messages || []).filter(m => m.conversationId !== conversationId);
+    mongoAdapter.persistDeleteMany('messages', { conversationId });
 
     // 3. Remove friend relationship if requested
     if (alsoRemoveFriend && otherUserId) {
@@ -567,10 +572,13 @@ const db = {
       msg.fileName = null;
       msg.reactions = {};
 
+      mongoAdapter.persistUpsert('messages', msg);
+
       // Update conversation preview if needed
       const conv = memoryState.conversations.find(c => c.id === msg.conversationId);
       if (conv && conv.lastMessage && conv.lastMessage.timestamp === msg.timestamp) {
         conv.lastMessage.text = '🚫 This message was deleted';
+        mongoAdapter.persistUpsert('conversations', conv);
       }
       scheduleFlush();
       return { message: msg, deleteForEveryone: true };
@@ -580,6 +588,7 @@ const db = {
       if (!msg.deletedFor.includes(userId)) {
         msg.deletedFor.push(userId);
       }
+      mongoAdapter.persistUpsert('messages', msg);
       scheduleFlush();
       return { message: msg, deleteForEveryone: false };
     }
@@ -631,6 +640,7 @@ const db = {
       createdAt: new Date().toISOString()
     };
     memoryState.connectionRequests.push(req);
+    mongoAdapter.persistUpsert('connectionRequests', req);
     scheduleFlush();
     return req;
   },
@@ -640,6 +650,7 @@ const db = {
     if (!req) return null;
     req.status = status;
     req.updatedAt = new Date().toISOString();
+    mongoAdapter.persistUpsert('connectionRequests', req);
     scheduleFlush();
     return req;
   },
@@ -667,6 +678,7 @@ const db = {
     } else {
       memoryState.pushSubscriptions.push(record);
     }
+    mongoAdapter.persistUpsert('pushSubscriptions', record);
     scheduleFlush();
     return record;
   },
@@ -678,6 +690,7 @@ const db = {
       s => s.subscription?.endpoint !== endpoint
     );
     if (memoryState.pushSubscriptions.length !== initialLen) {
+      mongoAdapter.persistDelete('pushSubscriptions', { 'subscription.endpoint': endpoint });
       scheduleFlush();
       return true;
     }

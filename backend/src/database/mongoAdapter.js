@@ -140,6 +140,39 @@ async function persistDelete(collectionName, filter) {
 }
 
 /**
+ * Asynchronously delete multiple records from MongoDB Atlas
+ */
+async function persistDeleteMany(collectionName, filter) {
+  if (!isConnected || !dbInstance || !filter) return;
+  try {
+    await dbInstance.collection(collectionName).deleteMany(filter);
+  } catch (err) {
+    console.warn(`[MongoDB] Failed to deleteMany from ${collectionName}:`, err.message);
+  }
+}
+
+/**
+ * Asynchronously bulk upsert records into MongoDB Atlas
+ */
+async function persistUpsertMany(collectionName, documents) {
+  if (!isConnected || !dbInstance || !Array.isArray(documents) || documents.length === 0) return;
+  try {
+    const ops = documents.filter(doc => doc && doc.id).map(doc => ({
+      updateOne: {
+        filter: { _id: doc.id },
+        update: { $set: { ...doc, _id: doc.id } },
+        upsert: true
+      }
+    }));
+    if (ops.length > 0) {
+      await dbInstance.collection(collectionName).bulkWrite(ops, { ordered: false });
+    }
+  } catch (err) {
+    console.warn(`[MongoDB] Failed bulk write to ${collectionName}:`, err.message);
+  }
+}
+
+/**
  * Full flush sync to MongoDB Atlas
  */
 async function fullSyncToMongo(memoryState) {
@@ -174,7 +207,9 @@ function getMongoStatus() {
 module.exports = {
   initMongo,
   persistUpsert,
+  persistUpsertMany,
   persistDelete,
+  persistDeleteMany,
   fullSyncToMongo,
   getMongoStatus,
   isConnected: () => isConnected,

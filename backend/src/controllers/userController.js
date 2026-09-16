@@ -74,7 +74,7 @@ exports.getUserProfile = (req, res) => {
   });
 };
 
-exports.updateProfile = (req, res) => {
+exports.updateProfile = async (req, res) => {
   try {
     const allowed = ['name', 'bio', 'avatar', 'profession', 'interests'];
     const updates = {};
@@ -90,6 +90,17 @@ exports.updateProfile = (req, res) => {
         return res.status(400).json({ success: false, message: 'Name must be between 2 and 30 characters.' });
       }
       updates.name = cleanName;
+    }
+
+    if (updates.avatar && typeof updates.avatar === 'string' && updates.avatar.startsWith('data:image/')) {
+      try {
+        const uploadRes = await cloudMediaService.uploadBase64(updates.avatar, 'hdtalk/avatars');
+        if (uploadRes && uploadRes.url) {
+          updates.avatar = uploadRes.url;
+        }
+      } catch (saveErr) {
+        console.warn('Could not upload base64 avatar on profile update:', saveErr.message);
+      }
     }
 
     const updated = db.updateUser(req.user.id, updates);

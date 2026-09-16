@@ -47,20 +47,12 @@ exports.register = async (req, res) => {
 
     if (avatar && avatar.startsWith('data:image/')) {
       try {
-        const matches = avatar.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
-        if (matches) {
-          const rawSubtype = matches[1].toLowerCase();
-          const ext = rawSubtype === 'jpeg' ? '.jpg' : `.${rawSubtype}`;
-          const safeExt = ['.jpg', '.png', '.webp', '.gif'].includes(ext) ? ext : '.png';
-          const filename = `avatar-${Date.now()}-${uuidv4().slice(0, 8)}${safeExt}`;
-          const filePath = path.join(config.UPLOAD_DIR, filename);
-          const buffer = Buffer.from(matches[2], 'base64');
-          // Use async write to avoid blocking the event loop
-          await fs.promises.writeFile(filePath, buffer);
-          avatar = `/uploads/${filename}`;
+        const uploadRes = await cloudMediaService.uploadBase64(avatar, 'hdtalk/avatars');
+        if (uploadRes && uploadRes.url) {
+          avatar = uploadRes.url;
         }
       } catch (saveErr) {
-        console.warn('Could not persist base64 avatar to disk:', saveErr.message);
+        console.warn('Could not upload base64 avatar:', saveErr.message);
       }
     }
 

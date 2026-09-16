@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useChat } from '../../context/ChatContext';
 import { useCall } from '../../context/CallContext';
 import { useSocket } from '../../context/SocketContext';
@@ -46,6 +46,9 @@ export function ChatArea({
     activeConversation, 
     messages, 
     isLoadingMessages, 
+    hasMoreMessages,
+    isLoadingOlderMessages,
+    loadOlderMessages,
     sendMessage, 
     editMessage,
     sendVoiceMessage, 
@@ -79,6 +82,9 @@ export function ChatArea({
   });
 
   const messagesEndRef = useRef(null);
+  const scrollContainerRef = useRef(null);
+  const isPrependingRef = useRef(false);
+  const prevScrollHeightRef = useRef(0);
   const fileInputRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -159,7 +165,30 @@ export function ChatArea({
     }
   };
 
+  const handleLoadMore = useCallback(async () => {
+    if (isLoadingOlderMessages || !hasMoreMessages || !scrollContainerRef.current) return;
+    const container = scrollContainerRef.current;
+    prevScrollHeightRef.current = container.scrollHeight;
+    isPrependingRef.current = true;
+    await loadOlderMessages();
+  }, [isLoadingOlderMessages, hasMoreMessages, loadOlderMessages]);
+
+  const handleScroll = useCallback((e) => {
+    const { scrollTop } = e.currentTarget;
+    if (scrollTop < 30 && hasMoreMessages && !isLoadingOlderMessages) {
+      handleLoadMore();
+    }
+  }, [hasMoreMessages, isLoadingOlderMessages, handleLoadMore]);
+
   useEffect(() => {
+    if (isPrependingRef.current && scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      const heightDiff = container.scrollHeight - prevScrollHeightRef.current;
+      container.scrollTop = heightDiff;
+      isPrependingRef.current = false;
+      return;
+    }
+
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOtherTyping]);
 
@@ -437,7 +466,11 @@ export function ChatArea({
       </div>
 
       {/* Message Feed */}
-      <div className="flex-1 overflow-y-auto min-h-0 p-4 md:p-6 space-y-3 bg-slate-50/50 dark:bg-[#090d18] transition-colors duration-200">
+      <div 
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto min-h-0 p-4 md:p-6 space-y-3 bg-slate-50/50 dark:bg-[#090d18] transition-colors duration-200"
+      >
         {/* End-to-end encryption banner */}
         <div className="flex items-center justify-center mb-3">
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-600/10 border border-blue-200 dark:border-blue-500/20 text-[10.5px] sm:text-[11px] text-slate-600 dark:text-slate-300 shadow-xs text-center">
@@ -446,6 +479,29 @@ export function ChatArea({
             <span className="sm:hidden">End-to-End Encrypted</span>
           </div>
         </div>
+
+        {/* Older messages pagination trigger */}
+        {hasMoreMessages && (
+          <div className="flex justify-center py-1">
+            <button
+              onClick={handleLoadMore}
+              disabled={isLoadingOlderMessages}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-500/30 shadow-xs transition cursor-pointer"
+            >
+              {isLoadingOlderMessages ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-blue-600 dark:border-blue-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                  <span>Loading older messages...</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-blue-500 font-bold">↑</span>
+                  <span>Load older messages</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
 
         {isLoadingMessages ? (
           <div className="flex items-center justify-center h-full">
