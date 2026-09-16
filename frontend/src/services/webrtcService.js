@@ -5,7 +5,23 @@ const DEFAULT_ICE_SERVERS = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun2.l.google.com:19302' }
+    { urls: 'stun:stun2.l.google.com:19302' },
+    { urls: 'stun:openrelay.metered.ca:80' },
+    {
+      urls: 'turn:openrelay.metered.ca:80',
+      username: 'openrelay',
+      credential: 'openrelay'
+    },
+    {
+      urls: 'turn:openrelay.metered.ca:443',
+      username: 'openrelay',
+      credential: 'openrelay'
+    },
+    {
+      urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+      username: 'openrelay',
+      credential: 'openrelay'
+    }
   ]
 };
 
@@ -247,8 +263,12 @@ export class WebRTCService {
   // ----------------------------------------------------
   // 1:1 PEER CONNECTION LIFECYCLE
   // ----------------------------------------------------
-  createPeerConnection(targetUserId = null, socket = null) {
+  createPeerConnection(targetUserId = null, socket = null, preservePending = false) {
+    const savedPending = preservePending ? [...this.pendingCandidates] : [];
     this.closePeerConnection();
+    if (preservePending) {
+      this.pendingCandidates = savedPending;
+    }
 
     this.peerConnection = new RTCPeerConnection(this.iceConfig);
     this.remoteStream = new MediaStream();
@@ -405,7 +425,7 @@ export class WebRTCService {
   }
 
   async createAnswer(offer) {
-    if (!this.peerConnection) this.createPeerConnection();
+    if (!this.peerConnection) this.createPeerConnection(null, null, true);
     await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
     await this.drainPendingCandidates();
     const answer = await this.peerConnection.createAnswer();

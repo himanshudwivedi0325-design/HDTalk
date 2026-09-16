@@ -73,7 +73,10 @@ module.exports = {
     : [
         'stun:stun.l.google.com:19302',
         'stun:stun1.l.google.com:19302',
-        'stun:stun2.l.google.com:19302'
+        'stun:stun2.l.google.com:19302',
+        'stun:stun3.l.google.com:19302',
+        'stun:stun4.l.google.com:19302',
+        'stun:openrelay.metered.ca:80'
       ],
 
   TURN_SERVERS: process.env.TURN_SERVERS
@@ -94,7 +97,16 @@ module.exports = {
         if (urls.length > 0) {
           return [{ urls, username: process.env.TURN_USERNAME || '', credential: process.env.TURN_CREDENTIAL || '' }];
         }
-        return [];
+        // Public OpenRelay TURN servers fallback for mobile & symmetric NAT traversal
+        return [{
+          urls: [
+            'turn:openrelay.metered.ca:80',
+            'turn:openrelay.metered.ca:443',
+            'turn:openrelay.metered.ca:443?transport=tcp'
+          ],
+          username: 'openrelay',
+          credential: 'openrelay'
+        }];
       })(),
 
   MAX_MESH_PARTICIPANTS: parseInt(process.env.MAX_MESH_PARTICIPANTS, 10) || 6,

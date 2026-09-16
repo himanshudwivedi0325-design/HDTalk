@@ -124,10 +124,17 @@ export function CallModal() {
     if (videoEl.srcObject !== remoteStream) {
       videoEl.srcObject = remoteStream;
     }
-    videoEl.play().catch(e => console.log('Remote video play note:', e));
+    const playRemote = () => {
+      videoEl.play().catch(e => {
+        console.log('Remote video autoplay blocked, retrying muted:', e);
+        videoEl.muted = true;
+        videoEl.play().catch(err => console.log('Remote play retry note:', err));
+      });
+    };
+    playRemote();
 
     const videoTracks = remoteStream.getVideoTracks();
-    const handleUnmute = () => videoEl.play().catch(() => {});
+    const handleUnmute = () => playRemote();
     videoTracks.forEach(track => track.addEventListener('unmute', handleUnmute));
 
     return () => {
@@ -299,7 +306,9 @@ export function CallModal() {
   }
 
   // 3. CONNECTED / RECONNECTING CALL STAGE
-  const totalMeshCount = groupParticipants ? groupParticipants.length + 1 : 1;
+  const totalMeshCount = groupParticipants instanceof Map 
+    ? groupParticipants.size + 1 
+    : (Array.isArray(groupParticipants) ? groupParticipants.length + 1 : 1);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-[#08090f] select-none animate-in fade-in">
@@ -402,7 +411,7 @@ export function CallModal() {
           </div>
 
           {/* Remote Mesh Participant Tiles */}
-          {groupParticipants.map(p => (
+          {(groupParticipants instanceof Map ? Array.from(groupParticipants.values()) : (Array.isArray(groupParticipants) ? groupParticipants : [])).map(p => (
             <MeshParticipantTile key={p.userId} participant={p} />
           ))}
         </div>

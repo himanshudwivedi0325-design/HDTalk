@@ -63,6 +63,8 @@ export function CallProvider({ children }) {
   const activeRoomIdRef = useRef(null);
   const titleIntervalRef = useRef(null);
   const originalTitleRef = useRef(typeof document !== 'undefined' ? document.title : 'HDTalk');
+  const outgoingCallSignaledRef = useRef(false);
+  const callerCandidateQueueRef = useRef([]);
 
   const startTitleFlashing = (callerName) => {
     stopTitleFlashing();
@@ -125,12 +127,18 @@ export function CallProvider({ children }) {
 
     webrtcService.onIceCandidate = (candidate) => {
       const target = remoteUserRef.current;
-      if (socket && target && target.id) {
-        socket.emit('ice_candidate', {
-          toUserId: target.id,
-          candidate
-        });
+      if (!socket || !target || !target.id) return;
+
+      // Queue caller ICE candidates until call_user offer has been dispatched
+      if (callStateRef.current === 'calling' && !outgoingCallSignaledRef.current) {
+        callerCandidateQueueRef.current.push(candidate);
+        return;
       }
+
+      socket.emit('ice_candidate', {
+        toUserId: target.id,
+        candidate
+      });
     };
 
     webrtcService.onHardwareStatusChange = (status) => {
@@ -465,6 +473,8 @@ export function CallProvider({ children }) {
 
     webrtcService.cleanupAll();
     stopTitleFlashing();
+    outgoingCallSignaledRef.current = false;
+    callerCandidateQueueRef.current = [];
     remoteUserRef.current = null;
     activeRoomIdRef.current = null;
 
@@ -484,17 +494,38 @@ export function CallProvider({ children }) {
   };
 
   // 1. Initiate 1:1 Outgoing Call
-  const initiateCall = async (targetUser, type = 'video') => {
-    if (!targetUser || !socket) return;
+  const initiateCall = async (rawTargetUser, type = 'video') => {
+    if (!rawTargetUser || !socket) return;
+
+    // Normalize target user object whether string ID or user object
+    let targetUserObj = null;
+    if (typeof rawTargetUser === 'string') {
+      targetUserObj = { id: rawTargetUser, name: 'User', avatar: null };
+    } else {
+      targetUserObj = {
+        id: rawTargetUser.id || rawTargetUser._id || rawTargetUser.userId,
+        name: rawTargetUser.name || rawTargetUser.username || 'User',
+        avatar: rawTargetUser.avatar || null
+      };
+    }
+
+    if (!targetUserObj.id) {
+      console.error('[Call] initiateCall aborted: missing target user id', rawTargetUser);
+      return;
+    }
+
     try {
-      remoteUserRef.current = targetUser;
-      setRemoteUser(targetUser);
+      outgoingCallSignaledRef.current = false;
+      callerCandidateQueueRef.current = [];
+
+      remoteUserRef.current = targetUserObj;
+      setRemoteUser(targetUserObj);
       setCallType(type);
       setCallState('calling');
       soundService.playOutgoingRing();
 
       // Start 45-second ring timeout
-      startRingTimeout(targetUser);
+      startRingTimeout(targetUserObj);
 
       // Acquire media with hardware fallback
       const stream = await webrtcService.startLocalStream({
@@ -504,17 +535,30 @@ export function CallProvider({ children }) {
       setLocalStream(stream);
 
       // Create 1:1 peer connection bound to target user
-      webrtcService.createPeerConnection(targetUser.id, socket);
+      webrtcService.createPeerConnection(targetUserObj.id, socket);
 
       // Create WebRTC Offer
       const offer = await webrtcService.createOffer();
 
       // Emit call_user
       socket.emit('call_user', {
-        targetUserId: targetUser.id,
+        targetUserId: targetUserObj.id,
         callType: type,
         signalData: offer
       });
+
+      // Mark call as signaled and flush initial caller ICE candidates
+      outgoingCallSignaledRef.current = true;
+      if (callerCandidateQueueRef.current.length > 0) {
+        console.log(`[CallContext] Flushing ${callerCandidateQueueRef.current.length} queued caller ICE candidates`);
+        while (callerCandidateQueueRef.current.length > 0) {
+          const cand = callerCandidateQueueRef.current.shift();
+          socket.emit('ice_candidate', {
+            toUserId: targetUserObj.id,
+            candidate: cand
+          });
+        }
+      }
     } catch (err) {
       console.error('Failed to initiate call:', err);
       soundService.stopRing();
@@ -541,7 +585,8 @@ export function CallProvider({ children }) {
       });
       setLocalStream(stream);
 
-      webrtcService.createPeerConnection(target.id, socket);
+      // Preserve caller ICE candidates received during ringing
+      webrtcService.createPeerConnection(target.id, socket, true);
 
       // Answer WebRTC offer
       const answer = await webrtcService.createAnswer(pendingSignal);

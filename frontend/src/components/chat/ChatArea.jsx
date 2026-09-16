@@ -120,8 +120,11 @@ export function ChatArea({
     }
   }, [editingMessage, replyingToMessage]);
 
-  const otherUser = activeConversation?.otherUser || 
+  const rawOther = activeConversation?.otherUser || 
     (activeConversation?.participants?.find(p => (typeof p === 'object' ? p.id : p) !== user?.id));
+  const otherUser = typeof rawOther === 'string'
+    ? { id: rawOther, name: 'User' }
+    : rawOther;
   const isOnline = otherUser ? isUserOnline(otherUser.id) : false;
   const isOtherTyping = Boolean(
     (otherUser && typingUsers[otherUser.id]) ||

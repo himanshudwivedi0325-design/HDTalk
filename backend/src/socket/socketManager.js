@@ -487,14 +487,21 @@ function initSocket(io) {
         return;
       }
 
-      // Check if target is already on another call (Line Busy)
+      // Check if target is already on another active call (Line Busy)
       if (userActiveCallMap.has(targetUserId)) {
-        console.log(`[Call Security] Call blocked: Target ${targetUserId} is already on another call`);
-        socket.emit('call_rejected', {
-          fromUserId: targetUserId,
-          reason: 'User is currently on another call (Line Busy)'
-        });
-        return;
+        const existing = userActiveCallMap.get(targetUserId);
+        const peerActive = existing && existing.peerUserId && userActiveCallMap.has(existing.peerUserId);
+        if (!peerActive || existing.status !== 'active') {
+          // Clean stale session from abandoned/timed-out call
+          userActiveCallMap.delete(targetUserId);
+        } else {
+          console.log(`[Call Security] Call blocked: Target ${targetUserId} is currently in an active call`);
+          socket.emit('call_rejected', {
+            fromUserId: targetUserId,
+            reason: 'User is currently on another call (Line Busy)'
+          });
+          return;
+        }
       }
 
       const caller = db.getUserById(callerId);
@@ -628,21 +635,7 @@ function initSocket(io) {
     socket.on('ice_candidate', (data) => {
       const { toUserId, candidate } = data;
       const senderId = socketUserMap.get(socket.id);
-      if (!senderId) return;
-
-      // Verify caller/callee relationship before forwarding candidate
-      const session = userActiveCallMap.get(senderId);
-      const activeCall = activeCallsMap.get(socket.id);
-      const targetSession = toUserId ? userActiveCallMap.get(toUserId) : null;
-
-      const isAuthorized = (session && session.peerUserId === toUserId) ||
-                           (activeCall && activeCall.targetUserId === toUserId) ||
-                           (targetSession && targetSession.peerUserId === senderId);
-
-      if (!isAuthorized) {
-        console.warn(`[Call Security] Dropped candidate from ${senderId} to unauthorized target ${toUserId}`);
-        return;
-      }
+      if (!senderId || !toUserId || !candidate) return;
 
       io.to(`user:${toUserId}`).emit('ice_candidate', {
         fromUserId: senderId,
