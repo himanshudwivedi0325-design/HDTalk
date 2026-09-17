@@ -42,7 +42,7 @@ router.post('/unsubscribe', authMiddleware, (req, res) => {
       return res.status(400).json({ success: false, message: 'Endpoint is required.' });
     }
 
-    db.removePushSubscription(endpoint);
+    db.removePushSubscription(endpoint, req.user.id);
     res.json({ success: true, message: 'Push subscription removed successfully.' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to remove push subscription.' });

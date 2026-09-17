@@ -151,6 +151,13 @@ exports.sendConnectionRequest = (req, res) => {
     if (!toUserId) {
       return res.status(400).json({ success: false, message: 'Target user ID is required.' });
     }
+    if (toUserId === req.user.id) {
+      return res.status(400).json({ success: false, message: 'You cannot send a connection request to yourself.' });
+    }
+    const targetUser = db.getUserById(toUserId);
+    if (!targetUser) {
+      return res.status(404).json({ success: false, message: 'Target user not found.' });
+    }
     const request = db.sendConnectionRequest(req.user.id, toUserId, note || '');
 
     // Real-time notification to recipient
@@ -195,7 +202,17 @@ exports.respondConnectionRequest = (req, res) => {
       return res.status(400).json({ success: false, message: 'Status must be accepted or rejected.' });
     }
 
-    const updated = db.updateConnectionRequest(requestId, status);
+    const request = db.getConnectionRequestById(requestId);
+    if (!request) {
+      return res.status(404).json({ success: false, message: 'Request not found.' });
+    }
+
+    // BOLA defense: only the intended recipient can accept or reject the request
+    if (request.toUserId !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'You are not authorized to respond to this connection request.' });
+    }
+
+    const updated = db.updateConnectionRequest(requestId, status, req.user.id);
     if (!updated) {
       return res.status(404).json({ success: false, message: 'Request not found.' });
     }

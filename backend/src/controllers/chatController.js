@@ -295,6 +295,16 @@ exports.addReaction = (req, res) => {
       return res.status(400).json({ success: false, message: 'Emoji is required.' });
     }
 
+    const msg = db.getMessageById(messageId);
+    if (!msg) {
+      return res.status(404).json({ success: false, message: 'Message not found.' });
+    }
+
+    const conv = db.getConversationById(msg.conversationId);
+    if (!conv || !conv.participants || !conv.participants.includes(req.user.id)) {
+      return res.status(403).json({ success: false, message: 'Access denied: You are not a participant in this conversation.' });
+    }
+
     const updated = db.addReaction(messageId, emoji, req.user.id);
     if (!updated) {
       return res.status(404).json({ success: false, message: 'Message not found.' });
@@ -309,6 +319,11 @@ exports.addReaction = (req, res) => {
 exports.markRead = (req, res) => {
   try {
     const { conversationId } = req.params;
+    const conv = db.getConversationById(conversationId);
+    if (!conv || !conv.participants || !conv.participants.includes(req.user.id)) {
+      return res.status(403).json({ success: false, message: 'Access denied: You are not a participant in this conversation.' });
+    }
+
     db.markAsRead(conversationId, req.user.id);
     res.json({ success: true });
   } catch (err) {
@@ -320,6 +335,20 @@ exports.deleteMessage = (req, res) => {
   try {
     const { messageId } = req.params;
     const deleteForEveryone = req.body.deleteForEveryone !== false;
+
+    const msg = db.getMessageById(messageId);
+    if (!msg) {
+      return res.status(404).json({ success: false, message: 'Message not found.' });
+    }
+
+    const conv = db.getConversationById(msg.conversationId);
+    if (!conv || !conv.participants || !conv.participants.includes(req.user.id)) {
+      return res.status(403).json({ success: false, message: 'Access denied: You are not a participant in this conversation.' });
+    }
+
+    if (deleteForEveryone && msg.senderId !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Only the sender can delete this message for everyone.' });
+    }
 
     const result = db.deleteMessage(messageId, req.user.id, deleteForEveryone);
     if (!result) {
@@ -341,7 +370,6 @@ exports.deleteMessage = (req, res) => {
         };
         if (deleteForEveryone) {
           io.to(`conv:${result.message.conversationId}`).emit('message_deleted', payload);
-          const conv = db.getConversationById(result.message.conversationId);
           if (conv && conv.participants) {
             conv.participants.forEach(pId => {
               io.to(`user:${pId}`).emit('message_deleted', payload);
@@ -371,9 +399,17 @@ exports.deleteConversation = (req, res) => {
     const { conversationId } = req.params;
     const alsoRemoveFriend = req.body.alsoRemoveFriend === true;
 
+    const conv = db.getConversationById(conversationId);
+    if (!conv) {
+      return res.status(404).json({ success: false, message: 'Conversation not found.' });
+    }
+    if (!conv.participants || !conv.participants.includes(req.user.id)) {
+      return res.status(403).json({ success: false, message: 'Access denied: You are not a participant in this conversation.' });
+    }
+
     const result = db.deleteConversation(conversationId, req.user.id, alsoRemoveFriend);
     if (!result) {
-      return res.status(404).json({ success: false, message: 'Conversation not found.' });
+      return res.status(404).json({ success: false, message: 'Failed to delete conversation.' });
     }
 
     try {
@@ -406,6 +442,20 @@ exports.editMessage = (req, res) => {
 
     if (!text || !text.trim()) {
       return res.status(400).json({ success: false, message: 'Message text cannot be empty.' });
+    }
+
+    const msg = db.getMessageById(messageId);
+    if (!msg) {
+      return res.status(404).json({ success: false, message: 'Message not found.' });
+    }
+
+    const conv = db.getConversationById(msg.conversationId);
+    if (!conv || !conv.participants || !conv.participants.includes(req.user.id)) {
+      return res.status(403).json({ success: false, message: 'Access denied: You are not a participant in this conversation.' });
+    }
+
+    if (msg.senderId !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Only the sender can edit this message.' });
     }
 
     const result = db.editMessage(messageId, req.user.id, text);

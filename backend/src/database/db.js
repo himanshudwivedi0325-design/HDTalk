@@ -401,13 +401,30 @@ const db = {
     return bot;
   },
 
-  createUser: (userData) => {
+  createUser: (userData = {}) => {
+    // Mass-assignment defense: Allowlist only safe user-controllable profile fields
+    const safeData = {
+      name: typeof userData.name === 'string' ? userData.name.trim() : 'User',
+      email: typeof userData.email === 'string' ? userData.email.trim().toLowerCase() : '',
+      password: userData.password,
+      avatar: typeof userData.avatar === 'string' ? userData.avatar : '',
+      profession: typeof userData.profession === 'string' ? userData.profession.trim() : 'Professional',
+      bio: typeof userData.bio === 'string' ? userData.bio.trim() : '',
+      interests: Array.isArray(userData.interests) ? userData.interests : []
+    };
+
+    // Role cannot be assigned via request body. Creator emails become admin, otherwise default 'user'
+    const isCreator = safeData.email === 'shikhar@gmail.com' || safeData.email === 'himanshudwivedi0325@gmail.com';
+    const role = isCreator ? 'admin' : (userData._forceRole || 'user');
+
     const newUser = {
-      id: 'usr_' + uuidv4().slice(0, 8),
-      createdAt: new Date().toISOString(),
+      id: (userData._forceId && typeof userData._forceId === 'string') ? userData._forceId : ('usr_' + uuidv4().slice(0, 8)),
+      ...safeData,
+      role,
+      isBanned: false,
       status: 'online',
       lastSeen: new Date().toISOString(),
-      ...userData
+      createdAt: new Date().toISOString()
     };
     memoryState.users.push(newUser);
     mongoAdapter.persistUpsert('users', newUser);
@@ -415,10 +432,17 @@ const db = {
     return newUser;
   },
 
-  updateUser: (id, updates) => {
+  updateUser: (id, updates = {}) => {
     const index = memoryState.users.findIndex(u => u.id === id);
     if (index === -1) return null;
-    memoryState.users[index] = { ...memoryState.users[index], ...updates };
+
+    // Mass-assignment defense: Never allow overwriting immutable identifiers
+    const safeUpdates = { ...updates };
+    delete safeUpdates.id;
+    delete safeUpdates._id;
+    delete safeUpdates.createdAt;
+
+    memoryState.users[index] = { ...memoryState.users[index], ...safeUpdates };
     mongoAdapter.persistUpsert('users', memoryState.users[index]);
     flushSync();
     return memoryState.users[index];
@@ -535,15 +559,22 @@ const db = {
     return found ? enrichMessage(found) : null;
   },
 
-  createMessage: (messageData) => {
+  createMessage: (messageData = {}) => {
     const newMsg = {
       id: 'msg_' + uuidv4().slice(0, 8),
+      conversationId: messageData.conversationId,
+      senderId: messageData.senderId,
+      text: typeof messageData.text === 'string' ? messageData.text : '',
+      type: messageData.type || 'text',
+      mediaUrl: messageData.mediaUrl || null,
+      fileName: messageData.fileName || null,
+      fileSize: messageData.fileSize || null,
+      replyToId: messageData.replyToId || null,
       timestamp: new Date().toISOString(),
       reactions: {},
       readBy: [messageData.senderId],
       deliveredTo: Array.isArray(messageData.deliveredTo) ? messageData.deliveredTo : [],
-      status: messageData.status || 'sent',
-      ...messageData
+      status: messageData.status || 'sent'
     };
     memoryState.messages.push(newMsg);
     mongoAdapter.persistUpsert('messages', newMsg);
@@ -566,6 +597,14 @@ const db = {
   addReaction: (messageId, emoji, userId) => {
     const msg = memoryState.messages.find(m => m.id === messageId);
     if (!msg) return null;
+
+    if (userId) {
+      const conv = memoryState.conversations.find(c => c.id === msg.conversationId);
+      if (conv && Array.isArray(conv.participants) && !conv.participants.includes(userId)) {
+        return null;
+      }
+    }
+
     if (!msg.reactions) msg.reactions = {};
     if (!msg.reactions[emoji]) msg.reactions[emoji] = [];
 
@@ -583,6 +622,14 @@ const db = {
   markAsDelivered: (messageId, userId) => {
     const msg = memoryState.messages.find(m => m.id === messageId);
     if (!msg) return null;
+
+    if (userId) {
+      const conv = memoryState.conversations.find(c => c.id === msg.conversationId);
+      if (conv && Array.isArray(conv.participants) && !conv.participants.includes(userId)) {
+        return null;
+      }
+    }
+
     if (!msg.deliveredTo) msg.deliveredTo = [];
     if (!msg.deliveredTo.includes(userId)) {
       msg.deliveredTo.push(userId);
@@ -621,6 +668,11 @@ const db = {
   },
 
   markAsRead: (conversationId, userId) => {
+    const conv = (memoryState.conversations || []).find(c => c.id === conversationId);
+    if (!conv || !Array.isArray(conv.participants) || !conv.participants.includes(userId)) {
+      return [];
+    }
+
     let updated = false;
     const readMessageIds = [];
     const updatedMessages = [];
@@ -644,11 +696,15 @@ const db = {
   },
 
   deleteConversation: (conversationId, userId, alsoRemoveFriend = false) => {
+    if (!conversationId || !userId) return null;
     const convIndex = (memoryState.conversations || []).findIndex(c => c.id === conversationId);
     if (convIndex === -1) return null;
 
     const conv = memoryState.conversations[convIndex];
     const participants = conv.participants || [];
+    if (!participants.includes(userId)) {
+      return null;
+    }
     const otherUserId = participants.find(p => p !== userId);
 
     // 1. Remove conversation from memory & mongo
@@ -696,6 +752,11 @@ const db = {
     const msg = memoryState.messages.find(m => m.id === messageId);
     if (!msg) return null;
 
+    const conv = memoryState.conversations.find(c => c.id === msg.conversationId);
+    if (!conv || !Array.isArray(conv.participants) || !conv.participants.includes(userId)) {
+      return { error: 'You are not a participant in this conversation.' };
+    }
+
     if (deleteForEveryone) {
       if (msg.senderId !== userId) {
         return { error: 'Only the sender can delete this message for everyone.' };
@@ -709,7 +770,6 @@ const db = {
       mongoAdapter.persistUpsert('messages', msg);
 
       // Update conversation preview if needed
-      const conv = memoryState.conversations.find(c => c.id === msg.conversationId);
       if (conv && conv.lastMessage && conv.lastMessage.timestamp === msg.timestamp) {
         conv.lastMessage.text = '🚫 This message was deleted';
         mongoAdapter.persistUpsert('conversations', conv);
@@ -731,6 +791,12 @@ const db = {
   editMessage: (messageId, userId, newText) => {
     const msg = memoryState.messages.find(m => m.id === messageId);
     if (!msg) return { error: 'Message not found' };
+
+    const conv = memoryState.conversations.find(c => c.id === msg.conversationId);
+    if (!conv || !Array.isArray(conv.participants) || !conv.participants.includes(userId)) {
+      return { error: 'You are not a participant in this conversation.' };
+    }
+
     if (msg.senderId !== userId) return { error: 'Only the sender can edit this message.' };
     if (msg.isDeleted) return { error: 'Cannot edit a deleted message.' };
     if (msg.type !== 'text') return { error: 'Only text messages can be edited.' };
@@ -745,7 +811,6 @@ const db = {
     mongoAdapter.persistUpsert('messages', msg);
 
     // Update conversation lastMessage preview if this was the last message
-    const conv = memoryState.conversations.find(c => c.id === msg.conversationId);
     if (conv && conv.lastMessage && conv.lastMessage.timestamp === msg.timestamp) {
       conv.lastMessage.text = trimmed;
       mongoAdapter.persistUpsert('conversations', conv);
@@ -757,6 +822,10 @@ const db = {
 
   getConnectionRequests: (userId) => {
     return (memoryState.connectionRequests || []).filter(r => r.toUserId === userId || r.fromUserId === userId);
+  },
+
+  getConnectionRequestById: (requestId) => {
+    return (memoryState.connectionRequests || []).find(r => r.id === requestId) || null;
   },
 
   sendConnectionRequest: (fromUserId, toUserId, note = '') => {
@@ -779,9 +848,12 @@ const db = {
     return req;
   },
 
-  updateConnectionRequest: (requestId, status) => {
+  updateConnectionRequest: (requestId, status, userId = null) => {
     const req = memoryState.connectionRequests.find(r => r.id === requestId);
     if (!req) return null;
+    if (userId && req.toUserId !== userId) {
+      return null;
+    }
     req.status = status;
     req.updatedAt = new Date().toISOString();
     mongoAdapter.persistUpsert('connectionRequests', req);
@@ -817,14 +889,16 @@ const db = {
     return record;
   },
 
-  removePushSubscription: (endpoint) => {
+  removePushSubscription: (endpoint, userId = null) => {
     if (!memoryState.pushSubscriptions) return false;
     const initialLen = memoryState.pushSubscriptions.length;
     memoryState.pushSubscriptions = memoryState.pushSubscriptions.filter(
-      s => s.subscription?.endpoint !== endpoint
+      s => !(s.subscription?.endpoint === endpoint && (!userId || s.userId === userId))
     );
     if (memoryState.pushSubscriptions.length !== initialLen) {
-      mongoAdapter.persistDelete('pushSubscriptions', { 'subscription.endpoint': endpoint });
+      const deleteQuery = { 'subscription.endpoint': endpoint };
+      if (userId) deleteQuery.userId = userId;
+      mongoAdapter.persistDelete('pushSubscriptions', deleteQuery);
       scheduleFlush();
       return true;
     }
