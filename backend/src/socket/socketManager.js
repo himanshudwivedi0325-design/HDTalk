@@ -50,56 +50,133 @@ function isSocketEventThrottled(socketId, eventName, maxEvents, windowMs) {
 
 let ioInstance = null;
 
+/**
+ * Reusable authorization helper: Verifies that the authenticated socket user
+ * is an active participant of the requested conversation.
+ * If unauthorized, emits 'unauthorized' and 'socket_error' and returns false.
+ *
+ * @param {import('socket.io').Socket} socket
+ * @param {string} conversationId
+ * @returns {Promise<Object|false>} Returns conversation object if authorized, false otherwise
+ */
+async function assertParticipant(socket, conversationId) {
+  const userId = socket.data?.userId || socketUserMap.get(socket.id);
+  if (!userId) {
+    socket.emit('unauthorized', {
+      success: false,
+      message: 'Authentication required. No authenticated session found on socket.'
+    });
+    socket.emit('socket_error', { message: 'Authentication required' });
+    return false;
+  }
+
+  if (!conversationId) {
+    socket.emit('unauthorized', {
+      success: false,
+      message: 'conversationId is required.'
+    });
+    return false;
+  }
+
+  const conv = db.getConversationById(conversationId);
+  if (!conv || !Array.isArray(conv.participants) || !conv.participants.includes(userId)) {
+    console.warn(`[Socket Auth] Unauthorized conversation access blocked: User ${userId} is not a participant of conversation ${conversationId}`);
+    socket.emit('unauthorized', {
+      success: false,
+      conversationId,
+      message: 'Unauthorized: You are not a participant in this conversation.'
+    });
+    socket.emit('socket_error', {
+      message: 'Unauthorized: Not a conversation participant'
+    });
+    return false;
+  }
+
+  return conv;
+}
 
 function initSocket(io) {
   ioInstance = io;
+
+  // ── Handshake JWT Verification Middleware ─────────────────────────────────────
+  // Enforces Requirement 5: socket.data.userId is set strictly via handshake JWT verification
+  io.use((socket, next) => {
+    let token = socket.handshake?.auth?.token;
+    if (!token && socket.handshake?.headers?.authorization) {
+      const auth = socket.handshake.headers.authorization;
+      token = auth.startsWith('Bearer ') ? auth.split(' ')[1] : auth;
+    }
+    if (!token && socket.handshake?.query?.token) {
+      token = socket.handshake.query.token;
+    }
+
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, config.JWT_SECRET);
+        if (decoded && decoded.id) {
+          const user = db.getUserById(decoded.id);
+          if (user && !user.isBanned) {
+            socket.data.userId = user.id;
+            socket.data.user = user;
+          }
+        }
+      } catch (err) {
+        console.warn(`[Socket Auth] Handshake token verification warning for ${socket.id}: ${err.message}`);
+      }
+    }
+    next();
+  });
+
   io.on('connection', (socket) => {
     console.log(`[Socket] New connection: ${socket.id}`);
 
-    // Register user socket with optional JWT authentication
+    // If verified via handshake JWT, register in lookup maps immediately
+    if (socket.data?.userId) {
+      const uId = socket.data.userId;
+      socketUserMap.set(socket.id, uId);
+      if (!userSocketMap.has(uId)) {
+        userSocketMap.set(uId, new Set());
+      }
+      userSocketMap.get(uId).add(socket.id);
+      socket.join(`user:${uId}`);
+    }
+
+    // Register user socket — NEVER trust client payload.userId; derive strictly from verified JWT
     socket.on('register_user', (payload) => {
-      let userId = null;
       let token = null;
-
       if (typeof payload === 'object' && payload !== null) {
-        userId = payload.userId;
         token = payload.token;
-      } else {
-        userId = payload;
       }
-
-      if (!userId) return;
-
-      // Cryptographic verification: token is required to prevent unauthenticated socket identity spoofing
       const candidateToken = token || socket.handshake?.auth?.token;
-      if (!candidateToken) {
-        console.warn(`[Socket Security] Rejected unauthenticated registration attempt for userId: ${userId} (No JWT token provided)`);
-        socket.emit('socket_error', { message: 'Authentication required. Token missing.' });
+
+      if (!candidateToken && !socket.data?.userId) {
+        console.warn(`[Socket Security] Rejected unauthenticated registration attempt for socket: ${socket.id} (No JWT token provided)`);
+        socket.emit('unauthorized', { message: 'Authentication required. Token missing.' });
         return;
       }
 
-      try {
-        const decoded = jwt.verify(candidateToken, config.JWT_SECRET);
-        if (!decoded || decoded.id !== userId) {
-          console.warn(`[Socket Security] Rejected spoofed registration attempt: Token user ${decoded?.id} !== requested ${userId}`);
-          socket.emit('socket_error', { message: 'Authentication mismatch' });
-          return;
-        }
-      } catch (jwtErr) {
-        console.warn(`[Socket Security] Invalid JWT token during register_user: ${jwtErr.message}`);
-        socket.emit('socket_error', { message: 'Invalid session token' });
-        return;
-      }
+      let verifiedUserId = socket.data?.userId;
 
-      let user = db.getUserById(userId);
-      if (!user && candidateToken) {
+      if (candidateToken) {
         try {
           const decoded = jwt.verify(candidateToken, config.JWT_SECRET);
-          if (decoded && decoded.id === userId) {
-            user = { id: userId, name: decoded.name || 'User', email: decoded.email || '', avatar: '' };
+          if (!decoded || !decoded.id) {
+            socket.emit('unauthorized', { message: 'Invalid token payload.' });
+            return;
           }
-        } catch (_) {}
+          verifiedUserId = decoded.id;
+        } catch (jwtErr) {
+          console.warn(`[Socket Security] Invalid JWT token during register_user: ${jwtErr.message}`);
+          socket.emit('unauthorized', { message: 'Invalid session token' });
+          return;
+        }
       }
+
+      // Strictly set socket.data.userId from verified cryptographic token — ignore payload.userId
+      socket.data.userId = verifiedUserId;
+      const userId = verifiedUserId;
+
+      let user = db.getUserById(userId);
       if (!user) {
         console.log(`[Socket] Rejected registration for unknown/deleted user: ${userId}`);
         return;
@@ -153,59 +230,60 @@ function initSocket(io) {
       console.log(`[Socket] User registered: ${userId} (${socket.id}). Online users: ${onlineUserIds.length}`);
     });
 
-    // Handle joining specific conversation room
-    socket.on('join_conversation', (conversationId) => {
+    // Handle joining specific conversation room with strict participant check (Requirement 1 & 2)
+    socket.on('join_conversation', async (conversationId) => {
+      const conv = await assertParticipant(socket, conversationId);
+      if (!conv) return;
       socket.join(`conv:${conversationId}`);
+      console.log(`[Socket Auth] User ${socket.data.userId} authorized & joined conv:${conversationId}`);
     });
 
     socket.on('leave_conversation', (conversationId) => {
-      socket.leave(`conv:${conversationId}`);
+      if (conversationId) {
+        socket.leave(`conv:${conversationId}`);
+      }
     });
 
     // ----------------------------------------------------
     // CHAT & MESSAGING EVENTS
     // ----------------------------------------------------
-    socket.on('send_message', (data, ackCallback) => {
+    socket.on('send_message', async (data, ackCallback) => {
       // Rate limit: max 20 messages per 5 seconds per socket
       if (isSocketEventThrottled(socket.id, 'send_message', 20, 5000)) {
         if (typeof ackCallback === 'function') ackCallback({ success: false, message: 'Slow down! You are sending messages too fast.' });
         return;
       }
       const { conversationId, text, type, mediaUrl, replyToId, tempId } = data || {};
-      if (!conversationId) return;
-
-      let senderId = socketUserMap.get(socket.id);
-      if (!senderId && data.token) {
-        try {
-          const dec = jwt.verify(data.token, config.JWT_SECRET);
-          if (dec?.id) senderId = dec.id;
-        } catch (_) {}
-      }
-      if (!senderId && socket.handshake?.auth?.token) {
-        try {
-          const dec = jwt.verify(socket.handshake.auth.token, config.JWT_SECRET);
-          if (dec?.id) senderId = dec.id;
-        } catch (_) {}
+      if (!conversationId) {
+        if (typeof ackCallback === 'function') ackCallback({ success: false, message: 'conversationId is required' });
+        return;
       }
 
+      // Assert conversation participant membership
+      const conv = await assertParticipant(socket, conversationId);
+      if (!conv) {
+        if (typeof ackCallback === 'function') ackCallback({ success: false, message: 'Unauthorized: Not a participant in this conversation' });
+        return;
+      }
+
+      // Derive senderId strictly from authenticated socket session (Requirement 5)
+      const senderId = socket.data?.userId || socketUserMap.get(socket.id);
       if (!senderId) {
         console.warn(`[Socket] send_message rejected: senderId not found for socket ${socket.id}`);
         if (typeof ackCallback === 'function') ackCallback({ success: false, message: 'Authentication required' });
         return;
       }
 
-      const existingConv = db.getConversationById(conversationId);
-      if (existingConv && existingConv.isPending) {
+      if (conv.isPending) {
         console.warn(`[Socket] send_message blocked: conversation ${conversationId} is pending connection acceptance`);
         if (typeof ackCallback === 'function') ackCallback({ success: false, message: 'Connection request is pending acceptance.' });
         socket.emit('socket_error', { message: 'Chat is locked until the connection request is accepted.' });
         return;
       }
 
-      const conv = db.getConversationById(conversationId);
       let initialStatus = 'sent';
       const deliveredTo = [];
-      if (conv && conv.participants) {
+      if (conv.participants) {
         const otherParticipants = conv.participants.filter(pId => pId !== senderId);
         const anyOnline = otherParticipants.some(pId => userSocketMap.has(pId) && userSocketMap.get(pId).size > 0);
         if (anyOnline) {
@@ -244,9 +322,8 @@ function initSocket(io) {
       const sender = db.getUserById(senderId);
 
       // 3. Also broadcast to every participant's personal user room so all devices/tabs receive it
-      if (conv && conv.participants) {
+      if (conv.participants) {
         conv.participants.forEach(pId => {
-          // Notify personal user room
           io.to(`user:${pId}`).emit('receive_message', newMsg);
           io.to(`user:${pId}`).emit('conversation_updated', {
             conversationId,
@@ -272,7 +349,7 @@ function initSocket(io) {
 
       // Check for n8n AI Bot trigger (@bot or @ai or direct AI conversation)
       const hasBotMention = /@bot|@ai/i.test(text || '');
-      const isAIConversation = conv && conv.participants && conv.participants.includes('usr_ai_bot');
+      const isAIConversation = conv.participants && conv.participants.includes('usr_ai_bot');
       if (hasBotMention || isAIConversation) {
         n8nService.handleAIBotQuery({
           conversationId,
@@ -284,11 +361,16 @@ function initSocket(io) {
       }
     });
 
-    socket.on('typing_start', ({ conversationId, targetUserId }) => {
+    socket.on('typing_start', async ({ conversationId, targetUserId }) => {
       // Rate limit: max 10 typing events per 3 seconds (prevents typing indicator spam)
       if (isSocketEventThrottled(socket.id, 'typing_start', 10, 3000)) return;
-      const senderId = socketUserMap.get(socket.id);
+      const senderId = socket.data?.userId || socketUserMap.get(socket.id);
       if (!senderId) return;
+
+      if (conversationId) {
+        const conv = await assertParticipant(socket, conversationId);
+        if (!conv) return;
+      }
 
       const payload = { conversationId, userId: senderId };
       // Emit only to participant personal rooms (avoids duplicates from conv room overlap)
@@ -306,9 +388,14 @@ function initSocket(io) {
       }
     });
 
-    socket.on('typing_stop', ({ conversationId, targetUserId }) => {
-      const senderId = socketUserMap.get(socket.id);
+    socket.on('typing_stop', async ({ conversationId, targetUserId }) => {
+      const senderId = socket.data?.userId || socketUserMap.get(socket.id);
       if (!senderId) return;
+
+      if (conversationId) {
+        const conv = await assertParticipant(socket, conversationId);
+        if (!conv) return;
+      }
 
       const payload = { conversationId, userId: senderId };
       // Emit only to participant personal rooms (avoids duplicates)
@@ -326,15 +413,26 @@ function initSocket(io) {
       }
     });
 
-    socket.on('add_reaction', ({ messageId, conversationId, emoji }) => {
+    socket.on('add_reaction', async ({ messageId, conversationId, emoji }) => {
       // Rate limit: max 15 reactions per 5 seconds
       if (isSocketEventThrottled(socket.id, 'add_reaction', 15, 5000)) return;
-      const userId = socketUserMap.get(socket.id);
+      const userId = socket.data?.userId || socketUserMap.get(socket.id);
       if (!userId) return;
+
+      let targetConvId = conversationId;
+      if (!targetConvId && messageId) {
+        const msg = db.getMessageById(messageId);
+        if (msg) targetConvId = msg.conversationId;
+      }
+
+      if (targetConvId) {
+        const conv = await assertParticipant(socket, targetConvId);
+        if (!conv) return;
+      }
 
       const updated = db.addReaction(messageId, emoji, userId);
       if (updated) {
-        io.to(`conv:${conversationId}`).emit('reaction_updated', {
+        io.to(`conv:${targetConvId || conversationId}`).emit('reaction_updated', {
           messageId,
           reactions: updated.reactions
         });
@@ -342,9 +440,14 @@ function initSocket(io) {
     });
 
     // Client confirms receipt of incoming message
-    socket.on('message_ack_delivered', ({ messageId, conversationId }) => {
-      const recipientId = socketUserMap.get(socket.id);
+    socket.on('message_ack_delivered', async ({ messageId, conversationId }) => {
+      const recipientId = socket.data?.userId || socketUserMap.get(socket.id);
       if (!recipientId) return;
+
+      if (conversationId) {
+        const conv = await assertParticipant(socket, conversationId);
+        if (!conv) return;
+      }
 
       const msg = db.markAsDelivered(messageId, recipientId);
       if (msg) {
@@ -356,16 +459,18 @@ function initSocket(io) {
       }
     });
 
-    socket.on('mark_read', ({ conversationId }) => {
-      const userId = socketUserMap.get(socket.id);
+    socket.on('mark_read', async ({ conversationId }) => {
+      const userId = socket.data?.userId || socketUserMap.get(socket.id);
       if (!userId) return;
+
+      const conv = await assertParticipant(socket, conversationId);
+      if (!conv) return;
 
       const readMessageIds = db.markAsRead(conversationId, userId);
       const payload = { conversationId, readBy: userId, messageIds: readMessageIds };
       
       io.to(`conv:${conversationId}`).emit('messages_marked_read', payload);
-      const conv = db.getConversationById(conversationId);
-      if (conv && conv.participants) {
+      if (conv.participants) {
         conv.participants.forEach(pId => {
           if (pId !== userId) {
             io.to(`user:${pId}`).emit('messages_marked_read', payload);
@@ -374,9 +479,12 @@ function initSocket(io) {
       }
     });
 
-    socket.on('delete_conversation', ({ conversationId, alsoRemoveFriend }) => {
-      const userId = socketUserMap.get(socket.id);
+    socket.on('delete_conversation', async ({ conversationId, alsoRemoveFriend }) => {
+      const userId = socket.data?.userId || socketUserMap.get(socket.id);
       if (!userId) return;
+
+      const conv = await assertParticipant(socket, conversationId);
+      if (!conv) return;
 
       const result = db.deleteConversation(conversationId, userId, alsoRemoveFriend);
       if (result) {
@@ -394,7 +502,7 @@ function initSocket(io) {
     });
 
     socket.on('remove_friend', ({ friendUserId }) => {
-      const userId = socketUserMap.get(socket.id);
+      const userId = socket.data?.userId || socketUserMap.get(socket.id);
       if (!userId) return;
 
       db.removeFriend(userId, friendUserId);
@@ -402,9 +510,19 @@ function initSocket(io) {
       io.to(`user:${friendUserId}`).emit('friend_removed', { friendUserId: userId });
     });
 
-    socket.on('delete_message', ({ messageId, conversationId, deleteForEveryone }) => {
-      let userId = socketUserMap.get(socket.id);
+    socket.on('delete_message', async ({ messageId, conversationId, deleteForEveryone }) => {
+      let userId = socket.data?.userId || socketUserMap.get(socket.id);
       if (!userId) return;
+
+      let targetConvId = conversationId;
+      if (!targetConvId && messageId) {
+        const msg = db.getMessageById(messageId);
+        if (msg) targetConvId = msg.conversationId;
+      }
+      if (targetConvId) {
+        const conv = await assertParticipant(socket, targetConvId);
+        if (!conv) return;
+      }
 
       const isForEveryone = deleteForEveryone !== false;
       const result = db.deleteMessage(messageId, userId, isForEveryone);
@@ -417,7 +535,7 @@ function initSocket(io) {
         return;
       }
 
-      const targetConvId = conversationId || result.message.conversationId;
+      targetConvId = targetConvId || result.message.conversationId;
       const payload = {
         messageId,
         conversationId: targetConvId,
@@ -444,11 +562,24 @@ function initSocket(io) {
       }
     });
 
-    socket.on('edit_message', ({ messageId, conversationId, text }, ackCallback) => {
-      let userId = socketUserMap.get(socket.id);
+    socket.on('edit_message', async ({ messageId, conversationId, text }, ackCallback) => {
+      let userId = socket.data?.userId || socketUserMap.get(socket.id);
       if (!userId) {
         if (typeof ackCallback === 'function') ackCallback({ success: false, message: 'Unauthorized' });
         return;
+      }
+
+      let targetConvId = conversationId;
+      if (!targetConvId && messageId) {
+        const msg = db.getMessageById(messageId);
+        if (msg) targetConvId = msg.conversationId;
+      }
+      if (targetConvId) {
+        const conv = await assertParticipant(socket, targetConvId);
+        if (!conv) {
+          if (typeof ackCallback === 'function') ackCallback({ success: false, message: 'Unauthorized' });
+          return;
+        }
       }
 
       const result = db.editMessage(messageId, userId, text);
@@ -458,7 +589,7 @@ function initSocket(io) {
         return;
       }
 
-      const targetConvId = conversationId || result.message.conversationId;
+      targetConvId = targetConvId || result.message.conversationId;
       const payload = {
         messageId,
         conversationId: targetConvId,
@@ -646,9 +777,24 @@ function initSocket(io) {
     });
 
     socket.on('ice_candidate', (data) => {
-      const { toUserId, candidate } = data;
-      const senderId = socketUserMap.get(socket.id);
+      const { toUserId, candidate } = data || {};
+      const senderId = socket.data?.userId || socketUserMap.get(socket.id);
       if (!senderId || !toUserId || !candidate) return;
+
+      // Verify that sender and receiver are mapped in an active or ringing call session
+      const session = userActiveCallMap.get(senderId);
+      const activeCall = activeCallsMap.get(socket.id);
+      const targetSession = toUserId ? userActiveCallMap.get(toUserId) : null;
+
+      const isAuthorized = (session && session.peerUserId === toUserId) ||
+                           (activeCall && activeCall.targetUserId === toUserId) ||
+                           (targetSession && targetSession.peerUserId === senderId);
+
+      if (!isAuthorized) {
+        console.warn(`[Call Security] Blocked rogue ice_candidate from ${senderId} to unmapped target ${toUserId}`);
+        socket.emit('unauthorized', { message: 'Unauthorized ICE candidate: No active call session with target user' });
+        return;
+      }
 
       io.to(`user:${toUserId}`).emit('ice_candidate', {
         fromUserId: senderId,
@@ -707,9 +853,22 @@ function initSocket(io) {
     });
 
     socket.on('renegotiate_answer', (data) => {
-      const { toUserId, signalData } = data;
-      const senderId = socketUserMap.get(socket.id);
-      if (!senderId) return;
+      const { toUserId, signalData } = data || {};
+      const senderId = socket.data?.userId || socketUserMap.get(socket.id);
+      if (!senderId || !toUserId) return;
+
+      const session = userActiveCallMap.get(senderId);
+      const activeCall = activeCallsMap.get(socket.id);
+      const targetSession = toUserId ? userActiveCallMap.get(toUserId) : null;
+
+      const isAuthorized = (session && session.peerUserId === toUserId) ||
+                           (activeCall && activeCall.targetUserId === toUserId) ||
+                           (targetSession && targetSession.peerUserId === senderId);
+
+      if (!isAuthorized) {
+        console.warn(`[Call Security] Dropped renegotiate_answer from ${senderId} to unauthorized target ${toUserId}`);
+        return;
+      }
 
       console.log(`[Call] Mid-call renegotiation answered from ${senderId} to ${toUserId}`);
       io.to(`user:${toUserId}`).emit('renegotiate_answer', {
@@ -721,10 +880,20 @@ function initSocket(io) {
     // ----------------------------------------------------
     // WEBRTC GROUP MESH CALLING SIGNALING (Phases 3, 4, 11)
     // ----------------------------------------------------
-    socket.on('join_call_room', (data) => {
-      const { roomId, callType } = data;
-      const userId = socketUserMap.get(socket.id);
+    socket.on('join_call_room', async (data) => {
+      const { roomId, callType } = data || {};
+      const userId = socket.data?.userId || socketUserMap.get(socket.id);
       if (!userId || !roomId) return;
+
+      // Arbitrary roomId disallowed: roomId must be a real conversation ID where the user is an active participant
+      const conv = await assertParticipant(socket, roomId);
+      if (!conv) {
+        socket.emit('call_room_error', {
+          roomId,
+          message: 'Access denied: Must be a participant of this conversation to join call room'
+        });
+        return;
+      }
 
       if (!callRooms.has(roomId)) {
         callRooms.set(roomId, new Map());
@@ -918,5 +1087,6 @@ module.exports = {
     uniqueOnlineUsers: userSocketMap.size,
     active1on1Calls: Math.floor(userActiveCallMap.size / 2),
     activeCallingRooms: callRooms.size
-  })
+  }),
+  assertParticipant
 };
