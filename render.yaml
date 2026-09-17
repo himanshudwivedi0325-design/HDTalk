@@ -20,6 +20,8 @@ services:
       # ── CORS — set to your actual Render URL ─────────────────────────────
       - key: CLIENT_URL
         value: '*'
+      - key: ALLOWED_ORIGINS
+        value: '*'
 
       # ── Security Secrets (Managed in Render Dashboard) ────────────────────
       - key: JWT_SECRET

@@ -52,7 +52,7 @@ if (!fs.existsSync(config.UPLOAD_DIR)) {
 }
 
 // Allowed origins: exact string allowlist from ALLOWED_ORIGINS (or CLIENT_URL), comma-separated
-const rawAllowedOrigins = process.env.ALLOWED_ORIGINS || process.env.CLIENT_URL || '';
+const rawAllowedOrigins = process.env.ALLOWED_ORIGINS || process.env.CLIENT_URL || '*';
 const configuredOrigins = new Set(
   rawAllowedOrigins
     .split(',')
@@ -62,30 +62,46 @@ const configuredOrigins = new Set(
 
 const isOriginAllowed = (origin) => {
   if (!origin) return true;
+  if (configuredOrigins.has('*') || rawAllowedOrigins.trim() === '*') return true;
   const normalizedOrigin = origin.trim().replace(/\/+$/, '');
   if (configuredOrigins.has(normalizedOrigin)) return true;
 
-  // In development only (NODE_ENV !== 'production'), allow localhost and 127.0.0.1
-  if (process.env.NODE_ENV !== 'production') {
-    try {
-      const url = new URL(origin);
-      const host = url.hostname.toLowerCase();
-      if (host === 'localhost' || host === '127.0.0.1') return true;
-    } catch (_) {}
-  }
+  try {
+    const url = new URL(origin);
+    const host = url.hostname.toLowerCase();
+    // Always permit local development and Render production domains
+    if (
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host.endsWith('.onrender.com') ||
+      host === 'hdtalk.onrender.com' ||
+      host.includes('site.je') ||
+      host.includes('render.com')
+    ) {
+      return true;
+    }
+  } catch (_) {}
+
   return false;
 };
 
-// Middleware
-app.use(cors({
-  origin: (origin, callback) => {
-    if (isOriginAllowed(origin)) {
-      return callback(null, true);
-    }
-    return callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true
-}));
+// Middleware: exempt static assets and handle CORS cleanly
+app.use((req, res, next) => {
+  if (req.path.startsWith('/assets/') || req.path === '/favicon.ico' || req.path === '/robots.txt' || req.path === '/sitemap.xml') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    return next();
+  }
+  return cors({
+    origin: (origin, callback) => {
+      if (isOriginAllowed(origin)) {
+        return callback(null, origin || true);
+      }
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true
+  })(req, res, next);
+});
 
 // HTTP -> HTTPS 301 Redirect when behind production reverse proxy
 if (process.env.NODE_ENV === 'production') {
