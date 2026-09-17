@@ -20,28 +20,40 @@ export function AuthProvider({ children }) {
 
   // Check existing token on mount
   useEffect(() => {
+    let isMounted = true;
     const initAuth = async () => {
       const currentToken = getStoredToken();
       if (currentToken) {
         try {
-          const meRes = await api.getMe();
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Auth verification timeout')), 4000)
+          );
+          const meRes = await Promise.race([api.getMe(), timeoutPromise]);
           if (meRes && meRes.success && meRes.user) {
-            setUser(meRes.user);
+            if (isMounted) setUser(meRes.user);
           } else {
             clearToken();
+            if (isMounted) {
+              setToken(null);
+              setUser(null);
+            }
+          }
+        } catch (err) {
+          console.warn('[AuthContext] Session init note:', err.message);
+          clearToken();
+          if (isMounted) {
             setToken(null);
             setUser(null);
           }
-        } catch {
-          clearToken();
-          setToken(null);
-          setUser(null);
         }
       }
-      setIsLoading(false);
+      if (isMounted) {
+        setIsLoading(false);
+      }
     };
 
     initAuth();
+    return () => { isMounted = false; };
   }, []);
 
   const login = async (email, password) => {

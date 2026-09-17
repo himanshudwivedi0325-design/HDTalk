@@ -4,6 +4,10 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  safelist: [
+    'w-7', 'h-7', 'w-9', 'h-9', 'w-12', 'h-12', 'w-16', 'h-16',
+    'max-w-md', 'max-w-lg', 'max-w-xl', 'max-w-2xl',
+  ],
   darkMode: 'class',
   theme: {
     extend: {

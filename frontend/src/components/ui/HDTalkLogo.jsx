@@ -7,23 +7,36 @@ export function HDTalkLogo({
   className = '' 
 }) {
   const sizeMap = {
-    sm: { icon: 'w-7 h-7', text: 'text-base', creator: 'text-[9px]' },
-    md: { icon: 'w-9 h-9', text: 'text-lg', creator: 'text-[10px]' },
-    lg: { icon: 'w-12 h-12', text: 'text-2xl', creator: 'text-xs' },
-    xl: { icon: 'w-16 h-16', text: 'text-3xl', creator: 'text-xs' },
+    sm: { icon: 'w-7 h-7', width: 28, height: 28, text: 'text-base', creator: 'text-[9px]' },
+    md: { icon: 'w-9 h-9', width: 36, height: 36, text: 'text-lg', creator: 'text-[10px]' },
+    lg: { icon: 'w-12 h-12', width: 48, height: 48, text: 'text-2xl', creator: 'text-xs' },
+    xl: { icon: 'w-16 h-16', width: 64, height: 64, text: 'text-3xl', creator: 'text-xs' },
   };
 
   const currentSize = sizeMap[size] || sizeMap.md;
 
   return (
     <div className={`flex items-center gap-2.5 select-none ${className}`}>
-      {/* Exact Vector Speech Bubble HD Logo */}
-      <div className={`relative ${currentSize.icon} flex-shrink-0 transition-transform duration-200 hover:scale-105`}>
+      {/* Exact Vector Speech Bubble HD Logo with explicit bounding box constraints */}
+      <div 
+        className={`relative ${currentSize.icon} flex-shrink-0 transition-transform duration-200 hover:scale-105`}
+        style={{
+          width: `${currentSize.width}px`,
+          height: `${currentSize.height}px`,
+          minWidth: `${currentSize.width}px`,
+          minHeight: `${currentSize.height}px`,
+          maxWidth: `${currentSize.width}px`,
+          maxHeight: `${currentSize.height}px`,
+        }}
+      >
         <svg
           viewBox="0 0 100 90"
+          width={currentSize.width}
+          height={currentSize.height}
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           className="w-full h-full drop-shadow-md"
+          style={{ width: '100%', height: '100%', display: 'block' }}
         >
           {/* Main Rounded Blue Speech Bubble Body with Tail */}
           <path
