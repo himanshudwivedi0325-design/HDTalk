@@ -5,19 +5,23 @@ const path = require('path');
 const config = require('../config/config');
 const n8nService = require('../services/n8nService');
 const authMiddleware = require('../middleware/authMiddleware');
-const { aiLimiter } = require('../middleware/rateLimiter');
+const adminMiddleware = require('../middleware/adminMiddleware');
+const { n8nAskLimiter } = require('../middleware/rateLimiter');
 
 /**
- * 1. Public: Get n8n integration status & health
+ * 1. Admin-only: Get n8n integration status & health
  * GET /api/n8n/status
+ * Note: Internal webhook URLs are strictly scrubbed to prevent infrastructure disclosure
  */
-router.get('/status', (req, res) => {
+router.get('/status', authMiddleware, adminMiddleware, (req, res) => {
   try {
     const status = n8nService.getN8nStatus();
+    // Ensure internal webhook URL is never leaked
+    const { webhookUrl, ...safeStatus } = status;
     res.json({
       success: true,
       service: 'HDTalk n8n Automation Engine',
-      ...status
+      ...safeStatus
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -49,7 +53,6 @@ router.post('/test', authMiddleware, async (req, res) => {
       success: true,
       message: 'Webhook test executed successfully.',
       latencyMs,
-      endpoint: config.N8N_WEBHOOK_URL || '(Internal autonomous engine)',
       mode: config.N8N_WEBHOOK_URL ? 'External n8n Instance' : 'Built-in Smart Automation Engine',
       webhookResponse: result || { status: 'Delivered (fallback response)' }
     });
@@ -61,8 +64,9 @@ router.post('/test', authMiddleware, async (req, res) => {
 /**
  * 3. Public/Authenticated: Interactive AI Chatbot Query for Help & Support
  * POST /api/n8n/ask
+ * Protected by dedicated rate limiter: 10 requests per 10 minutes per IP
  */
-router.post('/ask', aiLimiter, async (req, res) => {
+router.post('/ask', n8nAskLimiter, async (req, res) => {
   try {
     const { question, senderName } = req.body;
     if (!question || !question.trim()) {

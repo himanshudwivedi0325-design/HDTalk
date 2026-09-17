@@ -351,7 +351,6 @@ function getN8nStatus() {
     enabled: config.N8N_ENABLED,
     configured: isConfigured,
     mode: isConfigured ? 'External n8n Workflow Cluster' : 'Built-in Smart Automation & AI Engine',
-    webhookUrl: config.N8N_WEBHOOK_URL || '(Internal Autonomous Engine)',
     metrics: n8nMetrics,
     availableEvents: [
       'user_registered',

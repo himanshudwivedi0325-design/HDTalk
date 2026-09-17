@@ -21,6 +21,7 @@ function validateEnv() {
     process.env.MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/hdtalk_test';
     process.env.VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || 'test_vapid_public_key';
     process.env.VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'test_vapid_private_key';
+    process.env.N8N_WEBHOOK_SECRET = process.env.N8N_WEBHOOK_SECRET || 'test_n8n_webhook_secret_32_chars';
     return true;
   }
 

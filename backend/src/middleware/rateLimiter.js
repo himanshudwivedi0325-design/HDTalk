@@ -90,6 +90,12 @@ module.exports = {
     windowMs: 60 * 1000,
     max: 30,
     message: 'Too many upload attempts. Please slow down.'
+  }),
+  // Dedicated rate limiter for n8n AI ask endpoint (10 requests per 10 minutes per IP)
+  n8nAskLimiter: createRateLimiter({
+    windowMs: 10 * 60 * 1000,
+    max: 10,
+    message: 'Too many queries to the AI assistant. Please try again after 10 minutes.'
   })
 };
 

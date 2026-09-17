@@ -142,7 +142,15 @@ const noSqlSanitizer = (req, res, next) => {
   next();
 };
 
-app.use(express.json({ limit: '2mb' }));
+// Preserve exact raw bytes for HMAC signature verification on webhook endpoints
+app.use('/api/chat/bot-reply', express.raw({ type: '*/*', limit: '2mb' }));
+
+app.use(express.json({
+  limit: '2mb',
+  verify: (req, res, buf) => {
+    req.rawBody = buf;
+  }
+}));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 app.use(noSqlSanitizer);
 
