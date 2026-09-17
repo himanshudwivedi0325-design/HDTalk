@@ -8,7 +8,8 @@ import {
   Settings, 
   LogOut,
   Download,
-  ShieldAlert
+  ShieldAlert,
+  HelpCircle
 } from 'lucide-react';
 import { useChat } from '../../context/ChatContext';
 import { useAuth } from '../../context/AuthContext';
@@ -23,7 +24,8 @@ export function ApphitectSidebar({
   onOpenThemeModal, 
   onOpenProfileModal,
   onOpenRequestsModal,
-  onOpenAdminModal
+  onOpenAdminModal,
+  onOpenHelpModal
 }) {
   const { conversations, pendingRequestsCount } = useChat();
   const { user, logout } = useAuth();
@@ -38,6 +40,7 @@ export function ApphitectSidebar({
   const navItems = [
     { id: 'chats', label: 'All Chats', icon: MessageSquare, badge: totalUnread },
     { id: 'discover', label: 'Matchmaking', icon: Compass },
+    { id: 'help', label: 'Help & AI Support', icon: HelpCircle, action: onOpenHelpModal },
     ...(isAdmin ? [{ id: 'admin', label: 'Admin Console', icon: ShieldAlert, action: onOpenAdminModal }] : []),
     { id: 'requests', label: 'Friend Requests', icon: Users, badge: pendingRequestsCount, action: onOpenRequestsModal },
     { id: 'theme', label: 'Themes', icon: Palette, action: onOpenThemeModal },

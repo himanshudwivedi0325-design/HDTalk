@@ -3,11 +3,11 @@ import { useChat } from '../../context/ChatContext';
 import { useSocket } from '../../context/SocketContext';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
-import { Search, Plus, MessageSquare, Check, CheckCheck, Filter, Mic, Image as ImageIcon, PanelLeftClose, UserCheck, Trash2, UserPlus } from 'lucide-react';
+import { Search, Plus, MessageSquare, Check, CheckCheck, Filter, Mic, Image as ImageIcon, PanelLeftClose, UserCheck, Trash2, UserPlus, Bot, Sparkles } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { formatChatTimestamp, formatLastActive } from '../../utils/timeAgo';
 
-export function ConversationList({ onNewChatClick, onCollapse, onSelectChat, onOpenRequestsModal }) {
+export function ConversationList({ onNewChatClick, onCollapse, onSelectChat, onOpenRequestsModal, onOpenHelpModal }) {
   const { user } = useAuth();
   const { conversations, activeConversation, selectConversation, typingUsers, pendingRequestsCount, deleteConversation, startDirectConversationWithUser } = useChat();
   const { isUserOnline, getUserLastSeen } = useSocket();
@@ -183,6 +183,14 @@ export function ConversationList({ onNewChatClick, onCollapse, onSelectChat, onO
                 {pendingRequestsCount}
               </span>
             )}
+          </button>
+          <button
+            onClick={() => onOpenHelpModal?.()}
+            className="px-2.5 py-1 rounded-lg text-xs font-medium transition flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent whitespace-nowrap"
+            title="Help Center & AI Assistant"
+          >
+            <Bot className="w-3.5 h-3.5 text-cyan-500 flex-shrink-0" />
+            <span>AI Help</span>
           </button>
         </div>
       </div>

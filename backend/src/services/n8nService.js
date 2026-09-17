@@ -74,30 +74,50 @@ function generateSmartAIResponse(query, senderName) {
   const name = senderName || 'friend';
 
   if (!q || q === 'hi' || q === 'hello' || q === 'hey' || q === 'hola' || q === 'namaste') {
-    return `Hello ${name}! 👋 I am your **HDTalk AI Assistant** powered by n8n workflow automations.\n\nHow can I help you today? You can ask me about:\n• 📹 **WebRTC Video & Audio Calling**\n• 💬 **Chat & Voice Notes**\n• ⚡ **n8n Automations & Webhooks**\n• 🛠️ **System Architecture & Creator info**`;
+    return `Hello ${name}! 👋 I am your **HDTalk AI Assistant** powered by n8n workflow automations.\n\nHow can I help you today? You can ask me about:\n• 📹 **WebRTC Video & Audio Calling**\n• ⚡ **n8n Automations & Webhooks**\n• 📲 **PWA Installation & Mobile App**\n• 🔔 **Background Push Notifications**\n• 🔒 **Security, Privacy & Encryption**\n• 🛠️ **System Architecture & Creator Info**`;
   }
 
   if (q.includes('creator') || q.includes('who made') || q.includes('who built') || q.includes('founder') || q.includes('himanshu') || q.includes('dwivedi')) {
-    return `HDTalk was envisioned, architected, and built with ❤️ by **Himanshu Dwivedi** as an enterprise-grade, real-time communication platform featuring WebRTC calling, instant messaging, and automated n8n workflows.`;
+    return `HDTalk was envisioned, architected, and crafted with ❤️ by **Himanshu Dwivedi** as a high-performance, real-time communication platform featuring peer-to-peer WebRTC video mesh, secure direct messaging, and automated n8n workflows.`;
   }
 
-  if (q.includes('feature') || q.includes('what can you do') || q.includes('help') || q.includes('capability') || q.includes('guide')) {
-    return `🚀 **HDTalk Core Features:**\n\n1. **HD Video & Voice Calling**: Peer-to-peer WebRTC mesh with STUN/TURN traversal and screen sharing.\n2. **Real-Time Chat**: Direct messaging with typing indicators, delivery receipts, and emojis.\n3. **Voice Notes**: In-browser audio recording & high-fidelity playback.\n4. **File Sharing**: Cloudinary & local storage for images, docs, and code up to 25MB.\n5. **Background Push Alerts**: RFC-8292 Web Push notifications for missed calls and messages.\n6. **n8n Workflow Automation**: Automated user onboarding, CRM triggers, and @bot AI agents.`;
+  if (q.includes('call') || q.includes('video') || q.includes('audio') || q.includes('camera') || q.includes('mic') || q.includes('webrtc')) {
+    return `📹 **HDTalk Video & Audio Calling Guide:**\n\n• **How to Call**: Open any chat or discover profile, then click the **"Video Call"** button.\n• **Technology**: HDTalk uses ultra-low-latency peer-to-peer **WebRTC** with Google STUN and Metered TURN NAT traversal.\n• **Screen Sharing**: During any active call, click the **Screen Share** icon to broadcast your screen or window in 1080p.\n• **Camera/Mic Blocked?**: If video is black or permissions are denied, check your browser address bar (lock icon 🔒) and set Camera & Microphone to **"Allow"**, then refresh.`;
   }
 
   if (q.includes('n8n') || q.includes('automation') || q.includes('workflow') || q.includes('webhook')) {
-    return `⚡ **n8n Automation Subsystem Status: ACTIVE!**\n\nHDTalk connects seamlessly with n8n workflows for:\n• **User Registered**: Welcome emails & CRM synchronization\n• **Missed Calls**: SMS & Push alert dispatches\n• **Offline Messages**: Background digest alerts\n• **AI Chat Queries**: Complex multi-step LLM chains\n\nYou can import the \`hdtalk-automation-workflow.json\` into your self-hosted or cloud n8n instance anytime!`;
+    return `⚡ **n8n Automation Subsystem Status: ACTIVE!**\n\nHDTalk connects natively with n8n workflows for event-driven actions:\n• **User Registered**: Sends automated welcome email & CRM records.\n• **Missed Calls**: Dispatches SMS & push alerts to offline recipients.\n• **Offline Messages**: Background email/push digests.\n• **AI Queries**: Dispatches \`@bot\` questions to custom AI/LLM chains.\n\nYou can download the pre-packaged workflow from **GET /api/n8n/workflow** or import \`hdtalk-automation-workflow.json\` into your self-hosted n8n instance!`;
   }
 
-  if (q.includes('call') || q.includes('video') || q.includes('audio') || q.includes('webrtc')) {
-    return `📞 **Calling on HDTalk:**\nTo start a call, navigate to **Messages** or **Matchmaking**, open any user's profile, and click **"Video Call"**. Calls use secure DTLS-SRTP encryption with Google STUN and Metered TURN fallbacks!`;
+  if (q.includes('pwa') || q.includes('install') || q.includes('download') || q.includes('apk') || q.includes('app') || q.includes('mobile')) {
+    return `📲 **Installing HDTalk as an App (PWA):**\n\nHDTalk is a full **Progressive Web App (PWA)** that installs natively on any device:\n• **Chrome / Edge (Desktop)**: Click the **"Install App"** button in the top navbar or the install icon in the URL bar.\n• **Android (Chrome)**: Tap the browser menu (⋮) and choose **"Install app"** or **"Add to Home screen"**.\n• **iOS Safari (iPhone/iPad)**: Tap the **Share** button (box with upward arrow) and select **"Add to Home Screen"**.\n\nOnce installed, HDTalk opens in full-screen standalone mode with native performance!`;
+  }
+
+  if (q.includes('push') || q.includes('notification') || q.includes('alert') || q.includes('vapid')) {
+    return `🔔 **Background Push Notifications:**\n\nHDTalk uses RFC-8292 standard **Web Push** with VAPID cryptographic keys.\n• Even if your browser tab is closed or minimized, your device will receive immediate alerts for incoming video calls and chat messages.\n• Click the **Bell** icon in the top navigation bar to check your notification permission status or re-enable push alerts anytime!`;
+  }
+
+  if (q.includes('security') || q.includes('encrypt') || q.includes('private') || q.includes('safe') || q.includes('password')) {
+    return `🔒 **Enterprise-Grade Security in HDTalk:**\n\n1. **WebRTC Media**: All audio/video streams are encrypted end-to-end via **DTLS-SRTP**.\n2. **Authentication**: Uses cryptographically signed **JWT tokens** with bcrypt password hashing.\n3. **Sanitization**: XSS prevention and MIME-type verification protect against unsafe uploads.\n4. **Database Safety**: Dual-layer architecture with MongoDB Atlas production cluster and local memory fallback.`;
+  }
+
+  if (q.includes('theme') || q.includes('dark') || q.includes('light') || q.includes('color')) {
+    return `🎨 **Theme Gallery & Dark Mode:**\n\n• **Instant Toggle**: Click the Sun/Moon icon in the top navigation bar to toggle between Light and Dark mode.\n• **Theme Gallery**: Click the **Palette** icon in the sidebar or navbar to choose between curated luxury color schemes (Midnight Titanium, Arctic Frost, Emerald Glow, Cyberpunk Neon).`;
+  }
+
+  if (q.includes('friend') || q.includes('request') || q.includes('discover') || q.includes('matchmaking')) {
+    return `👥 **Matchmaking & Friend Connections:**\n\n• Click **"Discover"** (Compass icon) in the navigation bar to find other members filtered by interests and profession.\n• Send a **Connect Request** to start a conversation.\n• Manage incoming invites via the **"Requests"** modal in the top bar or sidebar.`;
+  }
+
+  if (q.includes('feature') || q.includes('what can you do') || q.includes('help') || q.includes('guide')) {
+    return `🚀 **HDTalk Feature Suite:**\n\n1. 📹 **HD Video & Voice Calling**: High-definition peer-to-peer WebRTC calls with screen sharing.\n2. 💬 **Instant Messaging**: Real-time chats with typing indicators, reactions, and read receipts.\n3. 🎙️ **Voice Notes**: In-browser voice recording and audio player.\n4. 📁 **File & Media Sharing**: Upload images, documents, and videos up to 25MB.\n5. ⚡ **n8n Automation Engine**: Background webhook integrations and @bot AI query responses.\n6. 📲 **PWA Installation**: Install on iOS, Android, macOS, and Windows.\n7. 🔔 **Background Push Alerts**: Receive notifications even when the app is closed.`;
   }
 
   if (q.includes('thank') || q.includes('thx') || q.includes('shukriya') || q.includes('dhanyawad')) {
-    return `You're very welcome, ${name}! 😊 Happy to assist. If you ever need anything else, just tag me with \`@bot\`!`;
+    return `You're very welcome, ${name}! 😊 I'm always here to assist. Feel free to ask any other questions, or tag \`@bot\` in any chat!`;
   }
 
-  return `🤖 **HDTalk AI Assistant:** I received your query: *"@bot ${query}"*.\n\nHDTalk's n8n automation engine is listening! If you have configured custom LLM nodes in your n8n workflow, they will handle complex processing. In the meantime, I'm here to help with any platform guidance or questions! 🚀`;
+  return `🤖 **HDTalk AI Assistant:** I received your query: *"@bot ${query}"*.\n\nHDTalk's automated assistant engine is active. If you need assistance with **video calling**, **n8n workflows**, **PWA installation**, or **friend requests**, feel free to ask or pick from the quick questions below! 🚀`;
 }
 
 /**
@@ -349,5 +369,6 @@ module.exports = {
   notifyOfflineMessage,
   handleAIBotQuery,
   postBotMessage,
-  getN8nStatus
+  getN8nStatus,
+  generateSmartAIResponse
 };

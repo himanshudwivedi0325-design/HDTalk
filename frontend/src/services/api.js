@@ -151,5 +151,12 @@ export const api = {
   adminCreateUser: (data) => request('/api/admin/users', {
     method: 'POST',
     body: JSON.stringify(data)
+  }),
+
+  // Help & n8n AI Assistant
+  getN8nStatus: () => request('/api/n8n/status'),
+  askN8nAssistant: (question, senderName) => request('/api/n8n/ask', {
+    method: 'POST',
+    body: JSON.stringify({ question, senderName })
   })
 };

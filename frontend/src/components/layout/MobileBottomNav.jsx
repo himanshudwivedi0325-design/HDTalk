@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare, Compass, Palette, User, UserCheck, ShieldAlert } from 'lucide-react';
+import { MessageSquare, Compass, Palette, User, UserCheck, ShieldAlert, HelpCircle } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 
 export function MobileBottomNav({
@@ -9,6 +9,7 @@ export function MobileBottomNav({
   onOpenProfileModal,
   onOpenRequestsModal,
   onOpenAdminModal,
+  onOpenHelpModal,
   unreadCount = 0,
   pendingRequestsCount = 0,
   user
@@ -85,6 +86,16 @@ export function MobileBottomNav({
       >
         <Palette className="w-5 h-5" />
         <span className="text-[10px] mt-0.5">Themes</span>
+      </button>
+
+      {/* Help & AI Support Button */}
+      <button
+        onClick={onOpenHelpModal}
+        className="flex flex-col items-center justify-center flex-1 py-1 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 transition-colors"
+        title="Help & AI Support"
+      >
+        <HelpCircle className="w-5 h-5 text-blue-500 dark:text-cyan-400" />
+        <span className="text-[10px] mt-0.5">Help</span>
       </button>
 
       {/* Profile Button */}

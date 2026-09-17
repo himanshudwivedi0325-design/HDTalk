@@ -71,6 +71,7 @@ import { PwaInstallBanner } from './components/pwa/PwaInstallBanner';
 import { PwaInstallModal } from './components/pwa/PwaInstallModal';
 import { registerServiceWorker } from './services/pushService';
 import { AdminUserManagementModal } from './components/admin/AdminUserManagementModal';
+import { HelpCenterModal } from './components/help/HelpCenterModal';
 
 function MainLayout() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -82,6 +83,7 @@ function MainLayout() {
   const [showRequestsModal, setShowRequestsModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
   const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState(false);
   const [isConversationListVisible, setIsConversationListVisible] = useState(true);
 
@@ -200,6 +202,7 @@ function MainLayout() {
           onOpenRequestsModal={() => setShowRequestsModal(true)}
           onOpenNotificationModal={() => setShowNotificationModal(true)}
           onOpenAdminModal={() => setShowAdminModal(true)}
+          onOpenHelpModal={() => setShowHelpModal(true)}
         />
       </div>
 
@@ -217,6 +220,7 @@ function MainLayout() {
             onOpenProfileModal={() => setShowProfileModal(true)}
             onOpenRequestsModal={() => setShowRequestsModal(true)}
             onOpenAdminModal={() => setShowAdminModal(true)}
+            onOpenHelpModal={() => setShowHelpModal(true)}
           />
         </div>
 
@@ -233,6 +237,7 @@ function MainLayout() {
                 onNewChatClick={() => setActiveTab('discover')} 
                 onCollapse={() => setIsConversationListVisible(false)}
                 onOpenRequestsModal={() => setShowRequestsModal(true)}
+                onOpenHelpModal={() => setShowHelpModal(true)}
                 onSelectChat={() => {
                   if (window.innerWidth < 768) {
                     setIsConversationListVisible(false);
@@ -289,6 +294,7 @@ function MainLayout() {
           onOpenProfileModal={() => setShowProfileModal(true)}
           onOpenRequestsModal={() => setShowRequestsModal(true)}
           onOpenAdminModal={() => setShowAdminModal(true)}
+          onOpenHelpModal={() => setShowHelpModal(true)}
           unreadCount={totalUnread}
           pendingRequestsCount={pendingRequestsCount}
           user={user}
@@ -315,6 +321,28 @@ function MainLayout() {
       <AdminUserManagementModal
         isOpen={showAdminModal}
         onClose={() => setShowAdminModal(false)}
+      />
+
+      {/* Help & AI Support Center with Embedded Chatbot */}
+      <HelpCenterModal 
+        isOpen={showHelpModal}
+        onClose={() => setShowHelpModal(false)}
+        onOpenMessengerChat={() => {
+          const existing = (conversations || []).find(c => !c.isGroup && c.participants?.includes('usr_ai_bot'));
+          if (existing) {
+            selectConversation(existing);
+            setActiveTab('chats');
+            setIsConversationListVisible(false);
+          } else if (startDirectConversationWithUser) {
+            startDirectConversationWithUser('usr_ai_bot').then(newConv => {
+              if (newConv) {
+                selectConversation(newConv);
+                setActiveTab('chats');
+                setIsConversationListVisible(false);
+              }
+            }).catch(console.warn);
+          }
+        }}
       />
 
       {/* PWA Download Banner (Floating at bottom, dismissible) */}

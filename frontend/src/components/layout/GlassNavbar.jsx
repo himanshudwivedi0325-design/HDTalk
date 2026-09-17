@@ -17,12 +17,21 @@ import {
   ShieldAlert,
   User,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  HelpCircle,
+  Bot
 } from 'lucide-react';
 import { HDTalkLogo, CreatorBadge } from '../ui/HDTalkLogo';
 import { Avatar } from '../ui/Avatar';
 
-export function GlassNavbar({ onOpenThemeModal, onOpenProfileModal, onOpenRequestsModal, onOpenNotificationModal, onOpenAdminModal }) {
+export function GlassNavbar({ 
+  onOpenThemeModal, 
+  onOpenProfileModal, 
+  onOpenRequestsModal, 
+  onOpenNotificationModal, 
+  onOpenAdminModal,
+  onOpenHelpModal
+}) {
   const { user, logout } = useAuth();
   const { isConnected } = useSocket();
   const { currentThemeObj, isDark, toggleMode } = useTheme();
@@ -173,6 +182,16 @@ export function GlassNavbar({ onOpenThemeModal, onOpenProfileModal, onOpenReques
           <Palette className="w-4 h-4 text-purple-600 dark:text-purple-400" />
         </button>
 
+        {/* Help & AI Support Center Button */}
+        <button
+          onClick={onOpenHelpModal}
+          className="flex w-9 h-9 items-center justify-center rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-600 dark:text-cyan-400 transition-all hover:scale-105 active:scale-95 shadow-xs"
+          title="Help & AI Support Center"
+          aria-label="Help & AI Support"
+        >
+          <HelpCircle className="w-4 h-4" />
+        </button>
+
         {/* Apple-Grade User Profile Pill & Luxury Popover Menu */}
         {user && (
           <div className="relative pl-1 sm:pl-2 border-l border-slate-200/80 dark:border-white/10" ref={userMenuRef}>
@@ -277,6 +296,17 @@ export function GlassNavbar({ onOpenThemeModal, onOpenProfileModal, onOpenReques
                   >
                     <Bell className="w-4 h-4 text-indigo-500 flex-shrink-0" />
                     <span>Notifications & Web Push</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      onOpenHelpModal();
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-white/10 hover:text-blue-600 dark:hover:text-cyan-400 transition"
+                  >
+                    <Bot className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                    <span>Help & AI Assistant</span>
                   </button>
                 </div>
 
