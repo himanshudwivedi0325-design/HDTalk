@@ -88,6 +88,28 @@ export const subscribeToPush = async (token) => {
   const applicationServerKey = urlBase64ToUint8Array(data.publicKey);
 
   let subscription = await registration.pushManager.getSubscription();
+  if (subscription) {
+    // Check if subscription was created with the previous/different VAPID key
+    try {
+      const currentKey = subscription.options && subscription.options.applicationServerKey
+        ? new Uint8Array(subscription.options.applicationServerKey)
+        : null;
+      let matches = false;
+      if (currentKey && currentKey.length === applicationServerKey.length) {
+        matches = currentKey.every((byte, idx) => byte === applicationServerKey[idx]);
+      }
+      if (!matches) {
+        console.log('[PushService] VAPID key rotation detected. Unsubscribing old key and re-subscribing...');
+        await subscription.unsubscribe();
+        subscription = null;
+      }
+    } catch (err) {
+      console.warn('[PushService] Key check warning, resetting subscription:', err);
+      await subscription.unsubscribe().catch(() => {});
+      subscription = null;
+    }
+  }
+
   if (!subscription) {
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,

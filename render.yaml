@@ -28,11 +28,11 @@ services:
         value: 7d
 
       # ── Web Push / VAPID ──────────────────────────────────────────────────
-      # Paste the values from: npx web-push generate-vapid-keys
+      # Generated via: npx web-push generate-vapid-keys
       - key: VAPID_PUBLIC_KEY
-        value: BCW8v2MgNBi_hXIEmeuJqhIMYBcIxkLdJ4K3ZzX9CG8wWwr-R9TgObg5VJ9rAfDLt6m8LGxjsj6diEdIUSPLJEo
+        value: BDO1OeUpNQHHGxrbZ2GmcftrnbS8s_hD8JIYoXcr8OJFRYh6juADBhB02WYyBHYhXEQ_2v7OFd1auDKBnVsXNJE
       - key: VAPID_PRIVATE_KEY
-        value: 1xicvmnLBdID_WVoDl__wZ1fc4-Npe2lQZ1llYuo7sg
+        sync: false
       - key: VAPID_EMAIL
         value: mailto:himanshudwivedi0325@gmail.com
 

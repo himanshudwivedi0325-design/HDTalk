@@ -52,8 +52,8 @@ module.exports = {
   ),
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
 
-  VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || 'BCW8v2MgNBi_hXIEmeuJqhIMYBcIxkLdJ4K3ZzX9CG8wWwr-R9TgObg5VJ9rAfDLt6m8LGxjsj6diEdIUSPLJEo',
-  VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY || '1xicvmnLBdID_WVoDl__wZ1fc4-Npe2lQZ1llYuo7sg',
+  VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || 'BDO1OeUpNQHHGxrbZ2GmcftrnbS8s_hD8JIYoXcr8OJFRYh6juADBhB02WYyBHYhXEQ_2v7OFd1auDKBnVsXNJE',
+  VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY || '',
   VAPID_EMAIL: process.env.VAPID_EMAIL || 'mailto:himanshudwivedi0325@gmail.com',
 
   // ─── Database ─────────────────────────────────────────────────────────────────
