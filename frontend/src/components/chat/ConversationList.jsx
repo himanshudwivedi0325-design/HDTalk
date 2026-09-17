@@ -51,8 +51,6 @@ export function ConversationList({ onNewChatClick, onCollapse, onSelectChat, onO
   const filtered = conversations.filter(c => {
     const other = getOther(c);
     if (!other) return false;
-    // Separate human conversations from AI: AI has its own dedicated workspace
-    if (other.id === 'usr_ai_bot' || other.email === 'claude@hdtalk.ai') return false;
 
     const name = (other.name || '').toLowerCase();
     const lastMsg = c.lastMessage?.text?.toLowerCase() || '';
@@ -293,9 +291,16 @@ export function ConversationList({ onNewChatClick, onCollapse, onSelectChat, onO
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1 gap-2">
-                    <span className="font-display font-bold text-[14.5px] text-slate-900 dark:text-white truncate flex-1 tracking-tight">
-                      {other?.name}
-                    </span>
+                    <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                      <span className="font-display font-bold text-[14.5px] text-slate-900 dark:text-white truncate tracking-tight">
+                        {other?.name}
+                      </span>
+                      {(other?.id === 'usr_ai_bot' || other?.email === 'claude@hdtalk.ai') && (
+                        <span className="px-1.5 py-0.2 rounded-full bg-cyan-500/15 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30 text-[9px] font-extrabold uppercase tracking-wider flex-shrink-0">
+                          AI Bot
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       <button
                         onClick={(e) => {

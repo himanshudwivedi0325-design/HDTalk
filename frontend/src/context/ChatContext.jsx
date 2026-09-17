@@ -116,9 +116,11 @@ export function ChatProvider({ children }) {
         if (res.success) {
           setMessages(res.messages || []);
           setHasMoreMessages(Boolean(res.hasMore));
+          setConversations(prev => prev.map(c => c.id === activeConversation.id ? { ...c, unreadCount: 0 } : c));
           if (socket) {
             socket.emit('mark_read', { conversationId: activeConversation.id });
           }
+          api.markRead(activeConversation.id).catch(() => {});
         }
       })
       .catch(console.warn)
@@ -463,6 +465,9 @@ export function ChatProvider({ children }) {
     setConversations(prev => prev.map(c => c.id === conv?.id ? { ...c, unreadCount: 0 } : c));
     if (conv && socket) {
       socket.emit('mark_read', { conversationId: conv.id });
+    }
+    if (conv?.id) {
+      api.markRead(conv.id).catch(() => {});
     }
   };
 
