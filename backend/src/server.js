@@ -97,22 +97,13 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// Helmet Security Headers (HSTS, noSniff, frameguard: deny, referrerPolicy, hidePoweredBy, CSP report-only)
+// Helmet Security Headers (HSTS, noSniff, frameguard: deny, referrerPolicy, hidePoweredBy)
 const helmet = require('helmet');
 app.use(helmet({
-  contentSecurityPolicy: {
-    reportOnly: true,
-    directives: {
-      defaultSrc: ["'self'"],
-      connectSrc: ["'self'", "wss:", "ws:", "https:"],
-      imgSrc: ["'self'", "data:", "blob:", "https:"],
-      mediaSrc: ["'self'", "blob:", "https:"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      workerSrc: ["'self'", "blob:"]
-    }
-  },
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: false,
+  crossOriginOpenerPolicy: false,
+  crossOriginEmbedderPolicy: false,
   hsts: {
     maxAge: 31536000,
     includeSubDomains: true,
@@ -360,7 +351,12 @@ app.get('/googlefa7a1a36ea6554fc.html', (req, res) => {
 });
 
 if (fs.existsSync(frontendDist)) {
-  app.use(express.static(frontendDist));
+  app.use(express.static(frontendDist, {
+    setHeaders: (res) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    }
+  }));
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api/') || req.path.startsWith('/uploads/')) {
       return next();
