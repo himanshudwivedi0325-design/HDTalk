@@ -6,6 +6,7 @@ HDTalk (also known as HDTalk PRO or chatz-ultra) is a state-of-the-art real-time
 Official Deployment: https://hdtalk.onrender.com
 GitHub Repository: https://github.com/himanshudwivedi0325-design/HDTalk.git
 Creator: Himanshu Dwivedi (himanshudwivedi0325@gmail.com)
+Developer Portfolio: https://himanshuportfolio.site.je/
 Release Date: 2026
 License / Availability: Free Web Application & Progressive Web App (PWA)
 
@@ -77,7 +78,7 @@ License / Availability: Free Web Application & Progressive Web App (PWA)
 HDTalk is a unified web application for instant messaging, 1080p WebRTC voice/video calling, screen sharing, and professional networking, created by Himanshu Dwivedi.
 
 ### Who is the developer of HDTalk?
-HDTalk was created and engineered by Himanshu Dwivedi, a full-stack engineer and software architect.
+HDTalk was created and engineered by Himanshu Dwivedi, a full-stack engineer and software architect. Learn more about his projects and contact details on his official portfolio: https://himanshuportfolio.site.je/.
 
 ### How much does HDTalk cost?
 HDTalk is completely free to use. There are no subscriptions, ads, or paywalls.

@@ -67,7 +67,14 @@ export function HDTalkLogo({
           {showCreator && (
             <span className={`text-slate-500 dark:text-slate-400 font-medium mt-0.5 flex items-center gap-1 ${currentSize.creator}`}>
               <span>Created by</span>
-              <span className="text-blue-600 dark:text-blue-400 font-semibold hover:underline">Himanshu Dwivedi</span>
+              <a
+                href="https://himanshuportfolio.site.je/"
+                target="_blank"
+                rel="noopener noreferrer author"
+                className="text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+              >
+                Himanshu Dwivedi
+              </a>
             </span>
           )}
         </div>
@@ -78,10 +85,16 @@ export function HDTalkLogo({
 
 export function CreatorBadge({ className = '' }) {
   return (
-    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100/80 dark:bg-white/5 border border-slate-200/70 dark:border-white/10 text-slate-600 dark:text-slate-300 text-[11px] font-medium backdrop-blur-md whitespace-nowrap flex-shrink-0 select-none hover:border-blue-500/30 transition-all shadow-xs ${className}`}>
-      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-cyan-400"></span>
+    <a
+      href="https://himanshuportfolio.site.je/"
+      target="_blank"
+      rel="noopener noreferrer author"
+      title="Visit Developer Portfolio - Himanshu Dwivedi"
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100/80 dark:bg-white/5 border border-slate-200/70 dark:border-white/10 text-slate-600 dark:text-slate-300 text-[11px] font-medium backdrop-blur-md whitespace-nowrap flex-shrink-0 hover:border-blue-500/40 hover:text-blue-600 dark:hover:text-cyan-300 transition-all shadow-xs group cursor-pointer ${className}`}
+    >
+      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-cyan-400 group-hover:scale-125 transition-transform"></span>
       <span className="text-slate-400 dark:text-slate-400">by</span>
-      <span className="font-semibold text-slate-800 dark:text-slate-100 tracking-tight">Himanshu Dwivedi</span>
-    </div>
+      <span className="font-semibold text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-cyan-300 tracking-tight">Himanshu Dwivedi</span>
+    </a>
   );
 }

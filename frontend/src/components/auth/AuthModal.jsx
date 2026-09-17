@@ -328,11 +328,21 @@ export function AuthModal() {
               <div className="p-2.5 rounded-xl bg-slate-100/60 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[10.5px] space-y-1.5 text-slate-600 dark:text-slate-400">
                 <div>
                   <strong className="text-slate-800 dark:text-slate-200">What is HDTalk?</strong>
-                  <p>HDTalk is a free, modern real-time messaging and WebRTC calling web app created by Himanshu Dwivedi.</p>
+                  <p>HDTalk is a free, modern real-time messaging and WebRTC calling web app developed by Himanshu Dwivedi.</p>
                 </div>
                 <div>
-                  <strong className="text-slate-800 dark:text-slate-200">Can I install it?</strong>
-                  <p>Yes, HDTalk is an installable PWA for Android, iOS, Windows, and Mac with offline push alerts.</p>
+                  <strong className="text-slate-800 dark:text-slate-200">Developer Portfolio:</strong>
+                  <p>
+                    Explore creator projects &amp; portfolio at{' '}
+                    <a
+                      href="https://himanshuportfolio.site.je/"
+                      target="_blank"
+                      rel="noopener noreferrer author"
+                      className="text-blue-600 dark:text-cyan-400 font-semibold hover:underline"
+                    >
+                      himanshuportfolio.site.je
+                    </a>
+                  </p>
                 </div>
               </div>
             </div>
@@ -342,7 +352,16 @@ export function AuthModal() {
         {/* Creator Attribution */}
         <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/10 text-center">
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-            Crafted with ❤️ by <span className="text-blue-600 dark:text-blue-400 font-bold">Himanshu Dwivedi</span>
+            Crafted with ❤️ by{' '}
+            <a
+              href="https://himanshuportfolio.site.je/"
+              target="_blank"
+              rel="noopener noreferrer author"
+              title="Visit Himanshu Dwivedi Portfolio"
+              className="text-blue-600 dark:text-blue-400 font-bold hover:underline"
+            >
+              Himanshu Dwivedi
+            </a>
           </p>
         </div>
       </div>
