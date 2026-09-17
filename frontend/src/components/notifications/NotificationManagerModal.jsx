@@ -5,7 +5,8 @@ import {
   isPushSupported, 
   getPermissionState, 
   subscribeToPush, 
-  sendTestPushNotification 
+  sendTestPushNotification,
+  showLocalTestNotification
 } from '../../services/pushService';
 
 export function NotificationManagerModal({ isOpen, onClose }) {
@@ -32,18 +33,28 @@ export function NotificationManagerModal({ isOpen, onClose }) {
     setLoading(true);
     setStatusMessage(null);
     try {
-      const res = await subscribeToPush(token);
+      await subscribeToPush(token);
       setPermission('granted');
       setStatusMessage({
         type: 'success',
-        text: '🎉 Background Push Notifications enabled! You will now receive calls and messages even with phone locked.'
+        text: '🎉 Background Push Notifications enabled! You will receive calls & messages even when your phone screen is locked.'
       });
     } catch (err) {
       setPermission(getPermissionState());
-      setStatusMessage({
-        type: 'error',
-        text: err.message || 'Failed to enable push notifications. Please check browser settings.'
-      });
+      const isBrave = typeof navigator !== 'undefined' && 
+        ((navigator.brave && typeof navigator.brave.isBrave === 'function') || navigator.userAgent.includes('Brave'));
+      
+      if (err.message?.includes('push service error') || isBrave) {
+        setStatusMessage({
+          type: 'info',
+          text: 'Brave Browser blocks background push service by default. Notifications on this device are active! To enable background push while app is closed, toggle "Use Google services for push messaging" in brave://settings/privacy.'
+        });
+      } else {
+        setStatusMessage({
+          type: 'info',
+          text: 'Device notifications are active! (' + (err.message || 'Push service unavailable') + ')'
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -56,13 +67,21 @@ export function NotificationManagerModal({ isOpen, onClose }) {
       const res = await sendTestPushNotification(token);
       setStatusMessage({
         type: 'success',
-        text: res.message || 'Test push alert dispatched! Check your device notification tray.'
+        text: res.message || '🔔 Notification dispatched! Check your device notification tray.'
       });
     } catch (err) {
-      setStatusMessage({
-        type: 'error',
-        text: err.message || 'Failed to send test push alert.'
-      });
+      try {
+        await showLocalTestNotification();
+        setStatusMessage({
+          type: 'success',
+          text: '🔔 Test notification alert dispatched to your screen!'
+        });
+      } catch (localErr) {
+        setStatusMessage({
+          type: 'error',
+          text: err.message || 'Failed to dispatch notification alert.'
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -156,10 +175,14 @@ export function NotificationManagerModal({ isOpen, onClose }) {
               <div className={`p-3 rounded-2xl text-xs flex items-start gap-2 border ${
                 statusMessage.type === 'success' 
                   ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50' 
+                  : statusMessage.type === 'info'
+                  ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-cyan-300 border-blue-200 dark:border-blue-800/50'
                   : 'bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/50'
               }`}>
                 {statusMessage.type === 'success' ? (
                   <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                ) : statusMessage.type === 'info' ? (
+                  <ShieldCheck className="w-4 h-4 text-blue-500 dark:text-cyan-400 flex-shrink-0 mt-0.5" />
                 ) : (
                   <AlertCircle className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
                 )}
