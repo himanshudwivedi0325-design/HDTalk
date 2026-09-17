@@ -71,7 +71,8 @@ export class WebRTCService {
   async fetchIceServers(apiUrl = '/api/webrtc/config', token = null) {
     try {
       const headers = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const activeToken = token || (typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null);
+      if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
       const res = await fetch(apiUrl, { headers });
       if (res.ok) {
         const data = await res.json();

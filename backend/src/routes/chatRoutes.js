@@ -43,8 +43,28 @@ const upload = multer({
   }
 });
 
+// Webhook Authorization Middleware for n8n/Bot callbacks
+const webhookAuthMiddleware = (req, res, next) => {
+  const secretHeader = req.headers['x-webhook-secret'] || req.headers['x-api-key'] || req.query.secret;
+  const expectedSecret = config.N8N_WEBHOOK_SECRET;
+
+  if (secretHeader && secretHeader === expectedSecret) {
+    return next();
+  }
+
+  // Also permit authenticated users / admins via standard Bearer token
+  if (req.headers.authorization) {
+    return authMiddleware(req, res, next);
+  }
+
+  return res.status(401).json({
+    success: false,
+    message: 'Unauthorized webhook access. Valid X-Webhook-Secret or Bearer token required.'
+  });
+};
+
 // Webhook Callback: Ingest asynchronous bot replies from n8n automation
-router.post('/bot-reply', chatController.botReply);
+router.post('/bot-reply', webhookAuthMiddleware, chatController.botReply);
 
 router.use(authMiddleware);
 

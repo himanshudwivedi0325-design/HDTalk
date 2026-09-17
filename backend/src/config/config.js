@@ -1,26 +1,25 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
+const crypto = require('crypto');
+
 /**
  * Require a critical secret environment variable.
- * In production, exits with a fatal error if not set.
+ * In production, generates an ephemeral cryptographic key if not provided to prevent token forgery.
  * In development, falls back to a dev default with a warning.
  */
 function requireSecret(key, devDefault, description) {
   const value = process.env[key];
-  if (value) return value;
+  if (value && value.trim()) return value.trim();
 
-  if (devDefault) {
-    if (process.env.NODE_ENV === 'production') {
-      console.warn(`[Config] NOTICE: "${key}" (${description}) not set in environment. Using fallback.`);
-    } else {
-      console.warn(`[Config] WARNING: "${key}" not set. Using dev default.`);
-    }
-    return devDefault;
+  if (process.env.NODE_ENV === 'production') {
+    const ephemeralKey = crypto.randomBytes(32).toString('hex');
+    console.warn(`[Config] SECURITY WARNING: "${key}" (${description}) not set in production. Generated ephemeral 256-bit cryptographic secret for this runtime session.`);
+    return ephemeralKey;
   }
 
-  console.error(`[Config] FATAL: Required secret "${key}" (${description}) is not set.`);
-  process.exit(1);
+  console.warn(`[Config] WARNING: "${key}" not set. Using dev default.`);
+  return devDefault || 'hdtalk_dev_local_jwt_secret_2026';
 }
 
 /**
@@ -47,7 +46,7 @@ module.exports = {
   // ─── Security Secrets (require env vars in production) ───────────────────────
   JWT_SECRET: requireSecret(
     'JWT_SECRET',
-    'hdtalk_super_jwt_secret_himanshu_dwivedi_secure_prod_key_2026',
+    'hdtalk_dev_local_jwt_secret_2026',
     'JWT signing secret'
   ),
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
@@ -65,6 +64,7 @@ module.exports = {
 
   // ─── n8n Automation ───────────────────────────────────────────────────────────
   N8N_WEBHOOK_URL: process.env.N8N_WEBHOOK_URL || 'http://localhost:5678/webhook/hdtalk',
+  N8N_WEBHOOK_SECRET: process.env.N8N_WEBHOOK_SECRET || 'hdtalk_secure_n8n_secret_99x',
   N8N_ENABLED: process.env.N8N_ENABLED !== 'false',
 
   // ─── WebRTC ICE Configuration ─────────────────────────────────────────────────

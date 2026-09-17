@@ -70,8 +70,14 @@ module.exports = {
   // Strict limiter for authentication endpoints (brute-force protection)
   authLimiter: createRateLimiter({
     windowMs: 60 * 1000,
-    max: 50,
+    max: 20,
     message: 'Too many authentication attempts. Please try again after 1 minute.'
+  }),
+  // Limiter for AI queries & chatbots
+  aiLimiter: createRateLimiter({
+    windowMs: 60 * 1000,
+    max: 20,
+    message: 'Too many AI queries. Please slow down and try again in 1 minute.'
   }),
   // General API limiter for all other routes
   apiLimiter: createRateLimiter({

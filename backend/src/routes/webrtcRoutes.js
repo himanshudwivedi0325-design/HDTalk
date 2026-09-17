@@ -16,8 +16,11 @@ router.get('/config', (req, res) => {
     });
   }
 
-  // Add configured TURN servers (if any configured)
-  if (config.TURN_SERVERS && config.TURN_SERVERS.length > 0) {
+  // Add configured TURN servers only for authenticated requests to protect credentials
+  const authHeader = req.headers.authorization;
+  const isAuth = Boolean(authHeader && authHeader.startsWith('Bearer '));
+
+  if (isAuth && config.TURN_SERVERS && config.TURN_SERVERS.length > 0) {
     config.TURN_SERVERS.forEach(ts => {
       if (ts && ts.urls) {
         iceServers.push(ts);

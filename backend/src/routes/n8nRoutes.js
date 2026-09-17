@@ -5,6 +5,7 @@ const path = require('path');
 const config = require('../config/config');
 const n8nService = require('../services/n8nService');
 const authMiddleware = require('../middleware/authMiddleware');
+const { aiLimiter } = require('../middleware/rateLimiter');
 
 /**
  * 1. Public: Get n8n integration status & health
@@ -61,7 +62,7 @@ router.post('/test', authMiddleware, async (req, res) => {
  * 3. Public/Authenticated: Interactive AI Chatbot Query for Help & Support
  * POST /api/n8n/ask
  */
-router.post('/ask', async (req, res) => {
+router.post('/ask', aiLimiter, async (req, res) => {
   try {
     const { question, senderName } = req.body;
     if (!question || !question.trim()) {

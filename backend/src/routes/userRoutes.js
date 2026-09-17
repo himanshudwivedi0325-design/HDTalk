@@ -39,7 +39,6 @@ const upload = multer({
 router.use(authMiddleware);
 
 router.get('/', userController.getAllUsers);
-router.get('/:id', userController.getUserProfile);
 router.put('/profile', userController.updateProfile);
 router.post('/avatar', upload.single('avatar'), userController.uploadAvatar);
 
@@ -48,5 +47,8 @@ router.get('/connections/requests', userController.getConnectionRequests);
 router.post('/connections/request', userController.sendConnectionRequest);
 router.put('/connections/requests/:requestId', userController.respondConnectionRequest);
 router.delete('/friends/:friendUserId', userController.removeFriend);
+
+// Generic user lookup by ID (must be after specific endpoints)
+router.get('/:id', userController.getUserProfile);
 
 module.exports = router;

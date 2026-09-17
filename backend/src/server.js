@@ -59,10 +59,19 @@ const allowedOrigins = process.env.CLIENT_URL
 const isOriginAllowed = (origin) => {
   if (!origin) return true;
   if (allowedOrigins.includes('*')) return true;
-  if (origin.endsWith('.loca.lt') || origin.endsWith('.ngrok-free.app') || origin.endsWith('.onrender.com')) return true;
-  if (origin === `http://localhost:${config.PORT}` || origin === `http://127.0.0.1:${config.PORT}`) return true;
-  if (origin === `https://localhost:${config.PORT}` || origin === `https://127.0.0.1:${config.PORT}`) return true;
-  return allowedOrigins.includes(origin);
+  if (allowedOrigins.includes(origin)) return true;
+  try {
+    const url = new URL(origin);
+    const host = url.hostname.toLowerCase();
+    if (host === 'localhost' || host === '127.0.0.1') return true;
+    if (host === 'hdtalk.onrender.com') return true;
+    if (host.endsWith('.onrender.com') || host.endsWith('.loca.lt') || host.endsWith('.ngrok-free.app')) {
+      return true;
+    }
+  } catch (_) {
+    return false;
+  }
+  return false;
 };
 
 // Middleware
@@ -112,8 +121,30 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// In-depth NoSQL injection & prototype pollution prevention middleware
+const sanitizeNoSql = (obj) => {
+  if (obj && typeof obj === 'object') {
+    for (const key of Object.keys(obj)) {
+      if (key.startsWith('$') || key.includes('.') || key === '__proto__' || key === 'constructor') {
+        delete obj[key];
+      } else if (typeof obj[key] === 'object') {
+        sanitizeNoSql(obj[key]);
+      }
+    }
+  }
+  return obj;
+};
+
+const noSqlSanitizer = (req, res, next) => {
+  if (req.body) sanitizeNoSql(req.body);
+  if (req.query) sanitizeNoSql(req.query);
+  if (req.params) sanitizeNoSql(req.params);
+  next();
+};
+
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
+app.use(noSqlSanitizer);
 
 // Serve static uploaded media files with caching
 app.use('/uploads', express.static(config.UPLOAD_DIR, {

@@ -50,4 +50,37 @@ test('Security Headers & CORS Suite', async (t) => {
     assert.equal(headers['X-Frame-Options'], 'DENY');
     assert.equal(headers['Referrer-Policy'], 'strict-origin-when-cross-origin');
   });
+
+  await t.test('NoSQL injection sanitizer strips MongoDB operator keys and prototype pollutants', () => {
+    const sanitizeNoSql = (obj) => {
+      if (obj && typeof obj === 'object') {
+        for (const key of Object.keys(obj)) {
+          if (key.startsWith('$') || key.includes('.') || key === '__proto__' || key === 'constructor') {
+            delete obj[key];
+          } else if (typeof obj[key] === 'object') {
+            sanitizeNoSql(obj[key]);
+          }
+        }
+      }
+      return obj;
+    };
+
+    const maliciousBody = {
+      email: { $gt: '' },
+      password: 'password123',
+      nested: {
+        $where: 'sleep(5000)',
+        cleanField: 'allowed'
+      },
+      'attacker.dotted': 'payload'
+    };
+
+    sanitizeNoSql(maliciousBody);
+
+    assert.equal(maliciousBody.email.$gt, undefined);
+    assert.equal(maliciousBody.password, 'password123');
+    assert.equal(maliciousBody.nested.$where, undefined);
+    assert.equal(maliciousBody.nested.cleanField, 'allowed');
+    assert.equal(maliciousBody['attacker.dotted'], undefined);
+  });
 });
