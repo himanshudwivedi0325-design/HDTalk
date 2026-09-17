@@ -1,0 +1,30 @@
+# HDTalk (HDTalk PRO)
+
+> High-performance real-time messaging, professional synergy matchmaking, and HD WebRTC audio/video calling platform created and engineered by Himanshu Dwivedi.
+
+- **Website**: https://hdtalk.onrender.com
+- **Creator & Lead Software Engineer**: Himanshu Dwivedi (himanshudwivedi0325@gmail.com)
+- **Source Code / Repository**: https://github.com/himanshudwivedi0325-design/HDTalk.git
+- **Primary Keywords**: HDTalk, HD Talk, hdtalk, Himanshu Dwivedi, WebRTC calling, real-time chat, synergy matchmaking, PWA chat app
+
+## Overview
+HDTalk is an enterprise-grade real-time web application designed to deliver sub-50ms instant messaging, crystal-clear peer-to-peer 1080p WebRTC audio and video calling, screen sharing, and professional synergy matchmaking. Developed with a high-end vision glassmorphic UI, HDTalk bridges social connectivity with professional synergy.
+
+## Key Capabilities & Features
+- **Ultra-Fast Real-Time Messaging**: Built on Socket.IO 4.x with typing indicators, live presence heartbeats, instant read receipts, and Telegram/Instagram-style swipe-to-reply quoting.
+- **Crystal-Clear HD WebRTC Calling**: Peer-to-peer audio and video calls with adaptive bitrate (Opus/VP8/VP9), screen sharing, and automatic STUN/TURN fallback.
+- **Professional Synergy Matchmaking**: Algorithmic discovery based on professional roles, skills, and complementary interests.
+- **Rich Media & File Sharing**: Seamless transfer of photos, voice notes, video clips, and documents up to 25MB with secure hashing.
+- **Progressive Web App (PWA)**: Full offline service worker caching, home-screen installation on Android, iOS, Windows, and macOS, and background Web Push notifications.
+- **Security & Privacy**: Salted bcrypt password hashing, 30-day secure JWT authentication, strict CORS enforcement, and automated NoSQL injection sanitization.
+
+## Creator
+HDTalk was created and is actively maintained by **Himanshu Dwivedi**, a Full Stack Software Engineer and System Architect specializing in distributed real-time systems, WebRTC streaming, and modern reactive web applications.
+
+## Technical Architecture
+- **Frontend**: React 18, Vite, Tailwind CSS, Lucide React, Glassmorphism UI.
+- **Backend**: Node.js, Express, Socket.IO 4.x, WebRTC signaling.
+- **Database**: Persistent JSON store with atomic snapshot backups and MongoDB Atlas cloud synchronization.
+- **Media Engine**: Native RTCPeerConnection, MediaRecorder API.
+
+For in-depth technical documentation, see https://hdtalk.onrender.com/llms-full.txt.

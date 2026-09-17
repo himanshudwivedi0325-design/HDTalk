@@ -130,6 +130,7 @@ app.use(helmet({
 
 app.use((req, res, next) => {
   res.setHeader('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=()');
+  res.setHeader('X-Robots-Tag', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
   next();
 });
 
@@ -331,6 +332,29 @@ initSocket(io);
 
 // Serve static frontend build if available (Unified full-stack deployment)
 const frontendDist = path.join(__dirname, '../../frontend/dist');
+const frontendPublic = path.join(__dirname, '../../frontend/public');
+
+// Dedicated SEO & AI Discovery routes (robots.txt, sitemap.xml, llms.txt, llms-full.txt, og-image.svg)
+const serveSeoFile = (fileName, contentType) => (req, res) => {
+  const distPath = path.join(frontendDist, fileName);
+  const publicPath = path.join(frontendPublic, fileName);
+  const targetPath = fs.existsSync(distPath) ? distPath : (fs.existsSync(publicPath) ? publicPath : null);
+
+  if (targetPath) {
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // 24 hours
+    res.setHeader('X-Robots-Tag', 'index, follow');
+    return res.sendFile(targetPath);
+  }
+  res.status(404).send('Not Found');
+};
+
+app.get('/robots.txt', serveSeoFile('robots.txt', 'text/plain; charset=utf-8'));
+app.get('/sitemap.xml', serveSeoFile('sitemap.xml', 'application/xml; charset=utf-8'));
+app.get('/llms.txt', serveSeoFile('llms.txt', 'text/markdown; charset=utf-8'));
+app.get('/llms-full.txt', serveSeoFile('llms-full.txt', 'text/markdown; charset=utf-8'));
+app.get('/og-image.svg', serveSeoFile('og-image.svg', 'image/svg+xml'));
+
 if (fs.existsSync(frontendDist)) {
   app.use(express.static(frontendDist));
   app.get('*', (req, res, next) => {

@@ -1,13 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
-import { Sparkles, ArrowRight, Lock, Mail, User, Briefcase, Upload, Camera, Trash2, Loader2 } from 'lucide-react';
+import { Sparkles, ArrowRight, Lock, Mail, User, Briefcase, Upload, Camera, Trash2, Loader2, Zap, Video, Users, ChevronDown, ChevronUp } from 'lucide-react';
 import { HDTalkLogo, CreatorBadge } from '../ui/HDTalkLogo';
 import { Avatar } from '../ui/Avatar';
 
 export function AuthModal() {
   const { login, register } = useAuth();
   const [isRegister, setIsRegister] = useState(false);
+  const [showFeatures, setShowFeatures] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -96,12 +97,12 @@ export function AuthModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-[#060b17]/90 backdrop-blur-2xl p-4 select-none transition-colors duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-[#060b17]/90 backdrop-blur-2xl p-4 select-none transition-colors duration-200 overflow-y-auto">
       {/* Dynamic Background Glow Vectors */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/15 dark:bg-blue-600/20 rounded-full blur-[100px] pointer-events-none"></div>
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/10 dark:bg-cyan-500/15 rounded-full blur-[100px] pointer-events-none"></div>
 
-      <div className="bg-white/95 dark:bg-[#0c1220]/95 max-w-md w-full rounded-3xl p-6 md:p-8 shadow-2xl border border-slate-200/90 dark:border-blue-500/20 relative z-10 transition-colors duration-200">
+      <div className="bg-white/95 dark:bg-[#0c1220]/95 max-w-md w-full max-h-[92vh] overflow-y-auto vision-scrollbar rounded-3xl p-6 md:p-8 shadow-2xl border border-slate-200/90 dark:border-blue-500/20 relative z-10 transition-colors duration-200 my-auto">
         {/* Brand Header */}
         <div className="flex flex-col items-center justify-center text-center mb-6">
           <HDTalkLogo size="lg" showText={true} showCreator={false} className="mb-1 justify-center" />
@@ -277,8 +278,69 @@ export function AuthModal() {
           </button>
         </div>
 
+        {/* Collapsible Features & FAQ for Search Visitors and New Users */}
+        <div className="mt-4 pt-3 border-t border-slate-200/70 dark:border-white/10">
+          <button
+            type="button"
+            onClick={() => setShowFeatures(prev => !prev)}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-[11px] font-semibold text-slate-700 dark:text-slate-300 transition"
+          >
+            <span className="flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-cyan-400" />
+              <span>Explore HDTalk Features &amp; FAQ</span>
+            </span>
+            {showFeatures ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+
+          {showFeatures && (
+            <div className="mt-3 space-y-2.5 text-left animate-fadeIn">
+              <div className="p-2.5 rounded-xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-500/20 text-[11px]">
+                <div className="font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1.5 mb-1">
+                  <Zap className="w-3 h-3 text-blue-600 dark:text-cyan-400" />
+                  <span>Sub-50ms Real-Time Chat</span>
+                </div>
+                <p className="text-slate-600 dark:text-slate-400 text-[10.5px]">
+                  Lightning-fast messaging with live read receipts, typing status, voice notes, and Telegram/Instagram-style swipe replies.
+                </p>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-cyan-50/50 dark:bg-cyan-950/20 border border-cyan-200/50 dark:border-cyan-500/20 text-[11px]">
+                <div className="font-bold text-cyan-700 dark:text-cyan-300 flex items-center gap-1.5 mb-1">
+                  <Video className="w-3 h-3 text-cyan-600 dark:text-cyan-400" />
+                  <span>1080p HD WebRTC Video Calling</span>
+                </div>
+                <p className="text-slate-600 dark:text-slate-400 text-[10.5px]">
+                  Encrypted peer-to-peer HD video/audio calls with native screen sharing and adaptive bitrate streaming.
+                </p>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-200/50 dark:border-indigo-500/20 text-[11px]">
+                <div className="font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5 mb-1">
+                  <Users className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
+                  <span>Synergy Matchmaking</span>
+                </div>
+                <p className="text-slate-600 dark:text-slate-400 text-[10.5px]">
+                  Smart matchmaking discovery algorithm connecting developers, designers, and creators with shared vision.
+                </p>
+              </div>
+
+              {/* Quick FAQ summary for bots and humans */}
+              <div className="p-2.5 rounded-xl bg-slate-100/60 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[10.5px] space-y-1.5 text-slate-600 dark:text-slate-400">
+                <div>
+                  <strong className="text-slate-800 dark:text-slate-200">What is HDTalk?</strong>
+                  <p>HDTalk is a free, modern real-time messaging and WebRTC calling web app created by Himanshu Dwivedi.</p>
+                </div>
+                <div>
+                  <strong className="text-slate-800 dark:text-slate-200">Can I install it?</strong>
+                  <p>Yes, HDTalk is an installable PWA for Android, iOS, Windows, and Mac with offline push alerts.</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Creator Attribution */}
-        <div className="mt-5 pt-3.5 border-t border-slate-200 dark:border-white/10 text-center">
+        <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/10 text-center">
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
             Crafted with ❤️ by <span className="text-blue-600 dark:text-blue-400 font-bold">Himanshu Dwivedi</span>
           </p>

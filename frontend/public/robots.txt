@@ -1,0 +1,57 @@
+# Robots.txt for HDTalk (https://hdtalk.onrender.com)
+# Creator & Lead Software Engineer: Himanshu Dwivedi
+# Optimization: Googlebot, Bingbot, and Generative Engine Optimization (ChatGPT, Perplexity, Gemini, Claude)
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /uploads/private/
+
+# Explicit permissions for Generative AI Crawlers & Search Engines (GEO)
+User-agent: GPTBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: ChatGPT-User
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: PerplexityBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: ClaudeBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: Claude-Web
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: Google-Extended
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: Applebot-Extended
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Canonical Sitemaps & LLM Knowledge Base Discovery
+Sitemap: https://hdtalk.onrender.com/sitemap.xml
+llms.txt: https://hdtalk.onrender.com/llms.txt

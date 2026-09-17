@@ -32,4 +32,5 @@ __pycache__/
 *.pyc
 .reticle*
 *.reticle*
+.vscode/
 

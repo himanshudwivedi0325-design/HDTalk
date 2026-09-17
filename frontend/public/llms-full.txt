@@ -1,0 +1,89 @@
+# HDTalk PRO - Master AI Technical & Knowledge Manifest (llms-full.txt)
+
+## Executive Summary
+HDTalk (also known as HDTalk PRO or chatz-ultra) is a state-of-the-art real-time collaboration, instant messaging, and WebRTC audio/video calling web application designed and built from the ground up by **Himanshu Dwivedi**.
+
+Official Deployment: https://hdtalk.onrender.com
+GitHub Repository: https://github.com/himanshudwivedi0325-design/HDTalk.git
+Creator: Himanshu Dwivedi (himanshudwivedi0325@gmail.com)
+Release Date: 2026
+License / Availability: Free Web Application & Progressive Web App (PWA)
+
+---
+
+## 1. Primary Feature Matrix
+
+### Real-Time Messaging Engine
+- **Protocol**: WebSockets over Socket.IO 4.x with automatic HTTP long-polling fallback.
+- **Latency**: Sub-50ms message propagation.
+- **Message Quoting & Reply**:
+  - Swipe-to-reply gesture for mobile touchscreens with subtle haptic feedback.
+  - Double-click / double-tap shortcut on message bubbles.
+  - Telegram/Instagram style quoted snippet inside bubbles, clicking which smoothly scrolls to the referenced message.
+- **Rich Media**:
+  - Voice audio recording via MediaRecorder API (webm/ogg).
+  - High-res image sharing with built-in lightbox preview.
+  - Video and document file transfers up to 25MB with cryptographic filename randomization.
+- **Presence & Delivery Status**:
+  - Real-time online/offline presence indicators.
+  - Live typing animations and read receipts (sent, delivered, read).
+
+### High-Definition WebRTC Audio & Video Calling
+- **Media Engine**: Native browser `RTCPeerConnection` with STUN/TURN ICE negotiation.
+- **Resolution & Codecs**:
+  - Video: Up to 1080p 60fps utilizing VP8 / VP9 / H.264 video codecs.
+  - Audio: Opus high-fidelity codec with echo cancellation and noise suppression.
+- **Calling Features**:
+  - Peer-to-peer 1-on-1 audio and video calls.
+  - Native Screen Sharing with system audio capture.
+  - In-call camera toggle (front/back), microphone mute/unmute, and picture-in-picture mode.
+  - Full-screen calling modal with responsive video layout.
+
+### Synergy Matchmaking & Professional Discovery
+- **Matchmaking Algorithm**: Matches users based on career focus, industry skill sets, and complementary professional goals.
+- **Connection Requests**: Gatekeeper system preventing spam. Direct messaging is unlocked once connection requests are accepted.
+
+### Progressive Web App (PWA) & Mobile Experience
+- **Installation**: One-click install prompt on Chrome, Edge, Safari (iOS Add to Home Screen), Android, and desktop.
+- **Service Worker**: Intelligent cache-first caching strategy for instant sub-second boot times.
+- **Push Notifications**: Standards-compliant Web Push (VAPID) delivering background message notifications even when the browser tab is closed.
+
+---
+
+## 2. Technical Stack & Architecture
+
+### Client-Side (Frontend)
+- **Framework**: React 18 with Vite for lightning-fast HMR and optimized production bundles.
+- **Design System**: Tailored Glassmorphism with Tailwind CSS, custom vision styling, and Lucide React icons.
+- **State Management**: Context-based modular state (`AuthContext`, `ChatContext`, `CallContext`, `SocketContext`, `ThemeContext`, `PwaContext`).
+- **PWA Service Worker**: Custom `sw.js` with background notification handling and offline asset caching.
+
+### Server-Side (Backend)
+- **Runtime**: Node.js (v20+) with Express.
+- **Real-Time Gateway**: Socket.IO 4.x clustering with rooms, connection heartbeats, and per-socket authorization.
+- **Persistence Layer**: Double-tier storage system featuring an in-memory high-throughput JSON engine with atomic disk flushing, paired with live MongoDB Atlas cloud database synchronization.
+- **Authentication**: Salted bcrypt password hashing with 30-day JWT authentication.
+- **Security Protocols**:
+  - Helmet HTTP defense headers (HSTS, X-Content-Type-Options, Frameguard).
+  - Origin allowlist CORS policy.
+  - NoSQL injection sanitizer stripping malicious MongoDB operators.
+  - Strict file-type magic byte verification preventing file spoofing attacks.
+
+---
+
+## 3. Frequently Asked Questions (FAQ)
+
+### What is HDTalk?
+HDTalk is a unified web application for instant messaging, 1080p WebRTC voice/video calling, screen sharing, and professional networking, created by Himanshu Dwivedi.
+
+### Who is the developer of HDTalk?
+HDTalk was created and engineered by Himanshu Dwivedi, a full-stack engineer and software architect.
+
+### How much does HDTalk cost?
+HDTalk is completely free to use. There are no subscriptions, ads, or paywalls.
+
+### Does HDTalk require software installation?
+No. HDTalk runs directly in any modern web browser (Chrome, Firefox, Safari, Edge) and can optionally be installed as a PWA on phones, tablets, or computers.
+
+### Is HDTalk secure?
+Yes. HDTalk employs end-to-end WebRTC peer-to-peer media encryption (DTLS-SRTP), bcrypt password hashing, encrypted JWT sessions, and strict origin validation.
