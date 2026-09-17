@@ -1,62 +1,21 @@
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '../../.env') });
-
-const crypto = require('crypto');
-
-/**
- * Require a critical secret environment variable.
- * In production, generates an ephemeral cryptographic key if not provided to prevent token forgery.
- * In development, falls back to a dev default with a warning.
- */
-function requireSecret(key, devDefault, description) {
-  const value = process.env[key];
-  if (value && value.trim()) return value.trim();
-
-  if (process.env.NODE_ENV === 'production') {
-    const ephemeralKey = crypto.randomBytes(32).toString('hex');
-    console.warn(`[Config] SECURITY WARNING: "${key}" (${description}) not set in production. Generated ephemeral 256-bit cryptographic secret for this runtime session.`);
-    return ephemeralKey;
-  }
-
-  console.warn(`[Config] WARNING: "${key}" not set. Using dev default.`);
-  return devDefault || 'hdtalk_dev_local_jwt_secret_2026';
-}
-
-/**
- * Optional secret — warns in production but does NOT crash the process.
- * Use for non-critical features (e.g., Web Push, external services).
- */
-function optionalSecret(key, devDefault, description) {
-  const value = process.env[key];
-  if (value) return value;
-
-  if (process.env.NODE_ENV === 'production') {
-    console.warn(`[Config] WARNING: Optional secret "${key}" (${description}) is not set. Related features will be disabled.`);
-    return devDefault || '';
-  }
-
-  return devDefault;
-}
+require('./env');
 
 module.exports = {
   PORT: process.env.PORT || 5000,
   NODE_ENV: process.env.NODE_ENV || 'development',
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
 
-  // ─── Security Secrets (require env vars in production) ───────────────────────
-  JWT_SECRET: requireSecret(
-    'JWT_SECRET',
-    'hdtalk_dev_local_jwt_secret_2026',
-    'JWT signing secret'
-  ),
+  // ─── Security Secrets (Validated via env.js - No fallback defaults permitted) ──
+  JWT_SECRET: process.env.JWT_SECRET,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
 
-  VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || 'BDO1OeUpNQHHGxrbZ2GmcftrnbS8s_hD8JIYoXcr8OJFRYh6juADBhB02WYyBHYhXEQ_2v7OFd1auDKBnVsXNJE',
-  VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY || '',
+  VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
+  VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY,
   VAPID_EMAIL: process.env.VAPID_EMAIL || 'mailto:himanshudwivedi0325@gmail.com',
 
   // ─── Database ─────────────────────────────────────────────────────────────────
-  MONGODB_URI: process.env.MONGODB_URI || '',
+  MONGODB_URI: process.env.MONGODB_URI,
 
   // ─── Storage Paths ────────────────────────────────────────────────────────────
   UPLOAD_DIR: process.env.UPLOAD_DIR || path.join(__dirname, '../../uploads'),
@@ -64,7 +23,7 @@ module.exports = {
 
   // ─── n8n Automation ───────────────────────────────────────────────────────────
   N8N_WEBHOOK_URL: process.env.N8N_WEBHOOK_URL || 'http://localhost:5678/webhook/hdtalk',
-  N8N_WEBHOOK_SECRET: process.env.N8N_WEBHOOK_SECRET || 'hdtalk_secure_n8n_secret_99x',
+  N8N_WEBHOOK_SECRET: process.env.N8N_WEBHOOK_SECRET,
   N8N_ENABLED: process.env.N8N_ENABLED !== 'false',
 
   // ─── WebRTC ICE Configuration ─────────────────────────────────────────────────
