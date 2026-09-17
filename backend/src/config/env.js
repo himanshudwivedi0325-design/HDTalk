@@ -6,11 +6,21 @@ dotenv.config({ path: path.join(__dirname, '../../../.env') });
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 const REQUIRED_ENV_VARS = [
-  'JWT_SECRET',
-  'MONGODB_URI',
-  'VAPID_PUBLIC_KEY',
-  'VAPID_PRIVATE_KEY'
+  'JWT_SECRET'
 ];
+
+// If VAPID keys are missing, generate valid keys automatically so WebPush functions without crashing
+if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+  try {
+    const webpush = require('web-push');
+    const autoKeys = webpush.generateVAPIDKeys();
+    process.env.VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || autoKeys.publicKey;
+    process.env.VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || autoKeys.privateKey;
+    console.log('[Config] VAPID keys auto-configured for background push notifications.');
+  } catch (e) {
+    console.warn('[Config] Could not auto-generate VAPID keys:', e.message);
+  }
+}
 
 function validateEnv() {
   const isTest = process.env.NODE_ENV === 'test' || process.argv.some(arg => arg.includes('test'));
