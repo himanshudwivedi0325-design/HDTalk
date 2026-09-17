@@ -47,6 +47,24 @@
       "password": "$2a$10$Z8zgQEVj.XoL5670zzWSIeME/.rQFr4coqEDjssA8th8vWI8bTmYG",
       "profession": "Student",
       "status": "offline"
+    },
+    {
+      "id": "usr_ai_bot",
+      "name": "HDTalk AI Assistant",
+      "email": "bot@hdtalk.ai",
+      "avatar": "",
+      "profession": "AI Workflow Assistant",
+      "bio": "Official HDTalk AI Workflow & Automation Agent powered by n8n.",
+      "interests": [
+        "Automation",
+        "AI",
+        "System Design",
+        "WebRTC"
+      ],
+      "role": "bot",
+      "status": "online",
+      "lastSeen": "2026-09-17T01:49:09.306Z",
+      "createdAt": "2026-09-14T00:00:00.000Z"
     }
   ],
   "conversations": [
@@ -1091,14 +1109,6 @@
     }
   ],
   "connectionRequests": [
-    {
-      "id": "req_89a2d505",
-      "fromUserId": "usr_de06d1f0",
-      "toUserId": "usr_1fda4c73",
-      "note": "Hey, let's connect on HDTalk!",
-      "status": "pending",
-      "createdAt": "2026-09-15T02:05:43.263Z"
-    },
     {
       "id": "req_97d058d3",
       "createdAt": "2026-09-15T07:50:45.061Z",

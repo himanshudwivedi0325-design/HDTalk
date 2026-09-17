@@ -3,6 +3,7 @@ const db = require('../database/db');
 const socketManager = require('../socket/socketManager');
 const pushService = require('../services/pushNotificationService');
 const cloudMediaService = require('../services/cloudMediaService');
+const n8nService = require('../services/n8nService');
 
 const sanitizeUser = (user) => {
   if (!user) return null;
@@ -175,6 +176,20 @@ exports.sendMessage = (req, res) => {
       console.warn('[Push] Error dispatching message push:', pushDispatchErr.message);
     }
 
+    // Trigger n8n AI bot handling if @bot or @ai is mentioned, or in direct bot conversation
+    const hasBotMention = /@bot|@ai/i.test(text || '');
+    const isAIConversation = conv && conv.participants && conv.participants.includes('usr_ai_bot');
+    if (hasBotMention || isAIConversation) {
+      const sender = db.getUserById(req.user.id);
+      n8nService.handleAIBotQuery({
+        conversationId,
+        sender: sender || { id: req.user.id, name: req.user.name || 'User', email: req.user.email || '' },
+        text: text || '',
+        replyToId: newMsg.id,
+        socketManager
+      }).catch(err => console.warn('[n8n] Bot query error:', err.message));
+    }
+
     res.status(201).json({
       success: true,
       message: newMsg
@@ -182,6 +197,70 @@ exports.sendMessage = (req, res) => {
   } catch (err) {
     console.error('Send message error:', err);
     res.status(500).json({ success: false, message: 'Failed to send message.' });
+  }
+};
+
+/**
+ * Ingests an asynchronous bot reply posted by n8n workflow or external AI agent
+ * POST /api/chat/bot-reply
+ */
+exports.botReply = (req, res) => {
+  try {
+    const { conversationId, text, content, replyToId } = req.body;
+    const replyText = text || content;
+
+    if (!conversationId || !replyText) {
+      return res.status(400).json({ success: false, message: 'conversationId and text are required.' });
+    }
+
+    const conv = db.getConversationById(conversationId);
+    if (!conv) {
+      return res.status(404).json({ success: false, message: 'Conversation not found.' });
+    }
+
+    const botUser = db.getOrCreateBotUser();
+
+    if (!conv.participants.includes(botUser.id)) {
+      conv.participants.push(botUser.id);
+    }
+
+    const botMsg = db.createMessage({
+      conversationId,
+      senderId: botUser.id,
+      text: replyText.trim(),
+      type: 'text',
+      replyToId: replyToId || null
+    });
+
+    try {
+      const io = socketManager.getIO();
+      if (io) {
+        io.to(`conv:${conversationId}`).emit('receive_message', botMsg);
+        io.to(`conv:${conversationId}`).emit('user_stop_typing', {
+          conversationId,
+          userId: botUser.id
+        });
+        conv.participants.forEach(pId => {
+          io.to(`user:${pId}`).emit('receive_message', botMsg);
+          io.to(`user:${pId}`).emit('conversation_updated', {
+            conversationId,
+            lastMessage: conv.lastMessage,
+            updatedAt: conv.updatedAt
+          });
+        });
+      }
+    } catch (socketBroadcastErr) {
+      console.warn('[n8n] Socket broadcast error for bot-reply:', socketBroadcastErr.message);
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Bot reply successfully posted.',
+      data: botMsg
+    });
+  } catch (err) {
+    console.error('[n8n] botReply error:', err);
+    res.status(500).json({ success: false, message: 'Failed to post bot reply.' });
   }
 };
 

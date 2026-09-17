@@ -43,6 +43,9 @@ const upload = multer({
   }
 });
 
+// Webhook Callback: Ingest asynchronous bot replies from n8n automation
+router.post('/bot-reply', chatController.botReply);
+
 router.use(authMiddleware);
 
 router.get('/conversations', chatController.getConversations);

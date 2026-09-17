@@ -42,6 +42,7 @@ function isTestUser(u) {
   if (!u) return false;
   const email = (u.email || '').toLowerCase().trim();
   const id = u.id || u._id || '';
+  if (id === 'usr_ai_bot' || email === 'bot@hdtalk.ai') return false;
   if (TEST_USER_EMAILS.includes(email)) return true;
   if (TEST_USER_IDS.includes(id)) return true;
   if (id.startsWith('usr_demo_')) return true;
@@ -365,7 +366,7 @@ const db = {
 
   seedDefaultUsers,
 
-  getUsers: () => (memoryState.users || []).filter(u => !isTestUser(u)),
+  getUsers: () => (memoryState.users || []).filter(u => !isTestUser(u) && u.id !== 'usr_ai_bot'),
 
   getUserById: (id) => {
     return (memoryState.users || []).find(x => x.id === id) || null;
@@ -375,6 +376,29 @@ const db = {
     if (!email) return null;
     const clean = email.trim().toLowerCase();
     return (memoryState.users || []).find(x => x.email && x.email.trim().toLowerCase() === clean) || null;
+  },
+
+  getOrCreateBotUser: () => {
+    let bot = (memoryState.users || []).find(u => u.id === 'usr_ai_bot');
+    if (!bot) {
+      bot = {
+        id: 'usr_ai_bot',
+        name: 'HDTalk AI Assistant',
+        email: 'bot@hdtalk.ai',
+        avatar: '',
+        profession: 'AI Workflow Assistant',
+        bio: 'Official HDTalk AI Workflow & Automation Agent powered by n8n.',
+        interests: ['Automation', 'AI', 'System Design', 'WebRTC'],
+        role: 'bot',
+        status: 'online',
+        lastSeen: new Date().toISOString(),
+        createdAt: '2026-09-14T00:00:00.000Z'
+      };
+      memoryState.users.push(bot);
+      mongoAdapter.persistUpsert('users', bot);
+      flushSync();
+    }
+    return bot;
   },
 
   createUser: (userData) => {

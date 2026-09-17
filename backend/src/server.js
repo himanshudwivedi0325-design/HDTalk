@@ -18,6 +18,7 @@ const chatRoutes = require('./routes/chatRoutes');
 const webrtcRoutes = require('./routes/webrtcRoutes');
 const pushRoutes = require('./routes/pushRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const n8nRoutes = require('./routes/n8nRoutes');
 
 const app = express();
 app.disable('x-powered-by');
@@ -128,6 +129,7 @@ app.use('/api/chat', apiLimiter, chatRoutes);
 app.use('/api/webrtc', apiLimiter, webrtcRoutes);
 app.use('/api/push', apiLimiter, pushRoutes);
 app.use('/api/admin', apiLimiter, adminRoutes);
+app.use('/api/n8n', apiLimiter, n8nRoutes);
 
 // Global API & Multer error handler
 const multer = require('multer');

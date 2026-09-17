@@ -42,9 +42,9 @@ services:
 
       # ── n8n Automation ────────────────────────────────────────────────────
       - key: N8N_ENABLED
-        value: false   # Enable only when you have a running n8n instance
+        value: true
       - key: N8N_WEBHOOK_URL
-        value: ''
+        sync: false
 
       # ── WebRTC TURN (optional — Google STUN used by default) ─────────────
       - key: TURN_URL_UDP

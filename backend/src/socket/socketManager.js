@@ -269,6 +269,19 @@ function initSocket(io) {
           }
         });
       }
+
+      // Check for n8n AI Bot trigger (@bot or @ai or direct AI conversation)
+      const hasBotMention = /@bot|@ai/i.test(text || '');
+      const isAIConversation = conv && conv.participants && conv.participants.includes('usr_ai_bot');
+      if (hasBotMention || isAIConversation) {
+        n8nService.handleAIBotQuery({
+          conversationId,
+          sender: sender || { id: senderId, name: 'User', email: '' },
+          text: text || '',
+          replyToId: newMsg.id,
+          socketManager: { getIO: () => io }
+        }).catch(err => console.warn('[n8n] Bot query error:', err.message));
+      }
     });
 
     socket.on('typing_start', ({ conversationId, targetUserId }) => {
