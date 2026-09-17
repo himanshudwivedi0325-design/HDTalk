@@ -36,19 +36,22 @@ const upload = multer({
   }
 });
 
+const validate = require('../middleware/validate');
+const { userSchemas } = require('../validation/schemas');
+
 router.use(authMiddleware);
 
 router.get('/', userController.getAllUsers);
-router.put('/profile', userController.updateProfile);
+router.put('/profile', validate(userSchemas.updateProfile), userController.updateProfile);
 router.post('/avatar', upload.single('avatar'), userController.uploadAvatar);
 
 // Connection requests / Matchmaking
 router.get('/connections/requests', userController.getConnectionRequests);
-router.post('/connections/request', userController.sendConnectionRequest);
-router.put('/connections/requests/:requestId', userController.respondConnectionRequest);
-router.delete('/friends/:friendUserId', userController.removeFriend);
+router.post('/connections/request', validate(userSchemas.sendConnectionRequest), userController.sendConnectionRequest);
+router.put('/connections/requests/:requestId', validate(userSchemas.respondConnectionRequest), userController.respondConnectionRequest);
+router.delete('/friends/:friendUserId', validate(userSchemas.removeFriend), userController.removeFriend);
 
 // Generic user lookup by ID (must be after specific endpoints)
-router.get('/:id', userController.getUserProfile);
+router.get('/:id', validate(userSchemas.getUserProfile), userController.getUserProfile);
 
 module.exports = router;

@@ -53,6 +53,7 @@ async function initMongo(memoryState) {
       await dbInstance.collection('conversations').createIndex({ participants: 1 });
       await dbInstance.collection('connectionRequests').createIndex({ id: 1 }, { unique: true });
       await dbInstance.collection('pushSubscriptions').createIndex({ id: 1 }, { unique: true });
+      await dbInstance.collection('rateLimits').createIndex({ resetTime: 1 }, { expireAfterSeconds: 0 });
     } catch (idxErr) {
       console.warn('[MongoDB] Index setup note:', idxErr.message);
     }
@@ -166,13 +167,21 @@ async function persistDelete(collectionName, filter) {
   try {
     let mongoFilter;
     if (typeof filter === 'string') {
-      mongoFilter = { $or: [{ _id: filter }, { id: filter }] };
+      const cleanId = String(filter);
+      mongoFilter = { $or: [{ _id: cleanId }, { id: cleanId }] };
     } else if (filter && typeof filter === 'object') {
       const targetId = filter.id || filter._id;
       if (targetId) {
-        mongoFilter = { $or: [{ _id: targetId }, { id: targetId }] };
+        const cleanId = String(targetId);
+        mongoFilter = { $or: [{ _id: cleanId }, { id: cleanId }] };
       } else {
-        mongoFilter = filter;
+        // Defensive NoSQL coercion: ensure every query value is coerced to String primitive
+        const safeFilter = {};
+        for (const [key, val] of Object.entries(filter)) {
+          if (key.startsWith('$')) continue;
+          safeFilter[key] = typeof val === 'object' && val !== null ? String(val) : String(val);
+        }
+        mongoFilter = safeFilter;
       }
     } else {
       return;
@@ -273,6 +282,7 @@ module.exports = {
   persistDeleteMany,
   fullSyncToMongo,
   getMongoStatus,
+  getDbInstance: () => dbInstance,
   isConnected: () => isConnected,
   isConfigured: () => isConfigured
 };

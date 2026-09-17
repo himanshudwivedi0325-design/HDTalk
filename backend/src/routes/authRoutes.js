@@ -37,40 +37,13 @@ const avatarUpload = multer({
   }
 });
 
-// ─── Input Validation Middleware ──────────────────────────────────────────────
-const validateRegister = (req, res, next) => {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password) {
-    return res.status(400).json({ success: false, message: 'Name, email, and password are required.' });
-  }
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email.trim())) {
-    return res.status(400).json({ success: false, message: 'Please enter a valid email address.' });
-  }
-  if (typeof name !== 'string' || name.trim().length < 2 || name.trim().length > 50) {
-    return res.status(400).json({ success: false, message: 'Name must be between 2 and 50 characters.' });
-  }
-  if (typeof password !== 'string' || password.length < 6 || password.length > 128) {
-    return res.status(400).json({ success: false, message: 'Password must be between 6 and 128 characters.' });
-  }
-  next();
-};
-
-const validateLogin = (req, res, next) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ success: false, message: 'Email and password are required.' });
-  }
-  if (typeof email !== 'string' || typeof password !== 'string') {
-    return res.status(400).json({ success: false, message: 'Invalid request format.' });
-  }
-  next();
-};
+const validate = require('../middleware/validate');
+const { authSchemas } = require('../validation/schemas');
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
-router.post('/register', validateRegister, authController.register);
-router.post('/login', validateLogin, authController.login);
-router.post('/quick-login', authController.quickLogin);
+router.post('/register', validate(authSchemas.register), authController.register);
+router.post('/login', validate(authSchemas.login), authController.login);
+router.post('/quick-login', validate(authSchemas.quickLogin), authController.quickLogin);
 
 // Protected: only authenticated users can see the user directory
 router.get('/demo-users', authMiddleware, authController.getDemoUsers);

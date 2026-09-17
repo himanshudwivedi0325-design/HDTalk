@@ -61,12 +61,15 @@ router.post('/test', authMiddleware, async (req, res) => {
   }
 });
 
+const validate = require('../middleware/validate');
+const { n8nSchemas } = require('../validation/schemas');
+
 /**
  * 3. Public/Authenticated: Interactive AI Chatbot Query for Help & Support
  * POST /api/n8n/ask
- * Protected by dedicated rate limiter: 10 requests per 10 minutes per IP
+ * Protected by dedicated rate limiter: 10 requests per 10 minutes
  */
-router.post('/ask', n8nAskLimiter, async (req, res) => {
+router.post('/ask', n8nAskLimiter, validate(n8nSchemas.ask), async (req, res) => {
   try {
     const { question, senderName } = req.body;
     if (!question || !question.trim()) {

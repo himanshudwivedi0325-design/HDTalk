@@ -13,29 +13,36 @@ test('Security Headers & CORS Suite', async (t) => {
   });
 
   await t.test('CORS origin validator correctly handles trusted and untrusted origins', () => {
-    const config = { PORT: 5000 };
-    const allowedOrigins = ['https://hdtalk.onrender.com', 'http://localhost:5173'];
+    const rawAllowed = 'https://hdtalk.onrender.com, http://localhost:5173';
+    const configuredOrigins = new Set(rawAllowed.split(',').map(s => s.trim().replace(/\/+$/, '')).filter(Boolean));
 
-    const isOriginAllowed = (origin) => {
+    const isOriginAllowed = (origin, isProd = false) => {
       if (!origin) return true;
-      if (allowedOrigins.includes('*')) return true;
-      if (origin.endsWith('.loca.lt') || origin.endsWith('.ngrok-free.app') || origin.endsWith('.onrender.com')) return true;
-      if (origin === `http://localhost:${config.PORT}` || origin === `http://127.0.0.1:${config.PORT}`) return true;
-      if (origin === `https://localhost:${config.PORT}` || origin === `https://127.0.0.1:${config.PORT}`) return true;
-      return allowedOrigins.includes(origin);
+      const normalized = origin.trim().replace(/\/+$/, '');
+      if (configuredOrigins.has(normalized)) return true;
+      if (!isProd) {
+        try {
+          const url = new URL(origin);
+          const host = url.hostname.toLowerCase();
+          if (host === 'localhost' || host === '127.0.0.1') return true;
+        } catch (_) {}
+      }
+      return false;
     };
 
-    // Allowed origins
+    // Allowed explicitly configured origins
     assert.equal(isOriginAllowed(undefined), true);
     assert.equal(isOriginAllowed('http://localhost:5173'), true);
     assert.equal(isOriginAllowed('https://hdtalk.onrender.com'), true);
-    assert.equal(isOriginAllowed('https://my-subdomain.onrender.com'), true);
-    assert.equal(isOriginAllowed('http://localhost:5000'), true);
 
-    // Disallowed malicious origins
+    // Disallowed wildcard / unauthorized onrender domains (attacker tenant defense)
+    assert.equal(isOriginAllowed('https://attacker.onrender.com'), false);
+    assert.equal(isOriginAllowed('https://evil.loca.lt'), false);
     assert.equal(isOriginAllowed('https://malicious-attacker.com'), false);
     assert.equal(isOriginAllowed('https://phishing-hdtalk.com'), false);
-    assert.equal(isOriginAllowed('http://localhost:3000'), false);
+
+    // Localhost disallowed in production mode if not in configured origins
+    assert.equal(isOriginAllowed('http://localhost:3000', true), false);
   });
 
   await t.test('Defensive HTTP security headers are properly structured', () => {

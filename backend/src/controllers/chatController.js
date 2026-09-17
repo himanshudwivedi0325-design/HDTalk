@@ -1,4 +1,8 @@
 const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
+const FileType = require('file-type');
+const config = require('../config/config');
 const db = require('../database/db');
 const socketManager = require('../socket/socketManager');
 const pushService = require('../services/pushNotificationService');
@@ -266,18 +270,58 @@ exports.botReply = (req, res) => {
 
 exports.uploadFile = async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: 'No file uploaded.' });
+    if (!req.file || !req.file.buffer) {
+      return res.status(400).json({ success: false, message: 'No file uploaded or file buffer empty.' });
     }
 
-    const uploadResult = await cloudMediaService.uploadMedia(req.file);
+    // 1. Verify buffer magic bytes via file-type
+    const detectedType = await FileType.fromBuffer(req.file.buffer);
+    if (!detectedType) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid file format. File type could not be verified from magic bytes.'
+      });
+    }
+
+    // 2. Strict allowlist: jpeg, png, webp, gif, pdf
+    const ALLOWED_MIMES = new Set([
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'image/gif',
+      'application/pdf'
+    ]);
+
+    if (!ALLOWED_MIMES.has(detectedType.mime)) {
+      return res.status(400).json({
+        success: false,
+        message: `File type "${detectedType.mime}" is not allowed. Allowed types: JPEG, PNG, WEBP, GIF, PDF.`
+      });
+    }
+
+    // 3. Randomize filename using crypto.randomUUID() — NEVER use original filename in disk path
+    const randomFilename = `${crypto.randomUUID()}.${detectedType.ext}`;
+    const safeDiskPath = path.join(config.UPLOAD_DIR, randomFilename);
+
+    // Write safe buffer to disk
+    await fs.promises.writeFile(safeDiskPath, req.file.buffer);
+
+    const safeFile = {
+      ...req.file,
+      filename: randomFilename,
+      path: safeDiskPath,
+      mimetype: detectedType.mime
+    };
+
+    const uploadResult = await cloudMediaService.uploadMedia(safeFile);
+    const sanitizedOriginal = path.basename(req.file.originalname || `upload.${detectedType.ext}`).replace(/[^a-zA-Z0-9._-]/g, '_');
 
     res.json({
       success: true,
       fileUrl: uploadResult.url,
-      fileName: req.file.originalname,
-      fileType: req.file.mimetype,
-      fileSize: req.file.size,
+      fileName: sanitizedOriginal,
+      fileType: detectedType.mime,
+      fileSize: req.file.size || req.file.buffer.length,
       storage: uploadResult.storage
     });
   } catch (err) {

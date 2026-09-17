@@ -51,25 +51,27 @@ if (!fs.existsSync(config.UPLOAD_DIR)) {
   fs.mkdirSync(config.UPLOAD_DIR, { recursive: true });
 }
 
-// Allowed origins
-const allowedOrigins = process.env.CLIENT_URL 
-  ? process.env.CLIENT_URL.split(',').map(s => s.trim()) 
-  : ['*'];
+// Allowed origins: exact string allowlist from ALLOWED_ORIGINS (or CLIENT_URL), comma-separated
+const rawAllowedOrigins = process.env.ALLOWED_ORIGINS || process.env.CLIENT_URL || '';
+const configuredOrigins = new Set(
+  rawAllowedOrigins
+    .split(',')
+    .map(s => s.trim().replace(/\/+$/, ''))
+    .filter(Boolean)
+);
 
 const isOriginAllowed = (origin) => {
   if (!origin) return true;
-  if (allowedOrigins.includes('*')) return true;
-  if (allowedOrigins.includes(origin)) return true;
-  try {
-    const url = new URL(origin);
-    const host = url.hostname.toLowerCase();
-    if (host === 'localhost' || host === '127.0.0.1') return true;
-    if (host === 'hdtalk.onrender.com') return true;
-    if (host.endsWith('.onrender.com') || host.endsWith('.loca.lt') || host.endsWith('.ngrok-free.app')) {
-      return true;
-    }
-  } catch (_) {
-    return false;
+  const normalizedOrigin = origin.trim().replace(/\/+$/, '');
+  if (configuredOrigins.has(normalizedOrigin)) return true;
+
+  // In development only (NODE_ENV !== 'production'), allow localhost and 127.0.0.1
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      const url = new URL(origin);
+      const host = url.hostname.toLowerCase();
+      if (host === 'localhost' || host === '127.0.0.1') return true;
+    } catch (_) {}
   }
   return false;
 };
@@ -95,33 +97,45 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// Defensive Security Headers
+// Helmet Security Headers (HSTS, noSniff, frameguard: deny, referrerPolicy, hidePoweredBy, CSP report-only)
+const helmet = require('helmet');
+app.use(helmet({
+  contentSecurityPolicy: {
+    reportOnly: true,
+    directives: {
+      defaultSrc: ["'self'"],
+      connectSrc: ["'self'", "wss:", "ws:", "https:"],
+      imgSrc: ["'self'", "data:", "blob:", "https:"],
+      mediaSrc: ["'self'", "blob:", "https:"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      workerSrc: ["'self'", "blob:"]
+    }
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  noSniff: true,
+  frameguard: {
+    action: 'deny'
+  },
+  referrerPolicy: {
+    policy: 'strict-origin-when-cross-origin'
+  },
+  hidePoweredBy: true
+}));
+
 app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=()');
-  res.setHeader(
-    'Content-Security-Policy',
-    [
-      "default-src 'self'",
-      "connect-src 'self' wss: ws: https:",
-      "img-src 'self' data: blob: https:",
-      "media-src 'self' blob:",
-      "script-src 'self' 'unsafe-inline'",  // unsafe-inline needed for Vite dev HMR
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "font-src 'self' https://fonts.gstatic.com",
-      "worker-src 'self' blob:"
-    ].join('; ')
-  );
-  if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  }
   next();
 });
 
-// In-depth NoSQL injection & prototype pollution prevention middleware
+// Global NoSQL injection & prototype pollution prevention middleware
+const mongoSanitize = require('express-mongo-sanitize');
+
 const sanitizeNoSql = (obj) => {
   if (obj && typeof obj === 'object') {
     for (const key of Object.keys(obj)) {
@@ -146,12 +160,17 @@ const noSqlSanitizer = (req, res, next) => {
 app.use('/api/chat/bot-reply', express.raw({ type: '*/*', limit: '2mb' }));
 
 app.use(express.json({
-  limit: '2mb',
+  limit: '100kb',
   verify: (req, res, buf) => {
     req.rawBody = buf;
   }
 }));
-app.use(express.urlencoded({ extended: true, limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '100kb' }));
+app.use(mongoSanitize({
+  onSanitize: ({ req, key }) => {
+    console.warn(`[Security] express-mongo-sanitize stripped prohibited key: ${key}`);
+  }
+}));
 app.use(noSqlSanitizer);
 
 // Serve static uploaded media files with caching

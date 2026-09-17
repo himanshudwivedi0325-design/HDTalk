@@ -891,13 +891,17 @@ const db = {
 
   removePushSubscription: (endpoint, userId = null) => {
     if (!memoryState.pushSubscriptions) return false;
+    if (!endpoint || typeof endpoint !== 'string') return false;
+    const cleanEndpoint = String(endpoint).trim();
+    const cleanUserId = userId ? String(userId) : null;
+
     const initialLen = memoryState.pushSubscriptions.length;
     memoryState.pushSubscriptions = memoryState.pushSubscriptions.filter(
-      s => !(s.subscription?.endpoint === endpoint && (!userId || s.userId === userId))
+      s => !(s.subscription?.endpoint === cleanEndpoint && (!cleanUserId || s.userId === cleanUserId))
     );
     if (memoryState.pushSubscriptions.length !== initialLen) {
-      const deleteQuery = { 'subscription.endpoint': endpoint };
-      if (userId) deleteQuery.userId = userId;
+      const deleteQuery = { 'subscription.endpoint': cleanEndpoint };
+      if (cleanUserId) deleteQuery.userId = cleanUserId;
       mongoAdapter.persistDelete('pushSubscriptions', deleteQuery);
       scheduleFlush();
       return true;

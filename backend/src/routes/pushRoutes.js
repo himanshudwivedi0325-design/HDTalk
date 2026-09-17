@@ -4,6 +4,8 @@ const config = require('../config/config');
 const db = require('../database/db');
 const pushService = require('../services/pushNotificationService');
 const authMiddleware = require('../middleware/authMiddleware');
+const validate = require('../middleware/validate');
+const { pushSchemas } = require('../validation/schemas');
 
 // Public: Get VAPID public key
 router.get('/vapid-public-key', (req, res) => {
@@ -14,13 +16,9 @@ router.get('/vapid-public-key', (req, res) => {
 });
 
 // Authenticated: Subscribe device
-router.post('/subscribe', authMiddleware, (req, res) => {
+router.post('/subscribe', authMiddleware, validate(pushSchemas.subscribe), (req, res) => {
   try {
     const { subscription } = req.body;
-    if (!subscription || !subscription.endpoint) {
-      return res.status(400).json({ success: false, message: 'Invalid subscription payload.' });
-    }
-
     const userAgent = req.headers['user-agent'] || '';
     db.savePushSubscription(req.user.id, subscription, userAgent);
 
@@ -35,11 +33,11 @@ router.post('/subscribe', authMiddleware, (req, res) => {
 });
 
 // Authenticated: Unsubscribe device
-router.post('/unsubscribe', authMiddleware, (req, res) => {
+router.post('/unsubscribe', authMiddleware, validate(pushSchemas.unsubscribe), (req, res) => {
   try {
     const { endpoint } = req.body;
-    if (!endpoint) {
-      return res.status(400).json({ success: false, message: 'Endpoint is required.' });
+    if (!endpoint || typeof endpoint !== 'string') {
+      return res.status(400).json({ success: false, message: 'Endpoint must be a non-empty string.' });
     }
 
     db.removePushSubscription(endpoint, req.user.id);
