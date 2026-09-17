@@ -57,7 +57,7 @@ module.exports = {
   VAPID_EMAIL: process.env.VAPID_EMAIL || 'mailto:himanshudwivedi0325@gmail.com',
 
   // ─── Database ─────────────────────────────────────────────────────────────────
-  MONGODB_URI: process.env.MONGODB_URI || 'mongodb+srv://himanshudwivedi0325_db_user:vj7tDfH57rdwU308@hdtalk-cluster.w65tsyc.mongodb.net/hdtalk?retryWrites=true&w=majority',
+  MONGODB_URI: process.env.MONGODB_URI || '',
 
   // ─── Storage Paths ────────────────────────────────────────────────────────────
   UPLOAD_DIR: process.env.UPLOAD_DIR || path.join(__dirname, '../../uploads'),

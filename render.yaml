@@ -38,7 +38,7 @@ services:
 
       # ── MongoDB Atlas (persistent cloud database) ──────────────────────────
       - key: MONGODB_URI
-        value: mongodb+srv://himanshudwivedi0325_db_user:vj7tDfH57rdwU308@hdtalk-cluster.w65tsyc.mongodb.net/hdtalk?retryWrites=true&w=majority
+        sync: false
 
       # ── n8n Automation ────────────────────────────────────────────────────
       - key: N8N_ENABLED
