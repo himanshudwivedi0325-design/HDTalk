@@ -23,10 +23,25 @@ import { Avatar } from '../ui/Avatar';
 // Subcomponent for individual group participant video tile in P2P mesh
 function MeshParticipantTile({ participant }) {
   const videoRef = useRef(null);
+  const audioRef = useRef(null);
+
+  // Dedicated audio playback for mesh participant (works even if video is off)
+  useEffect(() => {
+    if (audioRef.current && participant.stream) {
+      if (audioRef.current.srcObject !== participant.stream) {
+        audioRef.current.srcObject = participant.stream;
+      }
+      audioRef.current.muted = false;
+      audioRef.current.volume = 1.0;
+      audioRef.current.play().catch(e => console.log('Mesh audio play note:', e));
+    }
+  }, [participant.stream]);
 
   useEffect(() => {
     if (videoRef.current && participant.stream) {
-      videoRef.current.srcObject = participant.stream;
+      if (videoRef.current.srcObject !== participant.stream) {
+        videoRef.current.srcObject = participant.stream;
+      }
       videoRef.current.play().catch(e => console.log('Mesh tile play note:', e));
     }
   }, [participant.stream]);
@@ -35,11 +50,15 @@ function MeshParticipantTile({ participant }) {
 
   return (
     <div className="relative rounded-2xl overflow-hidden bg-slate-900 border border-white/10 shadow-xl flex items-center justify-center aspect-video sm:aspect-auto">
+      {/* Hidden dedicated audio element ensuring participant voice is always heard */}
+      <audio ref={audioRef} autoPlay playsInline />
+
       {hasVideo ? (
         <video
           ref={videoRef}
           autoPlay
           playsInline
+          muted
           className="w-full h-full object-cover"
         />
       ) : (
@@ -82,6 +101,7 @@ export function CallModal() {
     callStatusMessage,
     localVideoRef, 
     remoteVideoRef,
+    remoteAudioRef,
     isMuted, 
     isVideoOff, 
     isScreenSharing, 
@@ -116,7 +136,49 @@ export function CallModal() {
     }
   }, [localStream, callState, localVideoRef]);
 
-  // Directly attach remote stream in 1:1 call
+  // Directly attach dedicated unmuted remote audio in 1:1 call
+  useEffect(() => {
+    const audioEl = remoteAudioRef?.current;
+    if (!audioEl || !remoteStream) return;
+
+    if (audioEl.srcObject !== remoteStream) {
+      audioEl.srcObject = remoteStream;
+    }
+
+    const playAudio = () => {
+      audioEl.muted = false;
+      audioEl.volume = 1.0;
+      audioEl.play().catch(e => {
+        console.warn('[CallModal] Remote audio play attempt note:', e);
+      });
+    };
+    playAudio();
+
+    const audioTracks = remoteStream.getAudioTracks();
+    const handleAudioUnmute = () => playAudio();
+    audioTracks.forEach(track => {
+      track.enabled = true;
+      track.addEventListener('unmute', handleAudioUnmute);
+    });
+
+    const handleUserGesture = () => {
+      if (audioEl && (audioEl.paused || audioEl.muted)) {
+        audioEl.muted = false;
+        audioEl.volume = 1.0;
+        audioEl.play().catch(() => {});
+      }
+    };
+    window.addEventListener('click', handleUserGesture, { once: true });
+    window.addEventListener('touchstart', handleUserGesture, { once: true });
+
+    return () => {
+      audioTracks.forEach(track => track.removeEventListener('unmute', handleAudioUnmute));
+      window.removeEventListener('click', handleUserGesture);
+      window.removeEventListener('touchstart', handleUserGesture);
+    };
+  }, [remoteStream, callState, remoteAudioRef]);
+
+  // Directly attach remote video in 1:1 call (muted so browser autoplay policies never block video)
   useEffect(() => {
     const videoEl = remoteVideoRef.current;
     if (!videoEl || !remoteStream) return;
@@ -124,12 +186,9 @@ export function CallModal() {
     if (videoEl.srcObject !== remoteStream) {
       videoEl.srcObject = remoteStream;
     }
+    videoEl.muted = true;
     const playRemote = () => {
-      videoEl.play().catch(e => {
-        console.log('Remote video autoplay blocked, retrying muted:', e);
-        videoEl.muted = true;
-        videoEl.play().catch(err => console.log('Remote play retry note:', err));
-      });
+      videoEl.play().catch(err => console.log('Remote play retry note:', err));
     };
     playRemote();
 
@@ -418,10 +477,17 @@ export function CallModal() {
       ) : (
         // 1:1 CALL STAGE
         <div className="flex-1 relative flex items-center justify-center overflow-hidden bg-gradient-to-b from-black/40 via-transparent to-black/60">
+          {/* Dedicated unmuted audio element for incoming 1:1 call audio */}
+          <audio
+            ref={remoteAudioRef}
+            autoPlay
+            playsInline
+          />
           <video
             ref={remoteVideoRef}
             autoPlay
             playsInline
+            muted
             className="w-full h-full object-contain"
           />
 

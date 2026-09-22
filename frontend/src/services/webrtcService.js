@@ -184,31 +184,81 @@ export class WebRTCService {
 
   // Initialize local media (Camera & Mic with graceful degradation)
   async startLocalStream(constraints = { video: true, audio: true }) {
-    let audioTrack = null;
-    let videoTrack = null;
     let hardwareStatus = { videoAvailable: false, audioAvailable: false, isFallback: false };
 
+    const resolvedAudio = constraints.audio ? (
+      typeof constraints.audio === 'object' ? constraints.audio : {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      }
+    ) : false;
+
+    const fullConstraints = {
+      video: constraints.video,
+      audio: resolvedAudio
+    };
+
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      // 1. Attempt requested constraints
+      // 1. Attempt requested full constraints
       try {
-        this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
+        this.localStream = await navigator.mediaDevices.getUserMedia(fullConstraints);
+        this.localStream.getAudioTracks().forEach(t => { t.enabled = true; });
         hardwareStatus.videoAvailable = this.localStream.getVideoTracks().length > 0;
         hardwareStatus.audioAvailable = this.localStream.getAudioTracks().length > 0;
         this.initAudioAnalyser(this.localStream);
         if (this.onHardwareStatusChange) this.onHardwareStatusChange(hardwareStatus);
         return this.localStream;
       } catch (primaryErr) {
-        console.warn('[WebRTC] Primary getUserMedia failed (' + primaryErr.name + '):', primaryErr.message);
+        console.warn('[WebRTC] Combined getUserMedia failed (' + primaryErr.name + '):', primaryErr.message);
 
-        // 2. Hardware Fallback: If video failed (e.g. webcam busy or permission denied), try audio-only!
-        if (constraints.video) {
+        // 2. Hardware Fallback: Try video and audio independently so failure in one does not break the other!
+        let vTrack = null;
+        let aTrack = null;
+
+        if (fullConstraints.video) {
           try {
-            const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            audioTrack = audioStream.getAudioTracks()[0];
-            hardwareStatus.audioAvailable = true;
-          } catch (audioErr) {
-            console.warn('[WebRTC] Audio also failed:', audioErr.message);
+            const vStream = await navigator.mediaDevices.getUserMedia({ video: fullConstraints.video });
+            vTrack = vStream.getVideoTracks()[0];
+            hardwareStatus.videoAvailable = true;
+          } catch (vErr) {
+            console.warn('[WebRTC] Independent video capture error:', vErr.message);
           }
+        }
+
+        if (fullConstraints.audio) {
+          try {
+            const aStream = await navigator.mediaDevices.getUserMedia({ audio: fullConstraints.audio });
+            aTrack = aStream.getAudioTracks()[0];
+            if (aTrack) aTrack.enabled = true;
+            hardwareStatus.audioAvailable = true;
+          } catch (aErr) {
+            console.warn('[WebRTC] Independent audio capture error:', aErr.message);
+          }
+        }
+
+        if (vTrack || aTrack) {
+          const tracks = [];
+          if (vTrack) {
+            tracks.push(vTrack);
+          } else {
+            const sim = this.createSimulatedStream('HDTalk Live Feed');
+            tracks.push(sim.getVideoTracks()[0]);
+            hardwareStatus.isFallback = true;
+          }
+
+          if (aTrack) {
+            tracks.push(aTrack);
+          } else {
+            const sim = this.createSimulatedStream('HDTalk Live Feed');
+            if (sim.getAudioTracks()[0]) tracks.push(sim.getAudioTracks()[0]);
+            hardwareStatus.isFallback = true;
+          }
+
+          this.localStream = new MediaStream(tracks);
+          this.initAudioAnalyser(this.localStream);
+          if (this.onHardwareStatusChange) this.onHardwareStatusChange(hardwareStatus);
+          return this.localStream;
         }
       }
     }
@@ -216,15 +266,7 @@ export class WebRTCService {
     // 3. Simulated Stream Fallback if full media acquisition failed
     const simStream = this.createSimulatedStream('HDTalk Live Feed');
     hardwareStatus.isFallback = true;
-
-    if (audioTrack) {
-      // Real mic audio + virtual video
-      this.localStream = new MediaStream([simStream.getVideoTracks()[0], audioTrack]);
-    } else {
-      // Pure simulated stream
-      this.localStream = simStream;
-    }
-
+    this.localStream = simStream;
     this.initAudioAnalyser(this.localStream);
     if (this.onHardwareStatusChange) this.onHardwareStatusChange(hardwareStatus);
     return this.localStream;
@@ -274,6 +316,7 @@ export class WebRTCService {
     this.peerConnection = new RTCPeerConnection(this.iceConfig);
     this.remoteStream = new MediaStream();
     this.videoSender = null;
+    this.audioSender = null;
     this.reconnectAttempts = 0;
     this.isReconnecting = false;
 
@@ -281,9 +324,12 @@ export class WebRTCService {
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => {
         try {
+          track.enabled = true;
           const sender = this.peerConnection.addTrack(track, this.localStream);
           if (track.kind === 'video') {
             this.videoSender = sender;
+          } else if (track.kind === 'audio') {
+            this.audioSender = sender;
           }
         } catch (e) {
           console.warn('[WebRTC] Error adding local track:', e);
@@ -291,22 +337,41 @@ export class WebRTCService {
       });
     }
 
-    // Ensure video transceiver exists
-    if (!this.videoSender) {
-      try {
+    // Ensure BOTH audio and video transceivers exist with sendrecv in Unified Plan
+    try {
+      const transceivers = this.peerConnection.getTransceivers ? this.peerConnection.getTransceivers() : [];
+      const hasAudio = transceivers.some(t => t.receiver && t.receiver.track && t.receiver.track.kind === 'audio');
+      if (!hasAudio) {
+        this.peerConnection.addTransceiver('audio', { direction: 'sendrecv' });
+      }
+      const hasVideo = transceivers.some(t => t.receiver && t.receiver.track && t.receiver.track.kind === 'video');
+      if (!hasVideo) {
         this.peerConnection.addTransceiver('video', { direction: 'sendrecv' });
-      } catch (e) {}
+      }
+    } catch (e) {
+      console.warn('[WebRTC] Transceiver registration note:', e);
     }
 
     // Remote track listener
     this.peerConnection.ontrack = (event) => {
-      console.log('[WebRTC] Remote track received:', event.track.kind, event.track.id);
+      console.log('[WebRTC] Remote track received:', event.track.kind, event.track.id, 'ready state:', event.track.readyState);
+      event.track.enabled = true;
+
+      if (!this.remoteStream) {
+        this.remoteStream = new MediaStream();
+      }
+
       if (event.streams && event.streams[0]) {
-        this.remoteStream = event.streams[0];
-      } else {
-        if (!this.remoteStream.getTracks().some(t => t.id === event.track.id)) {
-          this.remoteStream.addTrack(event.track);
-        }
+        event.streams[0].getTracks().forEach(t => {
+          t.enabled = true;
+          if (!this.remoteStream.getTracks().some(existing => existing.id === t.id)) {
+            this.remoteStream.addTrack(t);
+          }
+        });
+      }
+
+      if (!this.remoteStream.getTracks().some(t => t.id === event.track.id)) {
+        this.remoteStream.addTrack(event.track);
       }
 
       if (this.onRemoteStream) {
@@ -315,6 +380,7 @@ export class WebRTCService {
 
       event.track.onunmute = () => {
         console.log('[WebRTC] Remote track unmuted:', event.track.kind);
+        event.track.enabled = true;
         if (this.onRemoteStream) {
           this.onRemoteStream(new MediaStream(this.remoteStream.getTracks()));
         }
@@ -429,7 +495,10 @@ export class WebRTCService {
     if (!this.peerConnection) this.createPeerConnection(null, null, true);
     await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
     await this.drainPendingCandidates();
-    const answer = await this.peerConnection.createAnswer();
+    const answer = await this.peerConnection.createAnswer({
+      offerToReceiveAudio: true,
+      offerToReceiveVideo: true
+    });
     await this.peerConnection.setLocalDescription(answer);
     return answer;
   }
@@ -494,6 +563,7 @@ export class WebRTCService {
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => {
         try {
+          track.enabled = true;
           const sender = pc.addTrack(track, this.localStream);
           if (track.kind === 'video') videoSender = sender;
         } catch (e) {
@@ -502,24 +572,29 @@ export class WebRTCService {
       });
     }
 
-    // Ensure video transceiver exists
-    if (!videoSender) {
-      try { pc.addTransceiver('video', { direction: 'sendrecv' }); } catch (e) {}
-    }
+    // Ensure both audio and video transceivers exist
+    try {
+      const transceivers = pc.getTransceivers ? pc.getTransceivers() : [];
+      const hasAudio = transceivers.some(t => t.receiver && t.receiver.track && t.receiver.track.kind === 'audio');
+      if (!hasAudio) pc.addTransceiver('audio', { direction: 'sendrecv' });
+      const hasVideo = transceivers.some(t => t.receiver && t.receiver.track && t.receiver.track.kind === 'video');
+      if (!hasVideo) pc.addTransceiver('video', { direction: 'sendrecv' });
+    } catch (e) {}
 
     // On remote track received
     pc.ontrack = (event) => {
       console.log(`[Mesh Engine] Remote track received from ${remoteUserId}:`, event.track.kind);
+      event.track.enabled = true;
       if (event.streams && event.streams[0]) {
         event.streams[0].getTracks().forEach(track => {
+          track.enabled = true;
           if (!remoteStream.getTracks().some(t => t.id === track.id)) {
             remoteStream.addTrack(track);
           }
         });
-      } else {
-        if (!remoteStream.getTracks().some(t => t.id === event.track.id)) {
-          remoteStream.addTrack(event.track);
-        }
+      }
+      if (!remoteStream.getTracks().some(t => t.id === event.track.id)) {
+        remoteStream.addTrack(event.track);
       }
 
       if (onRemoteStream) {
@@ -527,6 +602,7 @@ export class WebRTCService {
       }
 
       event.track.onunmute = () => {
+        event.track.enabled = true;
         if (onRemoteStream) {
           onRemoteStream(remoteUserId, new MediaStream(remoteStream.getTracks()));
         }
@@ -570,7 +646,10 @@ export class WebRTCService {
     if (isInitiator) {
       (async () => {
         try {
-          const offer = await pc.createOffer();
+          const offer = await pc.createOffer({
+            offerToReceiveAudio: true,
+            offerToReceiveVideo: true
+          });
           await pc.setLocalDescription(offer);
           socket.emit('mesh_signal', {
             roomId,
@@ -612,7 +691,10 @@ export class WebRTCService {
           const c = pendingCandidates.shift();
           try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch (e) {}
         }
-        const answer = await pc.createAnswer();
+        const answer = await pc.createAnswer({
+          offerToReceiveAudio: true,
+          offerToReceiveVideo: true
+        });
         await pc.setLocalDescription(answer);
 
         socket.emit('mesh_signal', {

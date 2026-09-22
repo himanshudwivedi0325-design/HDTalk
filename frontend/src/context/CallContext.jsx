@@ -53,9 +53,10 @@ export function CallProvider({ children }) {
   const [recordingDuration, setRecordingDuration] = useState(0);
   const recordTimerRef = useRef(null);
 
-  // Video element references
+  // Video and Audio element references
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
+  const remoteAudioRef = useRef(null);
 
   // Refs for stable closures in callbacks
   const remoteUserRef = useRef(null);
@@ -179,6 +180,18 @@ export function CallProvider({ children }) {
     if (remoteVideoRef.current && remoteStream) {
       remoteVideoRef.current.srcObject = remoteStream;
       remoteVideoRef.current.play().catch(e => console.log('Remote play note:', e));
+    }
+  }, [remoteStream, callState]);
+
+  // Keep dedicated remote audio element updated with remote stream for crystal-clear voice output
+  useEffect(() => {
+    if (remoteAudioRef.current && remoteStream) {
+      if (remoteAudioRef.current.srcObject !== remoteStream) {
+        remoteAudioRef.current.srcObject = remoteStream;
+      }
+      remoteAudioRef.current.muted = false;
+      remoteAudioRef.current.volume = 1.0;
+      remoteAudioRef.current.play().catch(e => console.warn('[CallContext] Remote audio play note:', e));
     }
   }, [remoteStream, callState]);
 
@@ -804,6 +817,7 @@ export function CallProvider({ children }) {
       callStatusMessage,
       localVideoRef,
       remoteVideoRef,
+      remoteAudioRef,
       isMuted,
       isVideoOff,
       isScreenSharing,
