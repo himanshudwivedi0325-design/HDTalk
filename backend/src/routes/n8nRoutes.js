@@ -24,7 +24,8 @@ router.get('/status', authMiddleware, adminMiddleware, (req, res) => {
       ...safeStatus
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error('[n8n] Status check error:', err.message);
+    res.status(500).json({ success: false, message: 'Failed to retrieve n8n service status.' });
   }
 });
 
@@ -40,8 +41,7 @@ router.post('/test', authMiddleware, async (req, res) => {
       timestamp: new Date().toISOString(),
       triggeredBy: {
         id: req.user.id,
-        name: req.user.name,
-        email: req.user.email
+        name: req.user.name
       },
       message: 'Test webhook event dispatched from HDTalk diagnostics'
     };
@@ -57,7 +57,8 @@ router.post('/test', authMiddleware, async (req, res) => {
       webhookResponse: result || { status: 'Delivered (fallback response)' }
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error('[n8n] Webhook test error:', err.message);
+    res.status(500).json({ success: false, message: 'Webhook test failed. Please check n8n service connectivity.' });
   }
 });
 
@@ -65,11 +66,11 @@ const validate = require('../middleware/validate');
 const { n8nSchemas } = require('../validation/schemas');
 
 /**
- * 3. Public/Authenticated: Interactive AI Chatbot Query for Help & Support
+ * 3. Authenticated: Interactive AI Chatbot Query for Help & Support
  * POST /api/n8n/ask
- * Protected by dedicated rate limiter: 10 requests per 10 minutes
+ * Protected by authMiddleware + dedicated rate limiter: 10 requests per 10 minutes
  */
-router.post('/ask', n8nAskLimiter, validate(n8nSchemas.ask), async (req, res) => {
+router.post('/ask', authMiddleware, n8nAskLimiter, validate(n8nSchemas.ask), async (req, res) => {
   try {
     const { question, senderName } = req.body;
     if (!question || !question.trim()) {
@@ -110,15 +111,17 @@ router.post('/ask', n8nAskLimiter, validate(n8nSchemas.ask), async (req, res) =>
       timestamp: new Date().toISOString()
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error('[n8n] Ask endpoint error:', err.message);
+    res.status(500).json({ success: false, message: 'AI assistant is temporarily unavailable. Please try again later.' });
   }
 });
 
 /**
- * 4. Public: Download/View pre-packaged n8n workflow definition
+ * 4. Authenticated: Download/View pre-packaged n8n workflow definition
  * GET /api/n8n/workflow
+ * SEC-7 FIX: Requires authentication — internal automation topology should not be public
  */
-router.get('/workflow', (req, res) => {
+router.get('/workflow', authMiddleware, (req, res) => {
   try {
     const workflowPath = path.join(__dirname, '../../../hdtalk-automation-workflow.json');
     if (fs.existsSync(workflowPath)) {
@@ -128,7 +131,8 @@ router.get('/workflow', (req, res) => {
       res.status(404).json({ success: false, message: 'Workflow schema file not found.' });
     }
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error('[n8n] Workflow download error:', err.message);
+    res.status(500).json({ success: false, message: 'Failed to retrieve workflow definition.' });
   }
 });
 

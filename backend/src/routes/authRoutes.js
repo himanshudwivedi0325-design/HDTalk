@@ -49,7 +49,7 @@ router.post('/quick-login', validate(authSchemas.quickLogin), authController.qui
 router.get('/demo-users', authMiddleware, authController.getDemoUsers);
 
 router.get('/me', authMiddleware, authController.getMe);
-router.post('/upload-avatar', uploadLimiter, avatarUpload.single('avatar'), authController.uploadRegistrationAvatar);
+router.post('/upload-avatar', uploadLimiter, authMiddleware, avatarUpload.single('avatar'), authController.uploadRegistrationAvatar);
 
 module.exports = router;
 

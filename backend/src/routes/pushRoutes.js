@@ -65,8 +65,8 @@ router.post('/test', authMiddleware, async (req, res) => {
       details: result
     });
   } catch (err) {
-    console.error('Error sending test push:', err);
-    res.status(500).json({ success: false, message: err.message });
+    console.error('[Push] Test notification error:', err.message);
+    res.status(500).json({ success: false, message: 'Failed to send test push notification.' });
   }
 });
 

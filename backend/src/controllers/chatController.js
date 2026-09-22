@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-const FileType = require('file-type');
+// file-type v22+ is ESM-only — use dynamic import() at call site
 const config = require('../config/config');
 const db = require('../database/db');
 const socketManager = require('../socket/socketManager');
@@ -224,8 +224,13 @@ exports.botReply = (req, res) => {
 
     const botUser = db.getOrCreateBotUser();
 
+    // Safe participant add — avoid direct in-memory mutation of conv object
     if (!conv.participants.includes(botUser.id)) {
-      conv.participants.push(botUser.id);
+      db.updateConversation
+        ? db.updateConversation(conversationId, {
+            participants: [...conv.participants, botUser.id]
+          })
+        : conv.participants.push(botUser.id); // fallback for in-memory db without updateConversation
     }
 
     const botMsg = db.createMessage({
@@ -275,7 +280,8 @@ exports.uploadFile = async (req, res) => {
     }
 
     // 1. Verify buffer magic bytes via file-type
-    const detectedType = await FileType.fromBuffer(req.file.buffer);
+    const { fileTypeFromBuffer } = await import('file-type');
+    const detectedType = await fileTypeFromBuffer(req.file.buffer);
     if (!detectedType) {
       return res.status(400).json({
         success: false,
@@ -283,19 +289,25 @@ exports.uploadFile = async (req, res) => {
       });
     }
 
-    // 2. Strict allowlist: jpeg, png, webp, gif, pdf
+    // 2. Strict allowlist: images, pdf, and audio/video for voice notes & media sharing
     const ALLOWED_MIMES = new Set([
       'image/jpeg',
       'image/png',
       'image/webp',
       'image/gif',
-      'application/pdf'
+      'application/pdf',
+      'audio/webm',
+      'audio/ogg',
+      'audio/mpeg',
+      'audio/wav',
+      'video/webm',
+      'video/mp4'
     ]);
 
     if (!ALLOWED_MIMES.has(detectedType.mime)) {
       return res.status(400).json({
         success: false,
-        message: `File type "${detectedType.mime}" is not allowed. Allowed types: JPEG, PNG, WEBP, GIF, PDF.`
+        message: `File type "${detectedType.mime}" is not allowed. Allowed types: Images, Audio, Video, PDF.`
       });
     }
 

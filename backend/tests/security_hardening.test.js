@@ -1,7 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('crypto');
-const FileType = require('file-type');
 const { z } = require('zod');
 const validate = require('../src/middleware/validate');
 const { authSchemas, chatSchemas, pushSchemas } = require('../src/validation/schemas');
@@ -95,24 +94,26 @@ test('Comprehensive Security Hardening Suite', async (t) => {
 
   // ── 3. Magic-Byte File Type Verification ──────────────────────────────────
   await t.test('FileType detects genuine magic bytes for PNG and PDF', async () => {
+    const { fileTypeFromBuffer } = await import('file-type');
     // 8-byte PNG header: 89 50 4E 47 0D 0A 1A 0A
     const pngHeader = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52]);
-    const detectedPng = await FileType.fromBuffer(pngHeader);
+    const detectedPng = await fileTypeFromBuffer(pngHeader);
     assert.ok(detectedPng);
     assert.equal(detectedPng.mime, 'image/png');
     assert.equal(detectedPng.ext, 'png');
 
     // PDF header: %PDF-
     const pdfHeader = Buffer.from('%PDF-1.7\n%Fake PDF content for test\n%%EOF');
-    const detectedPdf = await FileType.fromBuffer(pdfHeader);
+    const detectedPdf = await fileTypeFromBuffer(pdfHeader);
     assert.ok(detectedPdf);
     assert.equal(detectedPdf.mime, 'application/pdf');
     assert.equal(detectedPdf.ext, 'pdf');
   });
 
   await t.test('FileType rejects text file renamed with .png extension (spoofing defense)', async () => {
+    const { fileTypeFromBuffer } = await import('file-type');
     const maliciousTextFile = Buffer.from('<?php echo "malicious script"; ?>');
-    const detected = await FileType.fromBuffer(maliciousTextFile);
+    const detected = await fileTypeFromBuffer(maliciousTextFile);
     // Should NOT be detected as image/png
     assert.notEqual(detected?.mime, 'image/png');
   });

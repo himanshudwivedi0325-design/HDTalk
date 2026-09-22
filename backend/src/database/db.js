@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const config = require('../config/config');
 
@@ -76,7 +77,9 @@ function normalizeSchema(data) {
  */
 function atomicWriteFile(targetPath, contentString) {
   const dir = path.dirname(targetPath);
-  const tempPath = path.join(dir, '.tmp_' + path.basename(targetPath) + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8));
+  // SEC-10 FIX: Use crypto.randomBytes instead of Math.random() for unpredictable temp filenames
+  const randomSuffix = crypto.randomBytes(8).toString('hex');
+  const tempPath = path.join(dir, '.tmp_' + path.basename(targetPath) + '_' + Date.now() + '_' + randomSuffix);
 
   try {
     const fd = fs.openSync(tempPath, 'w');
@@ -303,7 +306,23 @@ function flushSync() {
 
 
 function seedDefaultUsers() {
-  const hash = bcrypt.hashSync('password123', 10);
+  // SEC-1 FIX: Never use hardcoded passwords. Read from env or generate a strong random one.
+  const NODE_ENV = process.env.NODE_ENV || 'development';
+  let seedPassword = process.env.SEED_ADMIN_PASSWORD;
+
+  if (!seedPassword) {
+    if (NODE_ENV === 'production') {
+      console.error('[DB] FATAL: SEED_ADMIN_PASSWORD env var is required in production. Refusing to seed with a default password.');
+      process.exit(1);
+    }
+    // In development: generate a random password and print it once
+    const crypto = require('crypto');
+    seedPassword = crypto.randomBytes(16).toString('hex');
+    console.warn('[DB][DEV] No SEED_ADMIN_PASSWORD set. Generated random seed password:', seedPassword);
+    console.warn('[DB][DEV] Set SEED_ADMIN_PASSWORD env var to use a fixed password.');
+  }
+
+  const hash = bcrypt.hashSync(seedPassword, 12);
   const initialUsers = [
     {
       id: 'usr_f5b68402',
@@ -327,7 +346,7 @@ function seedDefaultUsers() {
     connectionRequests: []
   };
   flushSync();
-  console.log('Database seeded with admin template user.');
+  console.log('[DB] Database seeded with admin template user (password from env).');
 }
 
 function enrichMessage(m) {

@@ -10,6 +10,7 @@ class MongoRateLimitStore {
   constructor(options = {}) {
     this.windowMs = options.windowMs || 60 * 1000;
     this.localHits = new Map();
+    this.startCleanup();
   }
 
   init(options) {
@@ -20,7 +21,7 @@ class MongoRateLimitStore {
 
   localFallback(key, now) {
     let entry = this.localHits.get(key);
-    if (!entry || entry.resetTime < now) {
+    if (!entry || new Date(entry.resetTime).getTime() < now) {
       entry = { totalHits: 1, resetTime: new Date(now + this.windowMs) };
     } else {
       entry.totalHits += 1;
@@ -30,6 +31,19 @@ class MongoRateLimitStore {
       totalHits: entry.totalHits,
       resetTime: entry.resetTime
     };
+  }
+
+  // Periodic cleanup of expired localHits entries to prevent unbounded Map growth
+  startCleanup() {
+    if (this._cleanupInterval) return;
+    this._cleanupInterval = setInterval(() => {
+      const now = Date.now();
+      for (const [key, entry] of this.localHits.entries()) {
+        if (new Date(entry.resetTime).getTime() < now) {
+          this.localHits.delete(key);
+        }
+      }
+    }, this.windowMs * 2).unref();
   }
 
   async increment(key) {
@@ -153,6 +167,15 @@ function createDistributedLimiter({ windowMs, max, message, keyGenerator }) {
     timestamps.push(now);
     memoryHits.set(key, timestamps);
 
+    // Cleanup: if all timestamps are fresh (array non-empty), keep it.
+    // But if next expiry has passed, remove the entry to prevent Map growth.
+    // We rely on the filter above to slide the window, but also prune fully
+    // expired keys when the sliding window empties them.
+    // Note: empty timestamps after filter means key expired — delete it.
+    if (timestamps.length === 0) {
+      memoryHits.delete(key);
+    }
+
     if (typeof res.setHeader === 'function') {
       res.setHeader('X-RateLimit-Limit', max);
       res.setHeader('X-RateLimit-Remaining', Math.max(0, max - timestamps.length));
@@ -175,9 +198,9 @@ const authLimiter = createDistributedLimiter({
   message: 'Too many authentication attempts. Please try again after 15 minutes.'
 });
 
-// 2. Dedicated Limiter for heavy operations: /api/n8n/ask and file uploads
+// 2. Dedicated Limiter for heavy AI operations: /api/n8n/ask
 // Limit: 10 requests / 10 min
-const heavyLimiter = createDistributedLimiter({
+const n8nAskLimiter = createDistributedLimiter({
   windowMs: 10 * 60 * 1000,
   max: 10,
   keyGenerator: (req) => {
@@ -187,11 +210,23 @@ const heavyLimiter = createDistributedLimiter({
   message: 'Too many requests. Please try again after 10 minutes.'
 });
 
-// 3. General Authenticated API Limiter
-// Limit: 100 requests / min per user
-const apiLimiter = createDistributedLimiter({
+// 3. File Upload Limiter
+// Limit: 100 requests / min per user (must allow frequent voice/image messages in chat)
+const uploadLimiter = createDistributedLimiter({
   windowMs: 60 * 1000,
   max: 100,
+  keyGenerator: (req) => {
+    const userOrIp = req.user?.id || req.ip || req.headers?.['x-forwarded-for'] || 'unknown';
+    return `upload:${userOrIp}`;
+  },
+  message: 'Too many file uploads. Please wait a moment.'
+});
+
+// 4. General Authenticated API Limiter
+// Limit: 200 requests / min per user
+const apiLimiter = createDistributedLimiter({
+  windowMs: 60 * 1000,
+  max: 200,
   keyGenerator: (req) => {
     const userOrIp = req.user?.id || req.ip || req.headers?.['x-forwarded-for'] || 'unknown';
     return `api:${userOrIp}`;
@@ -202,8 +237,8 @@ const apiLimiter = createDistributedLimiter({
 module.exports = {
   authLimiter,
   apiLimiter,
-  uploadLimiter: heavyLimiter,
-  n8nAskLimiter: heavyLimiter,
+  uploadLimiter,
+  n8nAskLimiter,
   MongoRateLimitStore,
   createDistributedLimiter
 };

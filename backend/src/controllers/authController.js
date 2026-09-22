@@ -8,6 +8,7 @@ const db = require('../database/db');
 const n8nService = require('../services/n8nService');
 const cloudMediaService = require('../services/cloudMediaService');
 const socketManager = require('../socket/socketManager');
+const { isAdminUser } = require('../config/adminHelper');
 
 const signToken = (id) => {
   return jwt.sign({ id }, config.JWT_SECRET, { expiresIn: config.JWT_EXPIRES_IN });
@@ -16,9 +17,7 @@ const signToken = (id) => {
 const sanitizeUser = (user) => {
   if (!user) return null;
   const { password, ...safe } = user;
-  const cleanEmail = (safe.email || '').toLowerCase().trim();
-  const isCreator = cleanEmail === 'shikhar@gmail.com' || cleanEmail === 'himanshudwivedi0325@gmail.com';
-  safe.role = safe.role || (isCreator ? 'admin' : 'user');
+  safe.role = safe.role || (isAdminUser(safe) ? 'admin' : 'user');
   safe.isBanned = safe.isBanned || false;
   return safe;
 };
@@ -38,8 +37,8 @@ exports.register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Name must be between 2 and 30 characters.' });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters.' });
+    if (password.length < 8) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 8 characters.' });
     }
 
     const existing = db.getUserByEmail(cleanEmail);
@@ -111,9 +110,31 @@ exports.login = (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid email or password.' });
     }
 
+    // SEC-12 FIX: Check if account is temporarily locked due to too many failed attempts
+    if (user.lockoutUntil && new Date(user.lockoutUntil) > new Date()) {
+      const remainingMinutes = Math.ceil((new Date(user.lockoutUntil) - new Date()) / 60000);
+      return res.status(429).json({
+        success: false,
+        message: `Account temporarily locked due to multiple failed login attempts. Try again in ${remainingMinutes} minutes.`
+      });
+    }
+
     const isMatch = bcrypt.compareSync(password, user.password);
     if (!isMatch) {
+      // SEC-12 FIX: Increment failed attempts and lock if >= 10
+      const attempts = (user.failedLoginAttempts || 0) + 1;
+      let updates = { failedLoginAttempts: attempts };
+      if (attempts >= 10) {
+        updates.lockoutUntil = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+      }
+      db.updateUser(user.id, updates);
+
       return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+    }
+
+    // Reset failed attempts on successful login
+    if (user.failedLoginAttempts || user.lockoutUntil) {
+      db.updateUser(user.id, { failedLoginAttempts: 0, lockoutUntil: null });
     }
 
     if (user.isBanned) {
@@ -173,7 +194,14 @@ exports.quickLogin = (req, res) => {
 };
 
 exports.getDemoUsers = (req, res) => {
-  const users = db.getUsers().map(sanitizeUser);
+  // Only return safe public fields — never expose emails or private profile data
+  const users = db.getUsers().map(u => ({
+    id: u.id,
+    name: u.name,
+    avatar: u.avatar || '',
+    status: u.status || 'offline',
+    profession: u.profession || ''
+  }));
   res.json({
     success: true,
     users

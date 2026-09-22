@@ -50,6 +50,20 @@ function isSocketEventThrottled(socketId, eventName, maxEvents, windowMs) {
 
 let ioInstance = null;
 
+// ─── Periodic Cleanup of Orphaned socketEventBuckets (Memory Leak Prevention) ─
+// Runs every 5 minutes to clear stale buckets for sockets that never disconnected cleanly.
+setInterval(() => {
+  const activeSockets = new Set(socketUserMap.keys()); // using socketUserMap as active socket reference
+  // Actually clean by checking if socketId is in socketUserMap (which tracks socket→user)
+  // We iterate socketEventBuckets and remove entries not in socketUserMap (reversed)
+  // socketUserMap: socketId → userId, so we check socketEventBuckets keys
+  for (const socketId of socketEventBuckets.keys()) {
+    if (!socketUserMap.has(socketId)) {
+      socketEventBuckets.delete(socketId);
+    }
+  }
+}, 5 * 60 * 1000).unref();
+
 /**
  * Reusable authorization helper: Verifies that the authenticated socket user
  * is an active participant of the requested conversation.
@@ -389,6 +403,8 @@ function initSocket(io) {
     });
 
     socket.on('typing_stop', async ({ conversationId, targetUserId }) => {
+      // Rate limit: max 10 typing_stop events per 3 seconds (prevents stop indicator spam)
+      if (isSocketEventThrottled(socket.id, 'typing_stop', 10, 3000)) return;
       const senderId = socket.data?.userId || socketUserMap.get(socket.id);
       if (!senderId) return;
 
@@ -504,6 +520,18 @@ function initSocket(io) {
     socket.on('remove_friend', ({ friendUserId }) => {
       const userId = socket.data?.userId || socketUserMap.get(socket.id);
       if (!userId) return;
+
+      // Validate friendUserId to prevent null/undefined errors
+      if (!friendUserId || typeof friendUserId !== 'string' || friendUserId.trim() === '') {
+        socket.emit('socket_error', { message: 'Invalid friendUserId provided.' });
+        return;
+      }
+
+      // Prevent removing yourself
+      if (friendUserId === userId) {
+        socket.emit('socket_error', { message: 'Cannot remove yourself as friend.' });
+        return;
+      }
 
       db.removeFriend(userId, friendUserId);
       io.to(`user:${userId}`).emit('friend_removed', { friendUserId });

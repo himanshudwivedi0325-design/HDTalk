@@ -10,6 +10,8 @@ const { initSocket, getMetrics } = require('./socket/socketManager');
 
 const db = require('./database/db');
 const { authLimiter, apiLimiter, uploadLimiter } = require('./middleware/rateLimiter');
+const authMiddleware = require('./middleware/authMiddleware');
+const adminMiddleware = require('./middleware/adminMiddleware');
 
 // Route handlers
 const authRoutes = require('./routes/authRoutes');
@@ -69,15 +71,12 @@ const isOriginAllowed = (origin) => {
   try {
     const url = new URL(origin);
     const host = url.hostname.toLowerCase();
-    // Always permit local development and Render production domains
-    if (
-      host === 'localhost' ||
-      host === '127.0.0.1' ||
-      host.endsWith('.onrender.com') ||
-      host === 'hdtalk.onrender.com' ||
-      host.includes('site.je') ||
-      host.includes('render.com')
-    ) {
+    // Always permit local development environments
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return true;
+    }
+    // Exact subdomain match for Render (endsWith prevents evilrender.com bypass)
+    if (host === 'hdtalk.onrender.com' || host.endsWith('.onrender.com')) {
       return true;
     }
   } catch (_) {}
@@ -113,10 +112,31 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// Helmet Security Headers (HSTS, noSniff, frameguard: deny, referrerPolicy, hidePoweredBy)
+// Helmet Security Headers (HSTS, noSniff, frameguard: deny, referrerPolicy, hidePoweredBy, CSP)
 const helmet = require('helmet');
 app.use(helmet({
-  contentSecurityPolicy: false,
+  // SEC-5 FIX: Enable Content-Security-Policy with strict directives
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'strict-dynamic'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+      imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+      // Allow WebSocket connections to same origin + configured backend origins
+      connectSrc: ["'self'", 'wss:', 'ws:', 'https:'],
+      // Media (audio/video for WebRTC voice/video)
+      mediaSrc: ["'self'", 'blob:'],
+      // WebRTC object URLs
+      workerSrc: ["'self'", 'blob:'],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      upgradeInsecureRequests: [],
+    },
+    reportOnly: false,
+  },
   crossOriginResourcePolicy: false,
   crossOriginOpenerPolicy: false,
   crossOriginEmbedderPolicy: false,
@@ -138,6 +158,11 @@ app.use(helmet({
 app.use((req, res, next) => {
   res.setHeader('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=()');
   res.setHeader('X-Robots-Tag', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
+  // SEC-6: Prevent caching of auth/sensitive API responses
+  if (req.path.startsWith('/api/auth') || req.path.startsWith('/api/admin')) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.setHeader('Pragma', 'no-cache');
+  }
   next();
 });
 
@@ -145,11 +170,18 @@ app.use((req, res, next) => {
 const mongoSanitize = require('express-mongo-sanitize');
 
 const sanitizeNoSql = (obj) => {
-  if (obj && typeof obj === 'object') {
+  if (Array.isArray(obj)) {
+    // Recursively sanitize each element in arrays
+    obj.forEach((item, i) => {
+      if (item && typeof item === 'object') {
+        sanitizeNoSql(item);
+      }
+    });
+  } else if (obj && typeof obj === 'object') {
     for (const key of Object.keys(obj)) {
       if (key.startsWith('$') || key.includes('.') || key === '__proto__' || key === 'constructor') {
         delete obj[key];
-      } else if (typeof obj[key] === 'object') {
+      } else if (obj[key] && typeof obj[key] === 'object') {
         sanitizeNoSql(obj[key]);
       }
     }
@@ -281,8 +313,8 @@ app.get('/api/health/ready', (req, res) => {
   }
 });
 
-// Real-time telemetry monitoring endpoint for continuous soak testing
-app.get('/api/health/telemetry', (req, res) => {
+// Real-time telemetry monitoring endpoint — Admin-only (requires authentication + admin role)
+app.get('/api/health/telemetry', authMiddleware, adminMiddleware, (req, res) => {
   try {
     const mem = process.memoryUsage();
     const cpu = process.cpuUsage();
@@ -312,7 +344,8 @@ app.get('/api/health/telemetry', (req, res) => {
       }
     });
   } catch (err) {
-    res.status(500).json({ status: 'error', message: err.message });
+    console.error('[Telemetry] Error generating telemetry:', err.message);
+    res.status(500).json({ status: 'error', message: 'Failed to collect telemetry data.' });
   }
 });
 

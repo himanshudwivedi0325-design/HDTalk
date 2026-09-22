@@ -56,7 +56,9 @@ module.exports = {
         if (urls.length > 0) {
           return [{ urls, username: process.env.TURN_USERNAME || '', credential: process.env.TURN_CREDENTIAL || '' }];
         }
-        // Public OpenRelay TURN servers fallback for mobile & symmetric NAT traversal
+        // SEC-9: Public OpenRelay TURN fallback — no quota protection; configure TURN_URL in production
+        console.warn('[Config][SECURITY] Using public OpenRelay TURN servers. These have NO quota protection.');
+        console.warn('[Config][SECURITY] Set TURN_URL, TURN_USERNAME, TURN_CREDENTIAL env vars for production TURN.');
         return [{
           urls: [
             'turn:openrelay.metered.ca:80',

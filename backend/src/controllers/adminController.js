@@ -1,12 +1,11 @@
 const bcrypt = require('bcryptjs');
 const db = require('../database/db');
+const { isAdminUser, isPlatformCreator } = require('../config/adminHelper');
 
 const sanitizeUser = (user) => {
   if (!user) return null;
   const { password, ...safe } = user;
-  const cleanEmail = (safe.email || '').toLowerCase().trim();
-  const isCreator = cleanEmail === 'shikhar@gmail.com' || cleanEmail === 'himanshudwivedi0325@gmail.com';
-  safe.role = safe.role || (isCreator ? 'admin' : 'user');
+  safe.role = safe.role || (isAdminUser(safe) ? 'admin' : 'user');
   safe.isBanned = safe.isBanned || false;
   return safe;
 };
@@ -99,8 +98,7 @@ exports.updateUserRole = (req, res) => {
     }
 
     // Protection: Prevent demoting platform creator
-    const cleanEmail = (targetUser.email || '').toLowerCase().trim();
-    if ((cleanEmail === 'shikhar@gmail.com' || cleanEmail === 'himanshudwivedi0325@gmail.com') && role !== 'admin') {
+    if (isPlatformCreator(targetUser.email) && role !== 'admin') {
       return res.status(403).json({ success: false, message: 'Platform creator cannot be demoted from admin.' });
     }
 
@@ -138,7 +136,7 @@ exports.toggleUserBan = (req, res) => {
       return res.status(400).json({ success: false, message: 'You cannot suspend your own account.' });
     }
     const cleanEmail = (targetUser.email || '').toLowerCase().trim();
-    if (cleanEmail === 'shikhar@gmail.com' || cleanEmail === 'himanshudwivedi0325@gmail.com') {
+    if (isPlatformCreator(targetUser.email)) {
       return res.status(403).json({ success: false, message: 'Platform creator cannot be suspended.' });
     }
 
@@ -211,8 +209,7 @@ exports.updateUser = (req, res) => {
 
     // Role update with platform creator protection
     if (role && ['admin', 'user'].includes(role)) {
-      const cleanEmail = (targetUser.email || '').toLowerCase().trim();
-      if ((cleanEmail === 'shikhar@gmail.com' || cleanEmail === 'himanshudwivedi0325@gmail.com') && role !== 'admin') {
+      if (isPlatformCreator(targetUser.email) && role !== 'admin') {
         return res.status(403).json({ success: false, message: 'Platform creator cannot be demoted from admin.' });
       }
       updates.role = role;
@@ -220,8 +217,8 @@ exports.updateUser = (req, res) => {
 
     // Password reset if provided
     if (password && typeof password === 'string' && password.trim().length > 0) {
-      if (password.trim().length < 6) {
-        return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long.' });
+      if (password.trim().length < 8) {
+        return res.status(400).json({ success: false, message: 'Password must be at least 8 characters long.' });
       }
       updates.password = bcrypt.hashSync(password.trim(), 10);
     }
@@ -271,8 +268,7 @@ exports.deleteUser = (req, res) => {
     if (userId === req.user.id) {
       return res.status(400).json({ success: false, message: 'You cannot delete your own account from here.' });
     }
-    const cleanEmail = (targetUser.email || '').toLowerCase().trim();
-    if (cleanEmail === 'shikhar@gmail.com' || cleanEmail === 'himanshudwivedi0325@gmail.com') {
+    if (isPlatformCreator(targetUser.email)) {
       return res.status(403).json({ success: false, message: 'Platform creator cannot be deleted.' });
     }
 

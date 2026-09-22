@@ -6,7 +6,7 @@ const authSchemas = {
     body: z.object({
       name: z.string().trim().min(2, 'Name must be at least 2 characters').max(50, 'Name must not exceed 50 characters'),
       email: z.string().trim().email('Invalid email address').max(100),
-      password: z.string().min(6, 'Password must be at least 6 characters').max(128),
+      password: z.string().min(8, 'Password must be at least 8 characters').max(128),
       avatar: z.string().optional().nullable(),
       profession: z.string().trim().max(100).optional().nullable(),
       bio: z.string().trim().max(500).optional().nullable(),
@@ -195,7 +195,7 @@ const adminSchemas = {
     body: z.object({
       name: z.string().trim().min(2).max(50),
       email: z.string().trim().email(),
-      password: z.string().min(6).max(128),
+      password: z.string().min(8).max(128),
       role: z.enum(['admin', 'user']).optional(),
       profession: z.string().max(100).optional(),
       bio: z.string().max(500).optional()
@@ -208,7 +208,7 @@ const adminSchemas = {
     body: z.object({
       name: z.string().trim().min(2).max(50).optional(),
       email: z.string().trim().email().optional(),
-      password: z.string().min(6).max(128).optional(),
+      password: z.string().min(8).max(128).optional(),
       role: z.enum(['admin', 'user']).optional(),
       profession: z.string().max(100).optional(),
       bio: z.string().max(500).optional(),
