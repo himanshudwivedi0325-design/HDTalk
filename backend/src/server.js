@@ -375,30 +375,32 @@ const frontendDist = path.join(__dirname, '../../frontend/dist');
 const frontendPublic = path.join(__dirname, '../../frontend/public');
 
 // Dedicated SEO & AI Discovery routes (robots.txt, sitemap.xml, llms.txt, llms-full.txt, og-image.svg)
-const serveSeoFile = (fileName, contentType) => (req, res) => {
+const serveSeoFile = (fileName, contentType, cacheControl = 'public, max-age=86400') => (req, res) => {
   const distPath = path.join(frontendDist, fileName);
   const publicPath = path.join(frontendPublic, fileName);
   const targetPath = fs.existsSync(distPath) ? distPath : (fs.existsSync(publicPath) ? publicPath : null);
 
   if (targetPath) {
     res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'public, max-age=86400'); // 24 hours
+    res.setHeader('Cache-Control', cacheControl);
     res.setHeader('X-Robots-Tag', 'index, follow');
     return res.sendFile(targetPath);
   }
   res.status(404).send('Not Found');
 };
 
-app.get('/robots.txt', serveSeoFile('robots.txt', 'text/plain; charset=utf-8'));
-app.get('/sitemap.xml', serveSeoFile('sitemap.xml', 'application/xml; charset=utf-8'));
+app.get('/robots.txt', serveSeoFile('robots.txt', 'text/plain; charset=utf-8', 'no-cache, no-store, must-revalidate'));
+app.get('/sitemap.xml', serveSeoFile('sitemap.xml', 'application/xml; charset=utf-8', 'no-cache, must-revalidate'));
 app.get('/llms.txt', serveSeoFile('llms.txt', 'text/markdown; charset=utf-8'));
 app.get('/llms-full.txt', serveSeoFile('llms-full.txt', 'text/markdown; charset=utf-8'));
 app.get('/og-image.svg', serveSeoFile('og-image.svg', 'image/svg+xml'));
 app.get('/e84a2f7c9b1d3056e1829a4c7f0b2e65.txt', serveSeoFile('e84a2f7c9b1d3056e1829a4c7f0b2e65.txt', 'text/plain; charset=utf-8'));
 app.get('/googlefa7a1a36ea6554fc.html', (req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
   res.send('google-site-verification: googlefa7a1a36ea6554fc.html');
 });
+
 
 if (fs.existsSync(frontendDist)) {
   app.use(express.static(frontendDist, {
