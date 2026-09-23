@@ -394,6 +394,7 @@ app.get('/sitemap.xml', serveSeoFile('sitemap.xml', 'application/xml; charset=ut
 app.get('/llms.txt', serveSeoFile('llms.txt', 'text/markdown; charset=utf-8'));
 app.get('/llms-full.txt', serveSeoFile('llms-full.txt', 'text/markdown; charset=utf-8'));
 app.get('/og-image.svg', serveSeoFile('og-image.svg', 'image/svg+xml'));
+app.get('/e84a2f7c9b1d3056e1829a4c7f0b2e65.txt', serveSeoFile('e84a2f7c9b1d3056e1829a4c7f0b2e65.txt', 'text/plain; charset=utf-8'));
 app.get('/googlefa7a1a36ea6554fc.html', (req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send('google-site-verification: googlefa7a1a36ea6554fc.html');
