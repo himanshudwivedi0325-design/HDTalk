@@ -115,28 +115,30 @@ if (process.env.NODE_ENV === 'production') {
 // Helmet Security Headers (HSTS, noSniff, frameguard: deny, referrerPolicy, hidePoweredBy, CSP)
 const helmet = require('helmet');
 app.use(helmet({
-  // SEC-5 FIX: Enable Content-Security-Policy with strict directives
+  // Content-Security-Policy (Permissive for Vite SPA + WebRTC + WebSockets)
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'strict-dynamic'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https:", "http:"],
+      scriptSrcElem: ["'self'", "'unsafe-inline'", "https:", "http:"],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      styleSrcElem: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
-      imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+      imgSrc: ["'self'", 'data:', 'blob:', 'https:', 'http:'],
       // Allow WebSocket connections to same origin + configured backend origins
-      connectSrc: ["'self'", 'wss:', 'ws:', 'https:'],
+      connectSrc: ["'self'", 'wss:', 'ws:', 'https:', 'http:'],
       // Media (audio/video for WebRTC voice/video)
-      mediaSrc: ["'self'", 'blob:'],
+      mediaSrc: ["'self'", 'blob:', 'data:', 'https:', 'http:'],
       // WebRTC object URLs
       workerSrc: ["'self'", 'blob:'],
-      frameSrc: ["'none'"],
+      frameSrc: ["'self'"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
       formAction: ["'self'"],
-      upgradeInsecureRequests: [],
     },
     reportOnly: false,
   },
+
   crossOriginResourcePolicy: false,
   crossOriginOpenerPolicy: false,
   crossOriginEmbedderPolicy: false,
