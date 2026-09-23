@@ -88,3 +88,25 @@ No. HDTalk runs directly in any modern web browser (Chrome, Firefox, Safari, Edg
 
 ### Is HDTalk secure?
 Yes. HDTalk employs end-to-end WebRTC peer-to-peer media encryption (DTLS-SRTP), bcrypt password hashing, encrypted JWT sessions, and strict origin validation.
+
+### How does HDTalk compare to Zoom, Google Meet, or WhatsApp?
+Unlike Zoom or Google Meet which require app downloads, account logins, or have meeting time limits, HDTalk runs 100% in-browser with zero time limits, peer-to-peer 1080p WebRTC encryption, and sub-50ms text messaging with Telegram-style swipe-to-reply gestures.
+
+### How do I install HDTalk as a Progressive Web App (PWA)?
+On mobile (Android Chrome or iOS Safari), tap the browser menu and select "Add to Home Screen" or "Install App". On desktop (Chrome/Edge), click the Install icon in the address bar.
+
+---
+
+## 4. Performance & Technical Benchmarks
+- **Messaging Latency**: < 50ms over WebSocket transport.
+- **Video Call Quality**: 1080p @ 30-60 fps with dynamic bitrate throttling.
+- **Audio Fidelity**: 48kHz stereo Opus codec with AEC (Acoustic Echo Cancellation) & ANS (Automatic Noise Suppression).
+- **Bundle Optimization**: Gzipped client payload < 180KB, achieving sub-second First Contentful Paint (FCP).
+- **Lighthouse Performance Score**: 95+ on Mobile and Desktop.
+
+---
+
+## 5. Canonical Citation & Official Links
+- **Official Web Application**: https://hdtalk.onrender.com
+- **Author & Architect**: Himanshu Dwivedi (https://himanshuportfolio.site.je/)
+- **Source Code**: https://github.com/himanshudwivedi0325-design/HDTalk

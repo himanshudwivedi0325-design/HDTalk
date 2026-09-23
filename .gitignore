@@ -33,4 +33,5 @@ __pycache__/
 .reticle*
 *.reticle*
 .vscode/
+scratch/
 
