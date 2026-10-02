@@ -1,19 +1,25 @@
-# HDTalk ⚡ - Professional Real-Time Communication & HD Calling System
+# HDTalk ⚡ — Free Real-Time Chat & 1080p WebRTC Video Calling
 
-> **Created with ❤️ by Himanshu Dwivedi**  
-> An ultra-modern, production-ready, self-hosted real-time messaging, professional synergy matchmaking, and HD WebRTC audio/video calling web application with Apphitect-style 3-panel architecture, light/dark themes, and signature royal electric blue styling.
+[![HDTalk Live](https://img.shields.io/badge/Live%20App-hdtalk.onrender.com-0066FF?style=for-the-badge&logo=render&logoColor=white)](https://hdtalk.onrender.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+[![Engineered By](https://img.shields.io/badge/Engineered%20By-Himanshu%20Dwivedi-38BDF8?style=for-the-badge)](https://himanshuportfolio.site.je)
+[![PWA Ready](https://img.shields.io/badge/PWA-Installable-success?style=for-the-badge)](https://hdtalk.onrender.com)
+
+> 🚀 **Live Production Application:** [https://hdtalk.onrender.com](https://hdtalk.onrender.com)  
+> 👨‍💻 **Lead Architect & Creator:** [Himanshu Dwivedi](https://himanshuportfolio.site.je/)  
+> 
+> **HDTalk** is an enterprise-grade, 100% free, ad-free real-time communication platform engineered by Himanshu Dwivedi. Features sub-50ms Socket.IO WebSocket messaging, 1080p peer-to-peer WebRTC video calling, full screen sharing, Telegram/Instagram-style quoted replies, in-browser voice memos, and smart synergy matchmaking.
 
 ---
 
 ## 🌟 Architecture & Core Highlights
 
+- **Live Production URL**: [https://hdtalk.onrender.com](https://hdtalk.onrender.com) (Runs directly in any web browser without installs)
 - **100% Free & Self-Hosted Real-Time Engine**: Built with native **Socket.io** rooms and **WebRTC Mesh Signaling** — no expensive third-party APIs (like Agora, Twilio, or Stream) required.
-- **Unified Full-Stack Deployment Ready**: Express serves both the REST API, Socket.io gateway, WebRTC signaling, and the compiled frontend static bundle from rontend/dist. Single container / single service deployment on any cloud.
+- **Unified Full-Stack Deployment Ready**: Express serves both the REST API, Socket.io gateway, WebRTC signaling, and the compiled frontend static bundle from `frontend/dist`. Single container / single service deployment on any cloud.
 - **Decoupled Architecture Ready**: Alternatively deploy the frontend to Vercel/Netlify/Cloudflare Pages and backend to Render/Railway/VPS.
 - **Native Web Audio API Sound Generator**: Synthesizes pleasant dual-tone call ringers and message chimes directly in the browser without external audio assets.
-- **Zero-Friction Storage**: Zero-dependency resilient JSON database with atomic writes, bcrypt security, and administrative CLI tools (
-pm run db:reset, 
-pm run db:seed).
+- **Zero-Friction Storage**: Zero-dependency resilient JSON database with atomic writes, bcrypt security, and administrative CLI tools (`npm run db:reset`, `npm run db:seed`).
 
 ---
 

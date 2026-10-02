@@ -1,0 +1,23 @@
+name: HDTalk 24/7 Keepalive & Googlebot Readiness
+
+on:
+  schedule:
+    # Run every 10 minutes to prevent Render free-tier instance from sleeping
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    name: Ping Render Gateway
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Warmup Ping to HDTalk
+        run: |
+          echo "Pinging HDTalk live health check to prevent cold starts and ensure Googlebot availability..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 https://hdtalk.onrender.com/api/health/live)
+          echo "Response HTTP Status: $STATUS"
+          if [ "$STATUS" -eq 200 ]; then
+            echo "✅ HDTalk instance is awake, warm, and ready for search crawler requests."
+          else
+            echo "⚠️ Health check returned status $STATUS (will retry next interval)"
+          fi

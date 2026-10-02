@@ -86,7 +86,21 @@ const isOriginAllowed = (origin) => {
 
 // Middleware: exempt static assets and handle CORS cleanly
 app.use((req, res, next) => {
-  if (req.path.startsWith('/assets/') || req.path === '/favicon.ico' || req.path === '/robots.txt' || req.path === '/sitemap.xml') {
+  if (
+    req.path.startsWith('/assets/') ||
+    req.path === '/favicon.ico' ||
+    req.path === '/robots.txt' ||
+    req.path === '/sitemap.xml' ||
+    req.path === '/manifest.json' ||
+    req.path === '/icon.svg' ||
+    req.path === '/icon-192.png' ||
+    req.path === '/icon-512.png' ||
+    req.path === '/og-image.png' ||
+    req.path === '/twitter-image.png' ||
+    req.path === '/og-image.svg' ||
+    req.path === '/llms.txt' ||
+    req.path === '/llms-full.txt'
+  ) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     return next();
@@ -376,7 +390,7 @@ initSocket(io);
 const frontendDist = path.join(__dirname, '../../frontend/dist');
 const frontendPublic = path.join(__dirname, '../../frontend/public');
 
-// Dedicated SEO & AI Discovery routes (robots.txt, sitemap.xml, llms.txt, llms-full.txt, og-image.svg)
+// Dedicated SEO & AI Discovery routes (robots.txt, sitemap.xml, llms.txt, llms-full.txt, og-image.png, etc.)
 const serveSeoFile = (fileName, contentType, cacheControl = 'public, max-age=86400') => (req, res) => {
   const distPath = path.join(frontendDist, fileName);
   const publicPath = path.join(frontendPublic, fileName);
@@ -395,7 +409,13 @@ app.get('/robots.txt', serveSeoFile('robots.txt', 'text/plain; charset=utf-8', '
 app.get('/sitemap.xml', serveSeoFile('sitemap.xml', 'application/xml; charset=utf-8', 'no-cache, must-revalidate'));
 app.get('/llms.txt', serveSeoFile('llms.txt', 'text/markdown; charset=utf-8'));
 app.get('/llms-full.txt', serveSeoFile('llms-full.txt', 'text/markdown; charset=utf-8'));
+app.get('/og-image.png', serveSeoFile('og-image.png', 'image/png'));
+app.get('/twitter-image.png', serveSeoFile('twitter-image.png', 'image/png'));
 app.get('/og-image.svg', serveSeoFile('og-image.svg', 'image/svg+xml'));
+app.get('/icon-192.png', serveSeoFile('icon-192.png', 'image/png'));
+app.get('/icon-512.png', serveSeoFile('icon-512.png', 'image/png'));
+app.get('/favicon.ico', serveSeoFile('favicon.ico', 'image/x-icon'));
+app.get('/manifest.json', serveSeoFile('manifest.json', 'application/manifest+json; charset=utf-8'));
 app.get('/e84a2f7c9b1d3056e1829a4c7f0b2e65.txt', serveSeoFile('e84a2f7c9b1d3056e1829a4c7f0b2e65.txt', 'text/plain; charset=utf-8'));
 app.get('/googlefa7a1a36ea6554fc.html', (req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -403,6 +423,84 @@ app.get('/googlefa7a1a36ea6554fc.html', (req, res) => {
   res.send('google-site-verification: googlefa7a1a36ea6554fc.html');
 });
 
+// Dynamic Multi-Page SEO Meta Dictionary
+const ROUTE_SEO_META = {
+  '/': {
+    title: 'HDTalk — Free Real-Time Chat & 1080p Video Calling Web App',
+    desc: 'HDTalk is an ultra-fast real-time messaging, WebRTC 1080p video calling, and synergy matchmaking web application by Himanshu Dwivedi. Features sub-50ms chats, screen sharing, voice notes, PWA install, and zero ads.',
+    canonical: 'https://hdtalk.onrender.com/'
+  },
+  '/features': {
+    title: 'HDTalk Features — Sub-50ms Chat, 1080p WebRTC Video & Screen Sharing',
+    desc: 'Explore HDTalk features: 1080p crystal clear WebRTC video calls, sub-50ms Socket.IO chat, Telegram-style replies, PWA offline access, voice notes, and professional matchmaking.',
+    canonical: 'https://hdtalk.onrender.com/features'
+  },
+  '/about': {
+    title: 'About HDTalk — Engineered by Himanshu Dwivedi',
+    desc: 'Learn about HDTalk, an open-source real-time communication platform engineered by Himanshu Dwivedi using React, Node.js, WebRTC, and Socket.io.',
+    canonical: 'https://hdtalk.onrender.com/about'
+  },
+  '/security': {
+    title: 'HDTalk Security & Privacy — DTLS-SRTP WebRTC Encryption',
+    desc: 'HDTalk privacy and security standards: DTLS-SRTP peer-to-peer media encryption, salted bcrypt authentication, zero adware, and strict data sanitization.',
+    canonical: 'https://hdtalk.onrender.com/security'
+  },
+  '/faq': {
+    title: 'HDTalk FAQ — Questions & Answers about HDTalk WebRTC Calling',
+    desc: 'Common questions about HDTalk: free browser-based video calling, 1080p screen sharing, sub-50ms real-time chat, and PWA installation.',
+    canonical: 'https://hdtalk.onrender.com/faq'
+  },
+  '/privacy': {
+    title: 'HDTalk Privacy Policy — Transparent & Secure',
+    desc: 'HDTalk Privacy Policy. We respect your confidentiality with end-to-end peer encryption, zero third-party tracking, and no data sales.',
+    canonical: 'https://hdtalk.onrender.com/privacy'
+  },
+  '/terms': {
+    title: 'HDTalk Terms of Service — Fair & Open Communication',
+    desc: 'HDTalk Terms of Service for using real-time chat, WebRTC video calling, and matchmaking services.',
+    canonical: 'https://hdtalk.onrender.com/terms'
+  }
+};
+
+let cachedIndexHtml = null;
+let lastIndexMtime = 0;
+
+const getIndexHtmlWithSeo = (pathname) => {
+  const indexPath = path.join(frontendDist, 'index.html');
+  if (!fs.existsSync(indexPath)) return null;
+
+  try {
+    const stat = fs.statSync(indexPath);
+    if (!cachedIndexHtml || stat.mtimeMs > lastIndexMtime) {
+      cachedIndexHtml = fs.readFileSync(indexPath, 'utf8');
+      lastIndexMtime = stat.mtimeMs;
+    }
+
+    const cleanPath = pathname.split('?')[0].replace(/\/+$/, '') || '/';
+    const seo = ROUTE_SEO_META[cleanPath] || ROUTE_SEO_META['/'];
+
+    let html = cachedIndexHtml;
+    // Inject route-specific title
+    html = html.replace(/<title>.*?<\/title>/i, `<title>${seo.title}</title>`);
+    html = html.replace(/<meta name="title" content=".*?" \/>/i, `<meta name="title" content="${seo.title}" />`);
+    // Inject route-specific description
+    html = html.replace(/<meta name="description" content=".*?" \/>/i, `<meta name="description" content="${seo.desc}" />`);
+    // Inject route-specific canonical
+    html = html.replace(/<link rel="canonical" href=".*?" \/>/i, `<link rel="canonical" href="${seo.canonical}" />`);
+    // Inject Open Graph tags
+    html = html.replace(/<meta property="og:title" content=".*?" \/>/i, `<meta property="og:title" content="${seo.title}" />`);
+    html = html.replace(/<meta property="og:description" content=".*?" \/>/i, `<meta property="og:description" content="${seo.desc}" />`);
+    html = html.replace(/<meta property="og:url" content=".*?" \/>/i, `<meta property="og:url" content="${seo.canonical}" />`);
+    // Inject Twitter Card tags
+    html = html.replace(/<meta name="twitter:title" content=".*?" \/>/i, `<meta name="twitter:title" content="${seo.title}" />`);
+    html = html.replace(/<meta name="twitter:description" content=".*?" \/>/i, `<meta name="twitter:description" content="${seo.desc}" />`);
+
+    return html;
+  } catch (err) {
+    console.error('[SEO] Error processing index.html SEO injection:', err);
+    return null;
+  }
+};
 
 if (fs.existsSync(frontendDist)) {
   app.use(express.static(frontendDist, {
@@ -414,6 +512,12 @@ if (fs.existsSync(frontendDist)) {
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api/') || req.path.startsWith('/uploads/')) {
       return next();
+    }
+    const htmlWithSeo = getIndexHtmlWithSeo(req.path);
+    if (htmlWithSeo) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('X-Robots-Tag', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
+      return res.send(htmlWithSeo);
     }
     res.sendFile(path.join(frontendDist, 'index.html'));
   });
