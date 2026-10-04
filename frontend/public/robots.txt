@@ -1,51 +1,10 @@
 # Robots.txt for HDTalk (https://hdtalk.onrender.com)
-# Created by Himanshu Dwivedi - Full-Stack & Distributed Systems Engineer
+# Lead Software Architect: Himanshu Dwivedi
 
-User-agent: Googlebot
-User-agent: Google-InspectionTool
-User-agent: Googlebot-Image
-User-agent: Bingbot
-User-agent: Slurp
-User-agent: DuckDuckBot
-User-agent: Baiduspider
-User-agent: YandexBot
-User-agent: Applebot
-Allow: /
-Allow: /assets/
-Allow: /features
-Allow: /about
-Allow: /security
-Allow: /faq
-Allow: /privacy
-Allow: /terms
-Allow: /icon.svg
-Allow: /icon-192.png
-Allow: /icon-512.png
-Allow: /favicon.ico
-Allow: /og-image.png
-Allow: /twitter-image.png
-Disallow: /api/
-Disallow: /uploads/private/
-
-# AI Search Crawlers & Assistants (LLMs)
-User-agent: GPTBot
-User-agent: ChatGPT-User
-User-agent: PerplexityBot
-User-agent: ClaudeBot
-User-agent: Claude-Web
-User-agent: Google-Extended
-User-agent: Amazonbot
-Allow: /
-Allow: /llms.txt
-Allow: /llms-full.txt
-Disallow: /api/
-
-# Global Crawlers
 User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /uploads/private/
 
-# Host & Canonical XML Sitemap
-Host: https://hdtalk.onrender.com
+# Canonical XML Sitemap
 Sitemap: https://hdtalk.onrender.com/sitemap.xml
